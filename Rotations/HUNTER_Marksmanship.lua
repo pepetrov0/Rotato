@@ -32,6 +32,7 @@ ns.Rotation{
 
     -- in combat (and with a hostile target out of it), checked before the rotations
     highprio = {
+        { "Trueshot Aura", when = function(c) return not c.buff("Trueshot Aura").up end },
         { "Tranquilizing Shot", when = function(c) return c.target.hasBuffType("Enrage", "Magic") end },
         { "Mend Pet", when = function(c)
             return c.combat and c.pet.exists and c.pet.hp < 50 and not c.pet.buff("Mend Pet").up
@@ -43,7 +44,6 @@ ns.Rotation{
         { "Aspect of the Dragonhawk", when = function(c)
             return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
-        { "Trueshot Aura", when = function(c) return not c.buff("Trueshot Aura").up end },
     },
 
     -- the side slots; see Slots.lua for the entry fields
