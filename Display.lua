@@ -83,7 +83,7 @@ function ns.InitDisplay()
         -- Snap the gray strip to whole screen pixels and derive its texture crop from that same
         -- width, so it lines up texel for texel with the icon below instead of swimming.
         local iconWidth = center.icon:GetWidth()
-        local pixel = pixelBase / center.icon:GetEffectiveScale()
+        local pixel = pixelBase / center:GetEffectiveScale()
         local pixels = grayFraction and shown and math.floor(math.min(grayFraction, 1) * iconWidth / pixel + 0.5) or 0
         if pixels > 0 then
             local width = pixels * pixel
