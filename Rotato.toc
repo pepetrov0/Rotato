@@ -15,4 +15,5 @@ Rotations\HUNTER_Marksmanship.lua
 Mode.lua
 Engine.lua
 Display.lua
+Common.lua
 Slots.lua

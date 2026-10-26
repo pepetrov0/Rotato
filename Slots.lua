@@ -141,12 +141,15 @@ function ns.InitSlots()
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
             local used = 0
-            for _, entry in ipairs(rotation and rotation[key] or {}) do
-                if used >= #row then break end
-                local icon, start, duration, remaining, dimmed, fromAura, highlight = Resolve(entry)
-                if icon then
-                    used = used + 1
-                    Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, highlight)
+            -- the rotation's own entries first, then the common ones
+            for _, list in ipairs({ rotation and rotation[key] or {}, ns.common[key] or {} }) do
+                for _, entry in ipairs(list) do
+                    if used >= #row then break end
+                    local icon, start, duration, remaining, dimmed, fromAura, highlight = Resolve(entry)
+                    if icon then
+                        used = used + 1
+                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, highlight)
+                    end
                 end
             end
             for i = used + 1, #row do row[i]:Hide() end
