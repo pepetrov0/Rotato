@@ -14,7 +14,6 @@ ns.Rotation{
 
     highprio = {
         { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
-        { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
     },
 
     rotations = {
