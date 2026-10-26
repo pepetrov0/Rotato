@@ -1,7 +1,8 @@
 local ADDON_NAME, ns = ...
 
 -- Registry of rotation definitions. Rotation files call ns.Rotation{ class=, spec=, reminders=, preparation=, highprio=, rotations={ single=, multi=, aoe= },
--- defensives=, utility=, trackers=, offensives= (see Slots.lua) };
+-- defensives=, utility=, trackers=, offensives= (see Slots.lua),
+-- consumables={ raid flasks/elixirs to remind about, see Common.lua } };
 -- omitting spec makes the rotation apply to every spec of that class.
 ns.rotations = {}
 

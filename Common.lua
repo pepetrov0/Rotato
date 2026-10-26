@@ -13,25 +13,22 @@ local function NeedsFlask(c) return not c.anyBuff(FLASKS).up end
 -- the other flasks are expensive: only worth suggesting inside a raid instance
 local function NeedsRaidFlask(c) return RotatoDB.remindRaidFlasks and c.inRaid and NeedsFlask(c) end
 
--- Raid-only consumables. Which ones are wanted can be chosen per class and spec from the menu.
+-- Raid-only consumables. Each rotation lists the ones its spec wants in a `consumables` field
+-- (every one of them when the field is missing).
 local RAID_CONSUMABLES = {
     "Flask of Endless Rage", "Flask of Pure Mojo", "Flask of Stoneblood", "Flask of the Frost Wyrm",
     "Elixir of Lightning Speed", "Elixir of Mighty Thoughts",
 }
 ns.RAID_CONSUMABLES = RAID_CONSUMABLES
 
--- the saved choices are keyed by "CLASS:specIndex"; anything not unchecked is wanted
-local function SpecKey() return (ns.class or "") .. ":" .. tostring(ns.specIndex or 0) end
-
 function ns.WantsConsumable(name)
-    local chosen = RotatoDB.consumables[SpecKey()]
-    return not chosen or chosen[name] ~= false
-end
-
-function ns.SetWantsConsumable(name, wanted)
-    local key = SpecKey()
-    RotatoDB.consumables[key] = RotatoDB.consumables[key] or {}
-    RotatoDB.consumables[key][name] = wanted
+    local rotation = ns.GetRotation()
+    local wanted = rotation and rotation.consumables
+    if not wanted then return true end
+    for _, wantedName in ipairs(wanted) do
+        if wantedName == name then return true end
+    end
+    return false
 end
 
 ns.common = {

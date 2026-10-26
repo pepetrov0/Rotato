@@ -7,6 +7,9 @@ ns.Rotation{
     class = "PALADIN",
     spec = 3, -- Retribution
 
+    -- raid flasks/elixirs worth reminding about for this spec
+    consumables = { "Flask of Endless Rage", "Elixir of Lightning Speed" },
+
     highprio = {
         -- the first of these that you know
         { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },

@@ -4,6 +4,9 @@ ns.Rotation{
     class = "PALADIN",
     spec = 1, -- Holy
 
+    -- raid flasks/elixirs worth reminding about for this spec
+    consumables = { "Flask of Pure Mojo", "Elixir of Mighty Thoughts" },
+
     -- Seal of Wisdom is the only seal that matters
     reminders = {
         { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },

@@ -2,7 +2,6 @@ local ADDON_NAME, ns = ...
 
 local defaults = {
     pos = { x = 0, y = -200 }, -- offset from the screen center
-    consumables = {}, -- per "CLASS:spec", which raid consumables to remind about (false = not wanted)
     remindRaidFlasks = true, -- remind about the expensive flasks inside raids
     font = nil, -- font file, nil for the combat text font
     cooldownTextSize = 12, -- countdown numbers on the side slots

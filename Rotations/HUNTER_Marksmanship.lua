@@ -13,6 +13,9 @@ ns.Rotation{
     class = "HUNTER",
     spec = 2, -- Marksmanship
 
+    -- raid flasks/elixirs worth reminding about for this spec
+    consumables = { "Flask of Endless Rage", "Elixir of Lightning Speed" },
+
     -- out of combat with no hostile target; keeps the UI up until done
     reminders = {
         { "Trueshot Aura", when = function(c) return not c.buff("Trueshot Aura").up end },

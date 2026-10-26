@@ -4,6 +4,9 @@ ns.Rotation{
     class = "PRIEST",
     spec = 1, -- Discipline
 
+    -- raid flasks/elixirs worth reminding about for this spec
+    consumables = { "Flask of the Frost Wyrm", "Elixir of Mighty Thoughts" },
+
     -- out of combat with no hostile target
     reminders = {
         { "Inner Fire", when = function(c) return not c.buff("Inner Fire").up end },
