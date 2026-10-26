@@ -235,4 +235,5 @@ function ns.CreateUI()
 
     ns.ApplySize()
     ns.ApplyPosition()
+    ns.InitVisibility()
 end
