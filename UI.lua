@@ -1,10 +1,8 @@
 local ADDON_NAME, ns = ...
 
-local ICON_SIZE = 36
 local SPACING = 2
 local PADDING = 6
 local PER_ROW = 5
-local CENTER_SIZE = ICON_SIZE * 2 + SPACING
 local SNAP = 20 -- pixels from a screen center line at which we snap
 local PLACEHOLDER = "Interface\\Icons\\INV_Misc_QuestionMark"
 
@@ -57,10 +55,13 @@ end
 
 -- Widgets ----------------------------------------------------------------
 
-local function CreateSlot(parent, size)
-    local f = CreateFrame("Frame", nil, parent)
+local function SetSlotSize(f, size)
     f:SetWidth(size)
     f:SetHeight(size)
+end
+
+local function CreateSlot(parent)
+    local f = CreateFrame("Frame", nil, parent)
     f.icon = f:CreateTexture(nil, "ARTWORK")
     f.icon:SetTexture(PLACEHOLDER)
     SkinSlot(f)
@@ -76,7 +77,7 @@ local function BuildRow(parent, center, side, vertical)
     local outer = side == "LEFT" and "LEFT" or "RIGHT"   -- slot edge that faces away
     local sign = side == "LEFT" and -1 or 1
     for i = 1, PER_ROW do
-        local slot = CreateSlot(parent, ICON_SIZE)
+        local slot = CreateSlot(parent)
         if i == 1 then
             slot:SetPoint(vertical .. inner, center, vertical .. outer, sign * SPACING, 0)
         else
@@ -85,6 +86,49 @@ local function BuildRow(parent, center, side, vertical)
         row[i] = slot
     end
     return row
+end
+
+-- Sizing -----------------------------------------------------------------
+
+-- The center icon is the one setting; the small icons are half of it (minus spacing).
+function ns.ApplySize()
+    local c = RotatoDB.centerSize
+    local s = (c - SPACING) / 2
+    SetSlotSize(ns.center, c)
+    for _, row in ipairs({ ns.defensives, ns.utility, ns.trackers, ns.offensives }) do
+        for _, slot in ipairs(row) do SetSlotSize(slot, s) end
+    end
+    ns.frame:SetWidth(c + 2 * PER_ROW * (s + SPACING) + 2 * PADDING)
+    ns.frame:SetHeight(c + 2 * PADDING)
+end
+
+-- Context menu ----------------------------------------------------------
+
+local SIZE_PRESETS = {
+    { "Tiny", 50 },
+    { "Small", 70 },
+    { "Medium", 90 },
+    { "Large", 110 },
+    { "Extra large", 130 },
+    { "Huge", 150 },
+}
+
+function ns.OpenMenu()
+    ns.menuFrame = ns.menuFrame or CreateFrame("Frame", "RotatoMenu", UIParent, "UIDropDownMenuTemplate")
+    local menu = { { text = "Rotato", isTitle = true, notCheckable = true },
+                   { text = "Main icon size", isTitle = true, notCheckable = true } }
+    for _, preset in ipairs(SIZE_PRESETS) do
+        local name, size = preset[1], preset[2]
+        tinsert(menu, {
+            text = name .. " (" .. size .. ")",
+            checked = RotatoDB.centerSize == size,
+            func = function()
+                RotatoDB.centerSize = size
+                ns.ApplySize()
+            end,
+        })
+    end
+    EasyMenu(menu, ns.menuFrame, "cursor", 0, 0, "MENU")
 end
 
 -- Positioning ------------------------------------------------------------
@@ -159,12 +203,7 @@ end
 -- Main -------------------------------------------------------------------
 
 function ns.CreateUI()
-    local width = CENTER_SIZE + 2 * (PER_ROW * (ICON_SIZE + SPACING)) + 2 * PADDING
-    local height = CENTER_SIZE + 2 * PADDING
-
     local f = CreateFrame("Frame", "RotatoFrame", UIParent)
-    f:SetWidth(width)
-    f:SetHeight(height)
     f:SetFrameStrata("MEDIUM")
     f:SetClampedToScreen(true)
     -- Click-through unless shift is held (needed to drag), so targets behind it stay selectable.
@@ -180,9 +219,12 @@ function ns.CreateUI()
 
     f:SetScript("OnDragStart", DragStart)
     f:SetScript("OnDragStop", DragStop)
+    f:SetScript("OnMouseUp", function(self, button)
+        if button == "RightButton" and IsShiftKeyDown() then ns.OpenMenu() end
+    end)
 
     -- big "next spell" icon, spanning both rows
-    local center = CreateSlot(f, CENTER_SIZE)
+    local center = CreateSlot(f)
     center:SetPoint("CENTER", f, "CENTER")
     ns.center = center
 
@@ -191,5 +233,6 @@ function ns.CreateUI()
     ns.trackers   = BuildRow(f, center, "RIGHT", "TOP")
     ns.offensives = BuildRow(f, center, "RIGHT", "BOTTOM")
 
+    ns.ApplySize()
     ns.ApplyPosition()
 end

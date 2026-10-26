@@ -3,6 +3,7 @@ local ADDON_NAME, ns = ...
 local defaults = {
     mode = "single", -- "single" | "aoe"
     pos = { x = 0, y = -200 }, -- offset from the screen center
+    centerSize = 70, -- main icon size in pixels; the small icons derive from it
 }
 
 function ns.Print(msg)
@@ -27,7 +28,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
     elseif event == "PLAYER_LOGIN" then
         -- everything else (ElvUI included) is loaded by now
         ns.CreateUI()
-        ns.Print("loaded. /rotato reset. Shift-drag to move.")
+        ns.Print("loaded. shift-right-click for options, shift-drag to move. /rotato reset to reposition.")
     end
 end)
 
@@ -38,6 +39,6 @@ SlashCmdList["ROTATO"] = function(msg)
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Usage: /rotato reset. Shift-drag to move.")
+        ns.Print("Shift-right-click the frame for options, shift-drag to move. /rotato reset to reposition.")
     end
 end
