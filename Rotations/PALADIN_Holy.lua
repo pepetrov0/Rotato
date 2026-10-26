@@ -23,7 +23,7 @@ ns.Rotation{
             end },
             { "Sacred Shield", when = function(c)
                 local shield = c.groupBuff("Sacred Shield")
-                return not shield.up or shield.remains < 30
+                return not shield.up or shield.remains < 15
             end },
             -- keeps Judgements of the Pure up
             { "Judgement of Light", when = function(c)
