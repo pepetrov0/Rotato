@@ -1,17 +1,16 @@
 local ADDON_NAME, ns = ...
 
--- Any of these counts as "a seal is up"; Vengeance is the Alliance seal, Corruption the Horde one.
-local SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
-
 ns.Rotation{
     class = "PALADIN",
     spec = 1, -- Holy
 
+    -- Seal of Wisdom is the only seal that matters
+    reminders = {
+        { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
+    },
+
     highprio = {
-        -- the first of these that you know
-        { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
+        { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
         { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
     },
 
@@ -31,7 +30,7 @@ ns.Rotation{
     },
 
     trackers = {
-        { buff = SEALS },
+        { buff = "Seal of Wisdom" },
     },
 
     defensives = {
@@ -43,8 +42,13 @@ ns.Rotation{
     },
 
     offensives = {
-        { spell = "Avenging Wrath", buff = "Avenging Wrath" },
-        { spell = "Divine Illumination", buff = "Divine Illumination" },
+        -- best used while Divine Plea is up
+        { spell = "Avenging Wrath", buff = "Avenging Wrath", recommend = function(c)
+            return c.buff("Divine Plea").up and c.ready("Avenging Wrath")
+        end },
+        { spell = "Divine Illumination", buff = "Divine Illumination", recommend = function(c)
+            return c.buff("Divine Plea").up and c.ready("Divine Illumination")
+        end },
     },
 
     utility = {
