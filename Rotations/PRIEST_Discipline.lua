@@ -11,6 +11,7 @@ ns.Rotation{
 
     highprio = {
         { "Inner Fire", when = function(c) return not c.buff("Inner Fire").up end },
+        { "Shadowfiend", when = function(c) return c.mana < 20 end },
     },
 
     trackers = {
