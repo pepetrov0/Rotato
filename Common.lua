@@ -10,6 +10,7 @@ ns.common = {
         { buff = "Hand of Sacrifice", show = "active" },
         { buff = "Stoneform", show = "active" },
         { buff = "Gift of the Naaru", show = "active" },
+        { buff = "Divine Guardian", show = "active" },
         { buff = "Indestructible", show = "active" }, -- Indestructible Potion
     },
     offensives = {
@@ -17,6 +18,8 @@ ns.common = {
         { buff = "Heroism", show = "active" },
         { buff = "Power Infusion", show = "active" },
         { buff = "Unholy Frenzy", show = "active" },
+        { buff = "Hysteria", show = "active" },
+        { buff = "Hyperspeed Acceleration", show = "active" }, -- engineering gloves
         { buff = "Blood Fury", show = "active" },
         { buff = "Berserking", show = "active" },
         { buff = "Speed", show = "active" },      -- Potion of Speed

@@ -43,6 +43,7 @@ ns.Rotation{
         { "Aspect of the Dragonhawk", when = function(c)
             return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
+        { "Trueshot Aura", when = function(c) return not c.buff("Trueshot Aura").up end },
     },
 
     -- the side slots; see Slots.lua for the entry fields
