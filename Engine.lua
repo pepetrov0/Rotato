@@ -114,6 +114,24 @@ local c = setmetatable({ target = target, pet = pet }, {
 
 function c.buff(name) return Aura(UnitBuff, "player", name) end
 
+-- your own buff on the player or any party/raid member: the one with the most time left, or NO_AURA
+-- if nobody has it (for single-target buffs such as Beacon of Light)
+function c.groupBuff(name)
+    local units = { "player" }
+    local raid = GetNumRaidMembers()
+    if raid > 0 then
+        for i = 1, raid do units[#units + 1] = "raid" .. i end
+    else
+        for i = 1, GetNumPartyMembers() do units[#units + 1] = "party" .. i end
+    end
+    local best = NO_AURA
+    for _, unit in ipairs(units) do
+        local aura = Aura(UnitBuff, unit, name, "PLAYER")
+        if aura.up and (not best.up or aura.remains > best.remains) then best = aura end
+    end
+    return best
+end
+
 -- debuffs on the player
 function c.selfDebuff(name) return Aura(UnitDebuff, "player", name) end
 
