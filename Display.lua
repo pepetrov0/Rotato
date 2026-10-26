@@ -68,6 +68,9 @@ function ns.InitDisplay()
 
     -- grayFraction: nil for none, otherwise 0..1 of the icon width, measured from the right edge
     local function Render(spell, start, duration, text, grayFraction)
+        -- nothing to press: hide the center box (and its label) altogether
+        if spell and not center:IsShown() then center:Show() end
+        if not spell and center:IsShown() then center:Hide() end
         if spell ~= shown then
             shown = spell
             local texture = spell and select(3, GetSpellInfo(spell)) or nil
@@ -127,7 +130,7 @@ function ns.InitDisplay()
         if spell ~= preview then preview = nil end
         -- while the global cooldown runs, the suggestion is what to press next
         local gcdRunning = start and duration and start > 0 and duration <= ns.GCD_MAX and start + duration > GetTime()
-        local text = (source == "reminders" and "Reminder") or (state == "cd" and "Cooldown") or ((spell == preview or gcdRunning) and "Next") or nil
+        local text = spell and ((source == "reminders" and "Reminder") or (state == "cd" and "Cooldown") or ((spell == preview or gcdRunning) and "Next")) or nil
         Render(spell, start, duration, text)
     end
 
