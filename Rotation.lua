@@ -25,9 +25,12 @@ end
 -- Variants -------------------------------------------------------------
 -- A rotation can declare named choices, e.g.
 --   variants = { judgement = { default = "light", light = { "Judgement of Light" }, wisdom = { "Judgement of Wisdom" } } }
--- Casting a spell listed under an option makes that option the current one (saved per class and spec).
+-- Casting a spell listed under an option makes that option the current one (not saved between sessions).
 -- Entries then use { variant = "judgement" } in place of a spell name, and debuff = { variant = "judgement" }
 -- (or buff / targetBuff) in side slots.
+
+-- the current options, per "CLASS:spec"; kept in memory only, so every session starts on the defaults
+local chosen = {}
 
 local function VariantKey() return (ns.class or "") .. ":" .. tostring(ns.specIndex or 0) end
 
@@ -40,7 +43,7 @@ end
 function ns.GetVariant(name)
     local definition = VariantDefinition(name)
     if not definition then return nil end
-    local saved = RotatoDB.variants[VariantKey()]
+    local saved = chosen[VariantKey()]
     saved = saved and saved[name]
     if saved and type(definition[saved]) == "table" then return saved end
     return definition.default
@@ -49,8 +52,8 @@ end
 function ns.SetVariant(name, option)
     if ns.GetVariant(name) == option then return end
     local key = VariantKey()
-    RotatoDB.variants[key] = RotatoDB.variants[key] or {}
-    RotatoDB.variants[key][name] = option
+    chosen[key] = chosen[key] or {}
+    chosen[key][name] = option
     ns.Print(format("%s: %s", name, option))
 end
 
