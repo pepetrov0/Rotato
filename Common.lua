@@ -4,9 +4,10 @@ local ADDON_NAME, ns = ...
 -- The side slot rows (defensives, offensives) only appear while the aura is up; same fields as in Slots.lua.
 -- The reminders tier works like a rotation's reminders.
 
--- the flasks that count as "has a flask"
+-- the flasks (and elixirs) that count as "has a flask"; the elixir buffs may be named with or without "Elixir of"
 local FLASKS = {
     "Flask of the North", "Flask of Endless Rage", "Flask of Pure Mojo", "Flask of Stoneblood", "Flask of the Frost Wyrm",
+    "Elixir of Lightning Speed", "Lightning Speed", "Elixir of Mighty Thoughts", "Mighty Thoughts",
 }
 local function NeedsFlask(c) return not c.anyBuff(FLASKS).up end
 -- the other flasks are expensive: only worth suggesting inside a raid instance
@@ -20,6 +21,8 @@ ns.common = {
         { item = "Flask of Pure Mojo", when = NeedsRaidFlask },
         { item = "Flask of Stoneblood", when = NeedsRaidFlask },
         { item = "Flask of the Frost Wyrm", when = NeedsRaidFlask },
+        { item = "Elixir of Lightning Speed", when = NeedsRaidFlask },
+        { item = "Elixir of Mighty Thoughts", when = NeedsRaidFlask },
     },
 
     defensives = {
