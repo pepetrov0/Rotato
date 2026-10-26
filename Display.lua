@@ -60,9 +60,9 @@ function ns.InitDisplay()
         local now = GetTime()
         if now - evaluatedAt >= TICK then
             evaluatedAt = now
-            evaluated[1], evaluated[2], evaluated[3], evaluated[4] = ns.Evaluate()
+            evaluated[1], evaluated[2], evaluated[3], evaluated[4], evaluated[5] = ns.Evaluate()
         end
-        return evaluated[1], evaluated[2], evaluated[3], evaluated[4]
+        return evaluated[1], evaluated[2], evaluated[3], evaluated[4], evaluated[5]
     end
     local preview -- spell last shown as "Next"; keeps its label until you start casting something
 
@@ -123,11 +123,11 @@ function ns.InitDisplay()
             return
         end
 
-        local spell, state, start, duration = Evaluate()
+        local spell, state, start, duration, source = Evaluate()
         if spell ~= preview then preview = nil end
         -- while the global cooldown runs, the suggestion is what to press next
         local gcdRunning = start and duration and start > 0 and duration <= ns.GCD_MAX and start + duration > GetTime()
-        local text = (state == "cd" and "Cooldown") or ((spell == preview or gcdRunning) and "Next") or nil
+        local text = (source == "prep" and "Reminder") or (state == "cd" and "Cooldown") or ((spell == preview or gcdRunning) and "Next") or nil
         Render(spell, start, duration, text)
     end
 

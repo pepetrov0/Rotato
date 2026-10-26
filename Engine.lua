@@ -90,7 +90,8 @@ local function Passes(entry, name)
     return result and true or false
 end
 
--- Returns spell, state ("ready" | "cd"), cooldown start, cooldown duration; nothing if there is no suggestion.
+-- Returns spell, state ("ready" | "cd"), cooldown start, cooldown duration and the list it came from
+-- ("prep", "common", or the mode); nothing if there is no suggestion.
 -- Out of combat: prep entries first; with a living hostile target (or in combat): common, then the mode's list.
 function ns.Evaluate()
     local rotation = ns.GetRotation()
@@ -98,23 +99,23 @@ function ns.Evaluate()
 
     local combat = UnitAffectingCombat("player")
     local lists = {}
-    if not combat then lists[#lists + 1] = rotation.prep end
+    if not combat then lists[#lists + 1] = { "prep", rotation.prep } end
     if combat or target.hostile then
-        lists[#lists + 1] = rotation.common
-        lists[#lists + 1] = rotation[ns.mode] or rotation.single
+        lists[#lists + 1] = { "common", rotation.common }
+        lists[#lists + 1] = { ns.mode, rotation[ns.mode] or rotation.single }
     end
 
-    for _, list in ipairs(lists) do
-        for _, entry in ipairs(list) do
+    for _, source in ipairs(lists) do
+        for _, entry in ipairs(source[2] or {}) do
             local name = ns.SpellName(entry[1])
             local start, duration
             if name then start, duration = GetSpellCooldown(name) end
             if start and Passes(entry, name) then -- start is nil for spells we don't know
                 local remaining = start > 0 and (start + duration - GetTime()) or 0
                 if duration <= GCD_MAX or remaining <= LOOKAHEAD then
-                    if IsUsableSpell(name) then return name, "ready", start, duration end
+                    if IsUsableSpell(name) then return name, "ready", start, duration, source[1] end
                 elseif entry.wait then
-                    return name, "cd", start, duration
+                    return name, "cd", start, duration, source[1]
                 end
             end
         end

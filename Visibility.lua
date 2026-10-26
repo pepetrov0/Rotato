@@ -5,12 +5,14 @@ local HIDE_DELAY = 3   -- seconds of calm before fading out, avoids flicker betw
 local POLL = 0.1
 
 -- "Dangerous" for now: in combat, a living hostile target selected (about to pull),
--- or the frame being unlocked for positioning. Returns the reason, or nil when calm.
+-- a pending out-of-combat reminder (prep entry), or the frame being unlocked for positioning. Returns the reason, or nil when calm.
 local function DangerReason()
     if UnitAffectingCombat("player") then return "in combat" end
     if UnitExists("target") and UnitCanAttack("player", "target") and not UnitIsDeadOrGhost("target") then
         return "hostile target"
     end
+    local _, _, _, _, source = ns.Evaluate()
+    if source == "prep" then return "reminder" end
     if ns.unlocked then return "unlocked" end
 end
 
