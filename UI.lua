@@ -1,10 +1,20 @@
 local ADDON_NAME, ns = ...
 
+-- The frame itself: skinning, layout, sizing, dragging and the right-click menu.
+--
+-- Layout (the big icon is the suggestion, each side has two rows of PER_ROW small slots):
+--   utility    (left, top)    | center | trackers   (right, top)
+--   defensives (left, bottom) | center | offensives (right, bottom)
+-- The left block grows right to left and the right block left to right, so slot 1 of every row
+-- is always the one touching the center icon.
+
 local SPACING = 2
 local PADDING = 6
 local PER_ROW = 5
-local SNAP = 20 -- pixels from a screen center line at which we snap
+local SNAP = 20 -- distance in pixels from a screen center line at which dragging locks onto it
 
+-- The tooltip look is the fallback when ElvUI is not installed, so the panel still matches the
+-- default UI instead of looking like a bare rectangle.
 local TOOLTIP_BACKDROP = {
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
     edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
@@ -18,9 +28,12 @@ local PIXEL_BACKDROP = {
     insets = { left = 1, right = 1, top = 1, bottom = 1 },
 }
 
+-- ElvUI's engine table; nil when it is not loaded
 local E = ElvUI and ElvUI[1]
 
 -- Skinning ---------------------------------------------------------------
+-- Both paths are guarded on SetTemplate rather than on E alone: ElvUI adds it to frames at its own
+-- pace, and a missing method would otherwise error at login.
 
 local function SkinPanel(f)
     if E and f.SetTemplate then
@@ -35,7 +48,7 @@ end
 local function SkinSlot(f)
     if E and f.SetTemplate then
         f:SetTemplate("Default")
-        f.icon:SetTexCoord(unpack(E.TexCoords))
+        f.icon:SetTexCoord(unpack(E.TexCoords)) -- crop the icon border ElvUI hides under its own
         if f.icon.SetInside then
             f.icon:SetInside()
         else
@@ -52,14 +65,15 @@ local function SkinSlot(f)
     end
 end
 
--- Widgets ----------------------------------------------------------------
+-- Slots --------------------------------------------------------------------
 
 local function SetSlotSize(f, size)
     f:SetWidth(size)
     f:SetHeight(size)
 end
 
--- boxed slots get the bordered skin (the center action box); the rest are bare icons.
+-- Only the center box is skinned. The small slots are bare icons because an empty bordered square
+-- in every unused position looked cluttered; the borders they get are meaningful (Slots.lua).
 local function CreateSlot(parent, boxed)
     local f = CreateFrame("Frame", nil, parent)
     f.icon = f:CreateTexture(nil, "ARTWORK")
@@ -67,22 +81,24 @@ local function CreateSlot(parent, boxed)
         SkinSlot(f)
     else
         f.icon:SetAllPoints()
-        f.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+        f.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93) -- trims the border baked into spell icons
     end
     return f
 end
 
--- Builds one row of slots next to the center icon.
--- side: "LEFT" grows right-to-left, "RIGHT" grows left-to-right.
--- vertical: "TOP" or "BOTTOM" row.
+-- Each slot is anchored to the previous one (not to the frame), so resizing only needs the slot
+-- sizes to change and the row follows by itself.
+-- side: "LEFT" grows right to left, "RIGHT" grows left to right.
+-- vertical: "TOP" or "BOTTOM".
 local function BuildRow(parent, center, side, vertical)
     local row = {}
-    local inner = side == "LEFT" and "RIGHT" or "LEFT"   -- slot edge that faces the center
-    local outer = side == "LEFT" and "LEFT" or "RIGHT"   -- slot edge that faces away
+    local inner = side == "LEFT" and "RIGHT" or "LEFT" -- the slot edge facing the center
+    local outer = side == "LEFT" and "LEFT" or "RIGHT" -- the slot edge facing away
     local sign = side == "LEFT" and -1 or 1
     for i = 1, PER_ROW do
         local slot = CreateSlot(parent)
         if i == 1 then
+            -- the first slot lines up with the matching corner of the center icon
             slot:SetPoint(vertical .. inner, center, vertical .. outer, sign * SPACING, 0)
         else
             slot:SetPoint(inner, row[i - 1], outer, sign * SPACING, 0)
@@ -94,20 +110,23 @@ end
 
 -- Sizing -----------------------------------------------------------------
 
--- The center icon is the one setting; the small icons are half of it (minus spacing).
+-- The center size is the only size setting. Two small icons plus the gap between them stack to
+-- exactly the center's height, which is what keeps the two rows aligned with it.
 function ns.ApplySize()
-    local c = RotatoDB.centerSize
-    local s = (c - SPACING) / 2
-    SetSlotSize(ns.center, c)
+    local center = RotatoDB.centerSize
+    local small = (center - SPACING) / 2
+    SetSlotSize(ns.center, center)
     for _, row in ipairs({ ns.defensives, ns.utility, ns.trackers, ns.offensives }) do
-        for _, slot in ipairs(row) do SetSlotSize(slot, s) end
+        for _, slot in ipairs(row) do SetSlotSize(slot, small) end
     end
-    ns.frame:SetWidth(c + 2 * PER_ROW * (s + SPACING) + 2 * PADDING)
-    ns.frame:SetHeight(c + 2 * PADDING)
+    ns.frame:SetWidth(center + 2 * PER_ROW * (small + SPACING) + 2 * PADDING)
+    ns.frame:SetHeight(center + 2 * PADDING)
 end
 
--- Context menu ----------------------------------------------------------
+-- Context menu -------------------------------------------------------------
 
+-- Even sizes only: the small icons are half of this minus the gap, so odd values would give
+-- fractional pixels and a blurry edge.
 local SIZE_PRESETS = {
     { "Tiny", 50 },
     { "Small", 70 },
@@ -118,6 +137,7 @@ local SIZE_PRESETS = {
 }
 
 local TEXT_SIZES = { 8, 10, 12, 14, 16, 18, 20, 24, 28, 32 }
+
 local BUILTIN_FONTS = {
     { "Friz Quadrata", "Fonts\\FRIZQT__.TTF" },
     { "Arial Narrow", "Fonts\\ARIALN.TTF" },
@@ -125,16 +145,19 @@ local BUILTIN_FONTS = {
     { "Morpheus", "Fonts\\MORPHEUS.ttf" },
 }
 
+-- The menus are rebuilt on every open so the checkmarks always reflect the saved state.
 local function FontMenu()
+    -- a nil path means "follow the client's combat text font", see ns.ApplyFonts
     local list = { { "Combat text (default)", nil } }
     for _, font in ipairs(BUILTIN_FONTS) do list[#list + 1] = font end
-    -- ElvUI and many addons ship LibSharedMedia; offer its fonts too
+    -- ElvUI and most addon packs ship LibSharedMedia, which is where users' extra fonts live
     local media = LibStub and LibStub("LibSharedMedia-3.0", true)
     if media then
         for _, name in ipairs(media:List("font")) do
             list[#list + 1] = { name, media:Fetch("font", name) }
         end
     end
+
     local menu = {}
     for _, font in ipairs(list) do
         local name, path = font[1], font[2]
@@ -186,10 +209,14 @@ function ns.OpenMenu()
     end
     tinsert(menu, { text = "Card size", hasArrow = true, notCheckable = true, menuList = cardSizes })
     tinsert(menu, { text = "Font", hasArrow = true, notCheckable = true, menuList = FontMenu() })
-    tinsert(menu, { text = "Cooldown text size", hasArrow = true, notCheckable = true, menuList = SizeMenu("cooldownTextSize") })
-    tinsert(menu, { text = "Label text size", hasArrow = true, notCheckable = true, menuList = SizeMenu("labelSize") })
-    tinsert(menu, { text = "Spell name size", hasArrow = true, notCheckable = true, menuList = SizeMenu("nameSize") })
+    tinsert(menu, { text = "Cooldown text size", hasArrow = true, notCheckable = true,
+        menuList = SizeMenu("cooldownTextSize") })
+    tinsert(menu, { text = "Label text size", hasArrow = true, notCheckable = true,
+        menuList = SizeMenu("labelSize") })
+    tinsert(menu, { text = "Spell name size", hasArrow = true, notCheckable = true,
+        menuList = SizeMenu("nameSize") })
 
+    -- keepShownOnClick: a toggle should not close the menu, the checkmark is the feedback
     tinsert(menu, { text = "Remind about raid flasks", isNotRadio = true, keepShownOnClick = true,
         checked = RotatoDB.remindRaidFlasks,
         func = function(_, _, _, checked) RotatoDB.remindRaidFlasks = checked end })
@@ -203,42 +230,52 @@ end
 
 -- Positioning ------------------------------------------------------------
 
+-- The position is stored as an offset from the screen center, not from a corner, so it survives
+-- a change of resolution or UI scale and the center snap stays meaningful.
 function ns.ApplyPosition()
     local p = RotatoDB.pos
     ns.frame:ClearAllPoints()
     ns.frame:SetPoint("CENTER", UIParent, "CENTER", p.x, p.y)
 end
 
--- Center guide lines, shown while dragging; they turn green when snapped.
+-- Dragging is done by hand instead of with StartMoving: the built-in version follows the cursor
+-- with no hook to snap while moving, and we want the frame to lock onto the center lines live.
+-- The guide lines show where those lines are and turn green when locked on.
 local function CreateGuides()
-    local v = UIParent:CreateTexture(nil, "OVERLAY")
-    v:SetTexture(1, 1, 1, 0.5)
-    v:SetWidth(1)
-    v:SetPoint("TOP", UIParent, "TOP")
-    v:SetPoint("BOTTOM", UIParent, "BOTTOM")
-    v:Hide()
-    local h = UIParent:CreateTexture(nil, "OVERLAY")
-    h:SetTexture(1, 1, 1, 0.5)
-    h:SetHeight(1)
-    h:SetPoint("LEFT", UIParent, "LEFT")
-    h:SetPoint("RIGHT", UIParent, "RIGHT")
-    h:Hide()
-    return v, h
+    local vertical = UIParent:CreateTexture(nil, "OVERLAY")
+    vertical:SetTexture(1, 1, 1, 0.5)
+    vertical:SetWidth(1)
+    vertical:SetPoint("TOP", UIParent, "TOP")
+    vertical:SetPoint("BOTTOM", UIParent, "BOTTOM")
+    vertical:Hide()
+
+    local horizontal = UIParent:CreateTexture(nil, "OVERLAY")
+    horizontal:SetTexture(1, 1, 1, 0.5)
+    horizontal:SetHeight(1)
+    horizontal:SetPoint("LEFT", UIParent, "LEFT")
+    horizontal:SetPoint("RIGHT", UIParent, "RIGHT")
+    horizontal:Hide()
+
+    return vertical, horizontal
 end
 
--- Manual drag so the frame can snap live instead of only on release.
 local function DragUpdate(f)
+    -- the cursor position is in screen pixels; dividing by UIParent's scale converts it to the
+    -- same units GetCenter uses
     local ux, uy = UIParent:GetCenter()
-    local s = UIParent:GetEffectiveScale()
+    local scale = UIParent:GetEffectiveScale()
     local mx, my = GetCursorPosition()
-    local x = mx / s - ux + f.dragOffX
-    local y = my / s - uy + f.dragOffY
+    local x = mx / scale - ux + f.dragOffX
+    local y = my / scale - uy + f.dragOffY
+
     local snapX, snapY = math.abs(x) < SNAP, math.abs(y) < SNAP
     if snapX then x = 0 end
     if snapY then y = 0 end
+
     f:ClearAllPoints()
     f:SetPoint("CENTER", UIParent, "CENTER", x, y)
-    f.pos = { x = x, y = y }
+    f.pos = { x = x, y = y } -- saved on release, not on every frame
+
     ns.guideV:SetTexture(snapX and 0 or 1, 1, snapX and 0 or 1, snapX and 0.9 or 0.5)
     ns.guideH:SetTexture(snapY and 0 or 1, 1, snapY and 0 or 1, snapY and 0.9 or 0.5)
 end
@@ -246,10 +283,11 @@ end
 local function DragStart(f)
     local cx, cy = f:GetCenter()
     local ux, uy = UIParent:GetCenter()
-    local s = UIParent:GetEffectiveScale()
+    local scale = UIParent:GetEffectiveScale()
     local mx, my = GetCursorPosition()
-    f.dragOffX = (cx - ux) - (mx / s - ux)
-    f.dragOffY = (cy - uy) - (my / s - uy)
+    -- remember where inside the frame it was grabbed, so it does not jump to center on the cursor
+    f.dragOffX = (cx - ux) - (mx / scale - ux)
+    f.dragOffY = (cy - uy) - (my / scale - uy)
     f.pos = nil
     f.dragging = true
     f:SetScript("OnUpdate", DragUpdate)
@@ -268,22 +306,22 @@ local function DragStop(f)
     end
 end
 
--- Locked: click-through, so targets behind the frame stay selectable.
--- Unlocked: the frame takes the mouse; left-drag moves it, right-click opens the menu.
+-- Locked means click-through: the frame sits over the playfield, and a mouse-enabled frame would
+-- swallow clicks and camera turns meant for the world behind it. Only unlocking takes the mouse.
 function ns.SetLocked(locked)
     ns.unlocked = not locked
     ns.frame:EnableMouse(not locked)
     if locked then CloseDropDownMenus() end
-    if ns.CheckVisibility then ns.CheckVisibility() end
+    if ns.CheckVisibility then ns.CheckVisibility() end -- an unlocked frame must be visible
 end
 
--- Main -------------------------------------------------------------------
+-- Frame creation ----------------------------------------------------------
 
 function ns.CreateUI()
     local f = CreateFrame("Frame", "RotatoFrame", UIParent)
     f:SetFrameStrata("MEDIUM")
-    f:SetClampedToScreen(true)
-    f:EnableMouse(false) -- locked by default, see ns.SetLocked
+    f:SetClampedToScreen(true) -- so a bad saved position can never lose the frame off screen
+    f:EnableMouse(false)       -- starts locked, see ns.SetLocked
     f:RegisterForDrag("LeftButton")
     SkinPanel(f)
     ns.frame = f
@@ -295,7 +333,7 @@ function ns.CreateUI()
         if button == "RightButton" and ns.unlocked then ns.OpenMenu() end
     end)
 
-    -- big "next spell" icon, spanning both rows
+    -- the suggestion, spanning both side rows
     local center = CreateSlot(f, true)
     center:SetPoint("CENTER", f, "CENTER")
     ns.center = center
