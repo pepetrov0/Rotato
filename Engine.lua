@@ -239,7 +239,10 @@ function ns.Evaluate()
         lists[#lists + 1] = { ns.mode, rotations[ns.mode] or rotations.single }
     end
 
+    -- when nothing is ready, the fallback is the combat spell that comes off cooldown first
+    local soonest, soonestRemaining, soonestStart, soonestDuration, soonestSource
     for _, source in ipairs(lists) do
+        local combatList = source[1] ~= "reminders" and source[1] ~= "preparation"
         for _, entry in ipairs(source[2] or {}) do
             local name = EntryName(entry)
             local start, duration
@@ -250,10 +253,13 @@ function ns.Evaluate()
                     if Usable(entry, name) then return name, "ready", start, duration, source[1] end
                 elseif entry.wait then
                     return name, "cd", start, duration, source[1]
+                elseif combatList and (not soonestRemaining or remaining < soonestRemaining) then
+                    soonest, soonestRemaining, soonestStart, soonestDuration, soonestSource = name, remaining, start, duration, source[1]
                 end
             end
         end
     end
+    if soonest then return soonest, "cd", soonestStart, soonestDuration, soonestSource end
 end
 
 -- Prints why the suggestion is what it is, for /rotato debug.
