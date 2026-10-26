@@ -23,9 +23,11 @@ ns.Rotation{
 
     highprio = {
         { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
-        -- keep the current Judgement on the target (from any paladin)
+        -- keep the current Judgement on the target (from any paladin): apply it, or refresh it under 5s
         { variant = "judgement", when = function(c)
-            return c.target.hostile and not c.debuff(c.variantName("judgement"), { any = true }).up
+            if not c.target.hostile then return false end
+            local judgement = c.debuff(c.variantName("judgement"), { any = true })
+            return not judgement.up or judgement.remains < 5
         end },
     },
 
