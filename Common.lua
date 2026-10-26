@@ -13,16 +13,32 @@ local function NeedsFlask(c) return not c.anyBuff(FLASKS).up end
 -- the other flasks are expensive: only worth suggesting inside a raid instance
 local function NeedsRaidFlask(c) return RotatoDB.remindRaidFlasks and c.inRaid and NeedsFlask(c) end
 
+-- Raid-only consumables. Which ones are wanted can be chosen per class and spec from the menu.
+local RAID_CONSUMABLES = {
+    "Flask of Endless Rage", "Flask of Pure Mojo", "Flask of Stoneblood", "Flask of the Frost Wyrm",
+    "Elixir of Lightning Speed", "Elixir of Mighty Thoughts",
+}
+ns.RAID_CONSUMABLES = RAID_CONSUMABLES
+
+-- the saved choices are keyed by "CLASS:specIndex"; anything not unchecked is wanted
+local function SpecKey() return (ns.class or "") .. ":" .. tostring(ns.specIndex or 0) end
+
+function ns.WantsConsumable(name)
+    local chosen = RotatoDB.consumables[SpecKey()]
+    return not chosen or chosen[name] ~= false
+end
+
+function ns.SetWantsConsumable(name, wanted)
+    local key = SpecKey()
+    RotatoDB.consumables[key] = RotatoDB.consumables[key] or {}
+    RotatoDB.consumables[key][name] = wanted
+end
+
 ns.common = {
     -- suggested when it is in the bags and no flask is active
     reminders = {
         { item = "Flask of the North", when = NeedsFlask }, -- endless and free for alchemists
-        { item = "Flask of Endless Rage", when = NeedsRaidFlask },
-        { item = "Flask of Pure Mojo", when = NeedsRaidFlask },
-        { item = "Flask of Stoneblood", when = NeedsRaidFlask },
-        { item = "Flask of the Frost Wyrm", when = NeedsRaidFlask },
-        { item = "Elixir of Lightning Speed", when = NeedsRaidFlask },
-        { item = "Elixir of Mighty Thoughts", when = NeedsRaidFlask },
+        -- the raid consumables are added below, one per entry of RAID_CONSUMABLES
     },
 
     defensives = {
@@ -48,3 +64,10 @@ ns.common = {
         { buff = "Wild Magic", show = "active" }, -- Potion of Wild Magic
     },
 }
+
+for _, name in ipairs(RAID_CONSUMABLES) do
+    table.insert(ns.common.reminders, {
+        item = name,
+        when = function(c) return NeedsRaidFlask(c) and ns.WantsConsumable(name) end,
+    })
+end

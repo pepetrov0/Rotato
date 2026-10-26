@@ -193,6 +193,18 @@ function ns.OpenMenu()
     tinsert(menu, { text = "Remind about raid flasks", isNotRadio = true, keepShownOnClick = true,
         checked = RotatoDB.remindRaidFlasks,
         func = function(_, _, _, checked) RotatoDB.remindRaidFlasks = checked end })
+    local consumables = {}
+    for _, name in ipairs(ns.RAID_CONSUMABLES) do
+        tinsert(consumables, {
+            text = name,
+            isNotRadio = true,
+            keepShownOnClick = true,
+            checked = ns.WantsConsumable(name),
+            func = function(_, _, _, checked) ns.SetWantsConsumable(name, checked) end,
+        })
+    end
+    tinsert(menu, { text = "Raid consumables (" .. tostring(ns.specName or "this spec") .. ")", hasArrow = true,
+        notCheckable = true, menuList = consumables })
     tinsert(menu, { text = "Lock", notCheckable = true, func = function()
         ns.SetLocked(true)
         ns.Print("locked.")
