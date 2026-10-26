@@ -39,6 +39,7 @@ function ns.InitDisplay()
     label:SetPoint("BOTTOM", 0, 3)
 
     local shown, shownStart, shownDuration
+    local preview -- spell last shown as "Next"; keeps its label until you start casting something
 
     -- grayFraction: nil for none, otherwise 0..1 of the icon width, measured from the right edge
     local function Render(spell, start, duration, text, grayFraction)
@@ -81,17 +82,20 @@ function ns.InitDisplay()
             if (castEnd - now) / 1000 <= NEXT_WINDOW then
                 local next, state, start, duration = ns.Evaluate()
                 if next and next ~= name then
+                    preview = next
                     Render(next, start, duration, "Next")
                     return
                 end
             end
+            preview = nil
             local progress = (now - castStart) / (castEnd - castStart)
             Render(name, 0, 0, text, channeling and progress or 1 - progress)
             return
         end
 
         local spell, state, start, duration = ns.Evaluate()
-        Render(spell, start, duration, state == "cd" and "Cooldown" or nil)
+        if spell ~= preview then preview = nil end
+        Render(spell, start, duration, (spell == preview and "Next") or (state == "cd" and "Cooldown") or nil)
     end
 
     local elapsedTotal = 0
