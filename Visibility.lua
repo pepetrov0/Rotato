@@ -16,12 +16,36 @@ local function DangerReason()
     if ns.unlocked then return "unlocked" end
 end
 
+-- Situations in which there is nothing to do: the frame is hidden at once, whatever else is going on
+-- (except while unlocked, so it can still be configured).
+local function HiddenReason()
+    if UnitIsDeadOrGhost("player") then return "dead" end
+    if UnitInVehicle("player") then return "in a vehicle" end
+    if IsMounted() then return "mounted" end
+end
+
 function ns.InitVisibility()
     local f = ns.frame
     local shown, calm, acc = false, 0, 0
     f:SetAlpha(0)
 
+    local hiddenFor
     local function Check(dt)
+        local why = HiddenReason()
+        if why and not ns.unlocked then
+            if hiddenFor ~= why then
+                hiddenFor = why
+                if shown then
+                    shown = false
+                    UIFrameFadeRemoveFrame(f)
+                    f:SetAlpha(0)
+                    ns.Print("hiding (" .. why .. ")")
+                end
+            end
+            return
+        end
+        hiddenFor = nil
+
         local reason = DangerReason()
         if reason then
             calm = 0
@@ -47,6 +71,11 @@ function ns.InitVisibility()
     local poller = CreateFrame("Frame")
     poller:RegisterEvent("PLAYER_REGEN_DISABLED")
     poller:RegisterEvent("PLAYER_TARGET_CHANGED")
+    poller:RegisterEvent("PLAYER_DEAD")
+    poller:RegisterEvent("PLAYER_ALIVE")
+    poller:RegisterEvent("PLAYER_UNGHOST")
+    poller:RegisterEvent("UNIT_ENTERED_VEHICLE")
+    poller:RegisterEvent("UNIT_EXITED_VEHICLE")
     poller:SetScript("OnEvent", function() Check(0) end)
     poller:SetScript("OnUpdate", function(_, elapsed)
         acc = acc + elapsed
