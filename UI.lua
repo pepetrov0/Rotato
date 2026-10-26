@@ -207,6 +207,7 @@ end
 function ns.SetLocked(locked)
     ns.unlocked = not locked
     ns.frame:EnableMouse(not locked)
+    if locked then CloseDropDownMenus() end
     if ns.CheckVisibility then ns.CheckVisibility() end
 end
 
@@ -225,7 +226,7 @@ function ns.CreateUI()
     f:SetScript("OnDragStart", DragStart)
     f:SetScript("OnDragStop", DragStop)
     f:SetScript("OnMouseUp", function(self, button)
-        if button == "RightButton" then ns.OpenMenu() end
+        if button == "RightButton" and ns.unlocked then ns.OpenMenu() end
     end)
 
     -- big "next spell" icon, spanning both rows
