@@ -41,7 +41,7 @@ local function FormatTime(seconds)
 end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
--- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash, tip
+-- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash, tip, coolingDown
 local function Resolve(entry, rowKey)
     local c = ns.c
     local typeList = entry.targetBuffType
@@ -125,7 +125,9 @@ local function Resolve(entry, rowKey)
         else tip.unit, tip.helpful = "target", true
         end
     end
-    return icon, start, duration, remaining, dimmed, fromAura, borderColor, borderColor and expiring or false, tip
+    -- showing nothing but an ability's cooldown (no aura up): the first thing to drop when a row is full
+    local coolingDown = not active and duration > 0
+    return icon, start, duration, remaining, dimmed, fromAura, borderColor, borderColor and expiring or false, tip, coolingDown
 end
 
 function ns.InitSlots()
@@ -204,19 +206,31 @@ function ns.InitSlots()
         local rotation = ns.GetRotation()
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
-            local used = 0
             -- the rotation's own entries first, then the common ones
+            local shown = {}
             for _, list in ipairs({ rotation and rotation[key] or {}, ns.common[key] or {} }) do
                 for _, entry in ipairs(list) do
-                    if used >= #row then break end
-                    local icon, start, duration, remaining, dimmed, fromAura, borderColor, flash, tip = Resolve(entry, key)
-                    if icon then
-                        used = used + 1
-                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, borderColor, flash, tip)
-                    end
+                    local result = { Resolve(entry, key) }
+                    if result[1] then shown[#shown + 1] = result end
                 end
             end
-            for i = used + 1, #row do row[i]:Hide() end
+            -- more than fit: drop abilities that are only showing a cooldown, last ones first
+            local excess = #shown - #row
+            for i = #shown, 1, -1 do
+                if excess <= 0 then break end
+                if shown[i][10] then
+                    table.remove(shown, i)
+                    excess = excess - 1
+                end
+            end
+            for i, slot in ipairs(row) do
+                local r = shown[i]
+                if r then
+                    Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9])
+                else
+                    slot:Hide()
+                end
+            end
         end
     end)
 end
