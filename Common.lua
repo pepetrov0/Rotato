@@ -13,9 +13,7 @@ ns.common = {
     reminders = {
         { item = "Flask of the North", when = NeedsFlask },
     },
-    highprio = {
-        { item = "Flask of the North", when = NeedsFlask },
-    },
+
     defensives = {
         { buff = "Pain Suppression", show = "active" },
         { buff = "Guardian Spirit", show = "active" },
