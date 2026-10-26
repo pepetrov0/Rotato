@@ -17,19 +17,23 @@ local ADDON_NAME, ns = ...
 --   show       = "always" (default) or "active": hide while the aura is not up
 --   when       = function(c) extra condition for showing the entry at all
 --   manaOnly   = true: only the mana cost decides if the spell is usable (for spells cast on others)
---   recommend  = function(c) true while using it is a good idea: gold border (not in trackers)
+--   recommend  = function(c) true while using it is a good idea: flashing white border (not in trackers)
+--   lockout    = true: the aura is a restriction counting down (Weakened Soul), blue border while it is up
 -- An entry can combine an ability with an aura (e.g. spell + buff): while the aura is up its
 -- remaining time sweeps, otherwise the ability's cooldown does. A missing aura is shown dimmed.
 --
--- Borders: an active aura is green when good for you (a buff on you, your debuff on the target) and
--- red when bad for you (a debuff on you, a buff on the target). Trackers differ: only buff/debuff
--- entries (and targetBuffType) are shown there; a missing buff or debuff gets a red border, a present one
--- none, and a targetBuffType buff is red. Any border flashes while its aura is about to expire.
+-- Borders:  red = you need to act,  flashing white = recommended,  green = active,  blue = lockout.
+-- Any border also flashes while its aura has under FLASH_BELOW seconds left.
+-- Outside the trackers an active aura is green when good for you (a buff on you, your debuff on the
+-- target) and red when bad for you (a debuff on you, a buff on the target). Trackers differ: only
+-- aura entries are shown there; a missing buff or debuff is red, a healthy one has no border, and a
+-- dispellable aura (targetBuffType, healTargetDebuffType) is red while present.
 
 local TICK = 0.1
 local GREEN = { 0, 1, 0 }
 local RED = { 1, 0, 0 }
-local GOLD = { 1, 0.82, 0 }
+local WHITE = { 1, 1, 1 }
+local BLUE = { 0.25, 0.55, 1 }
 local FLASH_BELOW = 5 -- seconds left at which a border starts flashing
 local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 
@@ -102,17 +106,18 @@ local function Resolve(entry, rowKey)
     -- only a bare aura (no ability) is dimmed while missing; an ability that is ready is normal
     local dimmed = auraName and not entry.spell and not active
     -- an active aura gets a border: green when it is good for you (a buff on you, your debuff on the
-    -- target), red when it is bad for you (a debuff on you, a buff on the target)
+    -- target), red when it is bad for you (a debuff on you, a buff on the target), blue for a lockout
     local expiring = fromAura and remaining and remaining < FLASH_BELOW
     local borderColor
     if rowKey == "trackers" then
-        -- a tracker only draws attention when something is missing, wrong, or about to run out
-        if typeList or healTypeList or not active or expiring then borderColor = RED end
+        -- a tracker only draws attention when something is missing, wrong, a lockout, or about to run out
+        if entry.lockout and active then borderColor = BLUE
+        elseif typeList or healTypeList or not active or expiring then borderColor = RED end
     elseif active then
-        borderColor = (entry.buff or entry.debuff) and GREEN or RED
+        borderColor = entry.lockout and BLUE or ((entry.buff or entry.debuff) and GREEN or RED)
     end
 
-    -- a recommendation overrides the aura border
+    -- a recommendation overrides the aura border and flashes
     if entry.recommend and rowKey ~= "trackers" then
         local ok, recommended = pcall(entry.recommend, c)
         if not ok then
@@ -121,7 +126,7 @@ local function Resolve(entry, rowKey)
                 ns.Print("recommend error in " .. tostring(entry.spell or auraName) .. ": " .. tostring(recommended))
             end
         elseif recommended then
-            borderColor, expiring = GOLD, false
+            borderColor, expiring = WHITE, true
         end
     end
 

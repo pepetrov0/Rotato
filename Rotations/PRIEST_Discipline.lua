@@ -17,7 +17,7 @@ ns.Rotation{
     trackers = {
         { buff = "Inner Fire" },
         -- Weakened Soul on whoever the next Shield would go to; hides itself when it is not there
-        { healTargetDebuff = "Weakened Soul", show = "active" },
+        { healTargetDebuff = "Weakened Soul", show = "active", lockout = true },
         -- something you can dispel (Dispel Magic / Abolish Disease) on that same unit
         { healTargetDebuffType = { "Disease", "Magic" } },
     },
