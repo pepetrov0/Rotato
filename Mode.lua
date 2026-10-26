@@ -3,6 +3,7 @@ local ADDON_NAME, ns = ...
 -- Picks the active rotation (single / multi / aoe) from what the player casts.
 -- Casting a spell the current rotation doesn't contain switches to the first rotation
 -- (in ns.MODES order) that does; spells in no rotation (prep, common) change nothing.
+-- This happens when a cast or channel starts (or an instant goes off), not when it ends.
 -- Leaving combat goes back to single.
 
 local function NameSet(list)
@@ -29,7 +30,9 @@ end
 
 function ns.InitMode()
     local f = CreateFrame("Frame")
-    f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+    f:RegisterEvent("UNIT_SPELLCAST_START")          -- cast-time spells, as soon as the cast begins
+    f:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START")  -- channels
+    f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")      -- instants
     f:RegisterEvent("PLAYER_REGEN_ENABLED")
     f:SetScript("OnEvent", function(_, event, unit, spell)
         if event == "PLAYER_REGEN_ENABLED" then
