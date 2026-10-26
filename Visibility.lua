@@ -5,13 +5,13 @@ local HIDE_DELAY = 3   -- seconds of calm before fading out, avoids flicker betw
 local POLL = 0.1
 
 -- "Dangerous" for now: in combat, a living hostile target selected (about to pull),
--- or the frame being positioned. Returns the reason, or nil when calm.
+-- or the frame being positioned (Shift held with the cursor over it, so Shift alone does nothing). Returns the reason, or nil when calm.
 local function DangerReason()
     if UnitAffectingCombat("player") then return "in combat" end
     if UnitExists("target") and UnitCanAttack("player", "target") and not UnitIsDeadOrGhost("target") then
         return "hostile target"
     end
-    if IsShiftKeyDown() or ns.frame.dragging then return "positioning" end
+    if ns.frame.dragging or (IsShiftKeyDown() and ns.frame:IsMouseOver()) then return "positioning" end
 end
 
 function ns.InitVisibility()
