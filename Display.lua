@@ -49,6 +49,21 @@ function ns.InitDisplay()
     nameText:SetPoint("BOTTOM", ns.frame, "TOP", 0, 4)
 
     local shown, shownStart, shownDuration
+
+    -- size of one screen pixel in UI units at scale 1 (UI height is 768 units)
+    local _, screenHeight = strmatch(GetCVar("gxResolution") or "", "(%d+)x(%d+)")
+    local pixelBase = screenHeight and 768 / screenHeight or 1
+
+    -- rotation evaluation is throttled; the animation itself runs every frame
+    local evaluated, evaluatedAt = {}, 0
+    local function Evaluate()
+        local now = GetTime()
+        if now - evaluatedAt >= TICK then
+            evaluatedAt = now
+            evaluated[1], evaluated[2], evaluated[3], evaluated[4] = ns.Evaluate()
+        end
+        return evaluated[1], evaluated[2], evaluated[3], evaluated[4]
+    end
     local preview -- spell last shown as "Next"; keeps its label until you start casting something
 
     -- grayFraction: nil for none, otherwise 0..1 of the icon width, measured from the right edge
@@ -65,12 +80,16 @@ function ns.InitDisplay()
             shownStart, shownDuration = start, duration
             CooldownFrame_SetTimer(cooldown, start, duration, duration > 0 and 1 or 0)
         end
-        if grayFraction and grayFraction > 0 and shown then
-            grayFraction = math.min(grayFraction, 1)
-            -- crop the texture to the same right-hand slice the width shows
+        -- Snap the gray strip to whole screen pixels and derive its texture crop from that same
+        -- width, so it lines up texel for texel with the icon below instead of swimming.
+        local iconWidth = center.icon:GetWidth()
+        local pixel = pixelBase / center.icon:GetEffectiveScale()
+        local pixels = grayFraction and shown and math.floor(math.min(grayFraction, 1) * iconWidth / pixel + 0.5) or 0
+        if pixels > 0 then
+            local width = pixels * pixel
             local left, top, _, _, right, _, _, bottom = center.icon:GetTexCoord()
-            gray:SetTexCoord(left + (1 - grayFraction) * (right - left), right, top, bottom)
-            gray:SetWidth(math.max(0.001, grayFraction * center.icon:GetWidth()))
+            gray:SetTexCoord(right - (width / iconWidth) * (right - left), right, top, bottom)
+            gray:SetWidth(width)
             gray:Show()
             edge:Show()
         else
@@ -91,7 +110,7 @@ function ns.InitDisplay()
         if name and ns.InRotation(name) then
             local now = GetTime() * 1000
             if (castEnd - now) / 1000 <= NEXT_WINDOW then
-                local next, state, start, duration = ns.Evaluate()
+                local next, state, start, duration = Evaluate()
                 if next and next ~= name then
                     preview = next
                     Render(next, start, duration, "Next")
@@ -104,7 +123,7 @@ function ns.InitDisplay()
             return
         end
 
-        local spell, state, start, duration = ns.Evaluate()
+        local spell, state, start, duration = Evaluate()
         if spell ~= preview then preview = nil end
         -- while the global cooldown runs, the suggestion is what to press next
         local gcdRunning = start and duration and start > 0 and duration <= ns.GCD_MAX and start + duration > GetTime()
@@ -112,12 +131,5 @@ function ns.InitDisplay()
         Render(spell, start, duration, text)
     end
 
-    local elapsedTotal = 0
-    local driver = CreateFrame("Frame")
-    driver:SetScript("OnUpdate", function(_, elapsed)
-        elapsedTotal = elapsedTotal + elapsed
-        if elapsedTotal < TICK then return end
-        elapsedTotal = 0
-        Update()
-    end)
+    CreateFrame("Frame"):SetScript("OnUpdate", Update)
 end
