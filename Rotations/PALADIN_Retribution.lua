@@ -53,7 +53,7 @@ ns.Rotation{
     },
 
     offensives = {
-        { spell = "Avenging Wrath", buff = "Avenging Wrath" },
+        { spell = "Avenging Wrath", buff = "Avenging Wrath", recommend = function(c) return c.ready("Avenging Wrath") end },
     },
 
     utility = {
