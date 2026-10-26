@@ -16,10 +16,10 @@ ns.Rotation{
 
     rotations = {
         single = {
-            -- single-target buffs of yours: refresh when nobody in the group has it or it is running out
+            -- single-target buffs of yours: refresh when nobody in the group has it or it has under 15s left
             { "Beacon of Light", when = function(c)
                 local beacon = c.groupBuff("Beacon of Light")
-                return not beacon.up or beacon.remains < 30
+                return not beacon.up or beacon.remains < 15
             end },
             { "Sacred Shield", when = function(c)
                 local shield = c.groupBuff("Sacred Shield")
