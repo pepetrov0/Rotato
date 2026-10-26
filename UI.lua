@@ -59,10 +59,16 @@ local function SetSlotSize(f, size)
     f:SetHeight(size)
 end
 
-local function CreateSlot(parent)
+-- boxed slots get the bordered skin (the center action box); the rest are bare icons.
+local function CreateSlot(parent, boxed)
     local f = CreateFrame("Frame", nil, parent)
     f.icon = f:CreateTexture(nil, "ARTWORK")
-    SkinSlot(f)
+    if boxed then
+        SkinSlot(f)
+    else
+        f.icon:SetAllPoints()
+        f.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+    end
     return f
 end
 
@@ -222,7 +228,7 @@ function ns.CreateUI()
     end)
 
     -- big "next spell" icon, spanning both rows
-    local center = CreateSlot(f)
+    local center = CreateSlot(f, true)
     center:SetPoint("CENTER", f, "CENTER")
     ns.center = center
 
