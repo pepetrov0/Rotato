@@ -18,6 +18,7 @@ ns.Rotation{
         { "Trueshot Aura", when = function(c) return not c.buff("Trueshot Aura").up end },
         { "Revive Pet", when = function(c) return c.pet.dead end },
         { "Call Pet", when = function(c) return c.pet.missing end },
+        { "Feed Pet", when = function(c) return c.pet.hungry end },
         { "Mend Pet", when = function(c)
             return c.pet.exists and c.pet.hp < 100 and not c.pet.buff("Mend Pet").up
         end },
@@ -65,6 +66,7 @@ ns.Rotation{
             return c.ready("Readiness") and (c.cd("Misdirection") > 15 or c.cd("Rapid Fire") > 15)
         end },
         { spell = "Call Pet", when = function(c) return c.pet.missing end, recommend = function() return true end },
+        { spell = "Feed Pet", when = function(c) return c.pet.hungry end, recommend = function(c) return not c.combat end },
         { spell = "Revive Pet", when = function(c) return c.pet.dead end },
     },
     offensives = {
