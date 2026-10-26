@@ -30,7 +30,7 @@ local function FormatTime(seconds)
 end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
--- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura
+-- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, highlight
 local function Resolve(entry)
     local c = ns.c
     local auraName = entry.buff or entry.debuff or entry.targetBuff
@@ -73,7 +73,9 @@ local function Resolve(entry)
 
     -- only a bare aura (no ability) is dimmed while missing; an ability that is ready is normal
     local dimmed = auraName and not entry.spell and not active
-    return icon, start, duration, remaining, dimmed, fromAura
+    -- an ability whose own aura is up (Misdirection, Deterrence...) gets a border; bare auras do not
+    local highlight = active and entry.spell ~= nil
+    return icon, start, duration, remaining, dimmed, fromAura, highlight
 end
 
 function ns.InitSlots()
@@ -95,6 +97,15 @@ function ns.InitSlots()
             overlay:SetFrameLevel(cooldown:GetFrameLevel() + 2)
 
             slot.cooldown = cooldown
+
+            -- yellow border while the ability is active
+            local border = CreateFrame("Frame", nil, slot)
+            border:SetAllPoints()
+            border:SetFrameLevel(cooldown:GetFrameLevel() + 3)
+            border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 2 })
+            border:SetBackdropBorderColor(1, 0.85, 0, 1)
+            border:Hide()
+            slot.border = border
             slot.time = overlay:CreateFontString(nil, "OVERLAY")
             slot.time:SetFont(font, 12, "OUTLINE")
             slot.time:SetPoint("CENTER")
@@ -111,7 +122,7 @@ function ns.InitSlots()
     end
     ns.ApplyTextSize()
 
-    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura)
+    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, highlight)
         if slot.shownIcon ~= icon then
             slot.shownIcon = icon
             slot.icon:SetTexture(icon)
@@ -125,6 +136,7 @@ function ns.InitSlots()
         local shade = dimmed and 0.5 or 1
         slot.icon:SetVertexColor(shade, shade, shade)
         slot.time:SetText(remaining and FormatTime(remaining) or "")
+        if highlight then slot.border:Show() else slot.border:Hide() end
         slot:Show()
     end
 
@@ -140,10 +152,10 @@ function ns.InitSlots()
             local used = 0
             for _, entry in ipairs(rotation and rotation[key] or {}) do
                 if used >= #row then break end
-                local icon, start, duration, remaining, dimmed, fromAura = Resolve(entry)
+                local icon, start, duration, remaining, dimmed, fromAura, highlight = Resolve(entry)
                 if icon then
                     used = used + 1
-                    Paint(row[used], icon, start, duration, remaining, dimmed, fromAura)
+                    Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, highlight)
                 end
             end
             for i = used + 1, #row do row[i]:Hide() end
