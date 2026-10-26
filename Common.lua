@@ -1,7 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Slots shown for every class and spec, after the rotation's own entries in each row.
--- All of them only appear while the aura is up. Same entry fields as in Slots.lua.
+-- Entries shared by every class and spec, added after the rotation's own entries.
+-- The side slot rows (defensives, offensives) only appear while the aura is up; same fields as in Slots.lua.
+-- The reminders tier works like a rotation's reminders.
+
 -- the flasks that count as "has a flask"
 local FLASKS = {
     "Flask of the North", "Flask of Endless Rage", "Flask of Pure Mojo", "Flask of Stoneblood", "Flask of the Frost Wyrm",
