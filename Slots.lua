@@ -17,7 +17,6 @@ local ADDON_NAME, ns = ...
 
 local TICK = 0.1
 local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
-local FALLBACK_FONT = "Fonts\\FRIZQT__.TTF"
 
 local ROW_KEYS = { "defensives", "utility", "trackers", "offensives" }
 
@@ -79,8 +78,6 @@ local function Resolve(entry)
 end
 
 function ns.InitSlots()
-    local font = DAMAGE_TEXT_FONT or FALLBACK_FONT
-
     for _, key in ipairs(ROW_KEYS) do
         for _, slot in ipairs(ns[key]) do
             local cooldown = CreateFrame("Cooldown", nil, slot, "CooldownFrameTemplate")
@@ -107,20 +104,11 @@ function ns.InitSlots()
             border:Hide()
             slot.border = border
             slot.time = overlay:CreateFontString(nil, "OVERLAY")
-            slot.time:SetFont(font, 12, "OUTLINE")
+            ns.RegisterText(slot.time, "time")
             slot.time:SetPoint("CENTER")
             slot:Hide()
         end
     end
-
-    function ns.ApplyTextSize()
-        for _, key in ipairs(ROW_KEYS) do
-            for _, slot in ipairs(ns[key]) do
-                slot.time:SetFont(font, RotatoDB.cooldownTextSize, "OUTLINE")
-            end
-        end
-    end
-    ns.ApplyTextSize()
 
     local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, highlight)
         if slot.shownIcon ~= icon then

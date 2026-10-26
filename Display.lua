@@ -7,7 +7,6 @@ local ADDON_NAME, ns = ...
 -- it differs, so it can be queued.
 
 local TICK = 0.05
-local FALLBACK_FONT = "Fonts\\FRIZQT__.TTF"
 local NEXT_WINDOW = 0.5 -- seconds before a cast/channel ends at which the next spell is shown
 
 function ns.InitDisplay()
@@ -21,16 +20,13 @@ function ns.InitDisplay()
     overlay:SetAllPoints()
     overlay:SetFrameLevel(cooldown:GetFrameLevel() + 2)
 
-    -- text uses the combat text font (ElvUI sets DAMAGE_TEXT_FONT to its own choice)
-    local font = DAMAGE_TEXT_FONT or FALLBACK_FONT
-
     local label = overlay:CreateFontString(nil, "OVERLAY")
-    label:SetFont(font, 12, "OUTLINE")
+    ns.RegisterText(label, "label")
     label:SetPoint("BOTTOM", 0, 3)
 
     -- name of the ability to press, right above the panel
     local nameText = ns.frame:CreateFontString(nil, "OVERLAY")
-    nameText:SetFont(font, 16, "OUTLINE")
+    ns.RegisterText(nameText, "name")
     nameText:SetPoint("BOTTOM", ns.frame, "TOP", 0, 4)
 
     local shown, shownStart, shownDuration, shownReverse

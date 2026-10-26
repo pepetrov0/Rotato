@@ -2,9 +2,30 @@ local ADDON_NAME, ns = ...
 
 local defaults = {
     pos = { x = 0, y = -200 }, -- offset from the screen center
-    cooldownTextSize = 12, -- font size of the countdown numbers on the side slots
+    font = nil, -- font file, nil for the combat text font
+    cooldownTextSize = 12, -- countdown numbers on the side slots
+    labelSize = 12, -- Next / Casting / Channeling / Reminder labels
+    nameSize = 16, -- spell name above the panel
     centerSize = 70, -- main icon size in pixels; the small icons derive from it
 }
+
+-- All text goes through here so the font and sizes can be changed from the menu.
+-- kind: "label", "name" or "time" (the cooldown numbers).
+local FALLBACK_FONT = "Fonts\\FRIZQT__.TTF"
+local SIZE_KEY = { label = "labelSize", name = "nameSize", time = "cooldownTextSize" }
+local texts = {}
+
+function ns.ApplyFonts()
+    local font = RotatoDB.font or DAMAGE_TEXT_FONT or FALLBACK_FONT
+    for _, text in ipairs(texts) do
+        text[1]:SetFont(font, RotatoDB[SIZE_KEY[text[2]]], "OUTLINE")
+    end
+end
+
+function ns.RegisterText(fontString, kind)
+    texts[#texts + 1] = { fontString, kind }
+    ns.ApplyFonts()
+end
 
 function ns.Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99Rotato|r: " .. tostring(msg))

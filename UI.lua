@@ -117,7 +117,55 @@ local SIZE_PRESETS = {
     { "Huge", 150 },
 }
 
-local TEXT_SIZES = { 8, 10, 12, 14, 16, 18, 20, 24 }
+local TEXT_SIZES = { 8, 10, 12, 14, 16, 18, 20, 24, 28, 32 }
+local BUILTIN_FONTS = {
+    { "Friz Quadrata", "Fonts\\FRIZQT__.TTF" },
+    { "Arial Narrow", "Fonts\\ARIALN.TTF" },
+    { "Skurri", "Fonts\\skurri.ttf" },
+    { "Morpheus", "Fonts\\MORPHEUS.ttf" },
+}
+
+local function FontMenu()
+    local list = { { "Combat text (default)", nil } }
+    for _, font in ipairs(BUILTIN_FONTS) do list[#list + 1] = font end
+    -- ElvUI and many addons ship LibSharedMedia; offer its fonts too
+    local media = LibStub and LibStub("LibSharedMedia-3.0", true)
+    if media then
+        for _, name in ipairs(media:List("font")) do
+            list[#list + 1] = { name, media:Fetch("font", name) }
+        end
+    end
+    local menu = {}
+    for _, font in ipairs(list) do
+        local name, path = font[1], font[2]
+        tinsert(menu, {
+            text = name,
+            checked = RotatoDB.font == path,
+            func = function()
+                RotatoDB.font = path
+                ns.ApplyFonts()
+                CloseDropDownMenus()
+            end,
+        })
+    end
+    return menu
+end
+
+local function SizeMenu(key)
+    local menu = {}
+    for _, size in ipairs(TEXT_SIZES) do
+        tinsert(menu, {
+            text = tostring(size),
+            checked = RotatoDB[key] == size,
+            func = function()
+                RotatoDB[key] = size
+                ns.ApplyFonts()
+                CloseDropDownMenus()
+            end,
+        })
+    end
+    return menu
+end
 
 function ns.OpenMenu()
     ns.menuFrame = ns.menuFrame or CreateFrame("Frame", "RotatoMenu", UIParent, "UIDropDownMenuTemplate")
@@ -137,20 +185,10 @@ function ns.OpenMenu()
         })
     end
     tinsert(menu, { text = "Card size", hasArrow = true, notCheckable = true, menuList = cardSizes })
-
-    local textSizes = {}
-    for _, size in ipairs(TEXT_SIZES) do
-        tinsert(textSizes, {
-            text = tostring(size),
-            checked = RotatoDB.cooldownTextSize == size,
-            func = function()
-                RotatoDB.cooldownTextSize = size
-                ns.ApplyTextSize()
-                CloseDropDownMenus()
-            end,
-        })
-    end
-    tinsert(menu, { text = "Cooldown text size", hasArrow = true, notCheckable = true, menuList = textSizes })
+    tinsert(menu, { text = "Font", hasArrow = true, notCheckable = true, menuList = FontMenu() })
+    tinsert(menu, { text = "Cooldown text size", hasArrow = true, notCheckable = true, menuList = SizeMenu("cooldownTextSize") })
+    tinsert(menu, { text = "Label text size", hasArrow = true, notCheckable = true, menuList = SizeMenu("labelSize") })
+    tinsert(menu, { text = "Spell name size", hasArrow = true, notCheckable = true, menuList = SizeMenu("nameSize") })
 
     EasyMenu(menu, ns.menuFrame, "cursor", 0, 0, "MENU")
 end
