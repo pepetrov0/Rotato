@@ -223,11 +223,21 @@ function ns.InitSlots()
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
             -- the rotation's own entries first, then the common ones
+            local own = rotation and rotation[key] or {}
+            -- a common buff is skipped when the rotation already has an entry for that ability or buff
+            -- in this row, so the same thing is not shown twice
+            local taken = {}
+            for _, entry in ipairs(own) do
+                if entry.spell then taken[entry.spell] = true end
+                if type(entry.buff) == "string" then taken[entry.buff] = true end
+            end
             local shown = {}
-            for _, list in ipairs({ rotation and rotation[key] or {}, ns.common[key] or {} }) do
+            for _, list in ipairs({ own, ns.common[key] or {} }) do
                 for _, entry in ipairs(list) do
-                    local result = { Resolve(entry, key) }
-                    if result[1] then shown[#shown + 1] = result end
+                    if list == own or type(entry.buff) ~= "string" or not taken[entry.buff] then
+                        local result = { Resolve(entry, key) }
+                        if result[1] then shown[#shown + 1] = result end
+                    end
                 end
             end
             -- more than fit: drop abilities that are only showing a cooldown, last ones first

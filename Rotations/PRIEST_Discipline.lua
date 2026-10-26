@@ -42,12 +42,12 @@ ns.Rotation{
     },
 
     defensives = {
-        { spell = "Pain Suppression" },
+        { spell = "Pain Suppression", buff = "Pain Suppression" },
         { spell = "Fade", buff = "Fade" },
         { spell = "Psychic Scream" },
     },
 
     offensives = {
-        { spell = "Power Infusion" },
+        { spell = "Power Infusion", buff = "Power Infusion" },
     },
 }
