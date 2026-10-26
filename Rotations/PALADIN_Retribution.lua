@@ -41,8 +41,8 @@ ns.Rotation{
     rotations = {
         single = {
             { "Divine Storm" },
-            -- low on mana: Judgement of Wisdom moves up to right after Divine Storm
-            { "Judgement of Wisdom", when = function(c) return c.variant.judgement == "wisdom" and c.mana < 50 end },
+            -- low on mana: the Judgement moves up to right after Divine Storm
+            { variant = "judgement", when = function(c) return c.mana < 50 end },
             { "Crusader Strike" },
             { "Exorcism", when = function(c) return c.buff("The Art of War").up end },
             { variant = "judgement" },
