@@ -215,7 +215,7 @@ function ns.OpenMenu()
             end,
         })
     end
-    tinsert(menu, { text = "Card size", hasArrow = true, notCheckable = true, menuList = cardSizes })
+    tinsert(menu, { text = "Size", hasArrow = true, notCheckable = true, menuList = cardSizes })
 
     local transparencies = {}
     for percent = 0, 100, 10 do
