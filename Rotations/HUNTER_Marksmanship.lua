@@ -56,9 +56,15 @@ ns.Rotation{
         { spell = "Deterrence", buff = "Deterrence" },
     },
     utility = {
-        { spell = "Misdirection", buff = "Misdirection" },
-        { spell = "Readiness" },
-        { spell = "Call Pet", when = function(c) return c.pet.missing end },
+        -- best used right before Chimera Shot
+        { spell = "Misdirection", buff = "Misdirection", recommend = function(c)
+            return c.ready("Misdirection") and c.ready("Chimera Shot") and not c.buff("Misdirection").up
+        end },
+        -- worth it once Misdirection or Rapid Fire is deep into its cooldown
+        { spell = "Readiness", recommend = function(c)
+            return c.ready("Readiness") and (c.cd("Misdirection") > 15 or c.cd("Rapid Fire") > 15)
+        end },
+        { spell = "Call Pet", when = function(c) return c.pet.missing end, recommend = function() return true end },
         { spell = "Revive Pet", when = function(c) return c.pet.dead end },
     },
     offensives = {

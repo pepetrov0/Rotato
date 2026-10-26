@@ -14,6 +14,7 @@ local ADDON_NAME, ns = ...
 --   targetBuffType = { "Magic", "Enrage" }  any buff of those dispel types on the target (shown only while present)
 --   show       = "always" (default) or "active": hide while the aura is not up
 --   when       = function(c) extra condition for showing the entry at all
+--   recommend  = function(c) true while using it is a good idea: gold border (not in trackers)
 -- An entry can combine an ability with an aura (e.g. spell + buff): while the aura is up its
 -- remaining time sweeps, otherwise the ability's cooldown does. A missing aura is shown dimmed.
 --
@@ -25,6 +26,7 @@ local ADDON_NAME, ns = ...
 local TICK = 0.1
 local GREEN = { 0, 1, 0 }
 local RED = { 1, 0, 0 }
+local GOLD = { 1, 0.82, 0 }
 local FLASH_BELOW = 5 -- seconds left at which a border starts flashing
 local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 
@@ -98,6 +100,19 @@ local function Resolve(entry, rowKey)
         if typeList or not active or expiring then borderColor = RED end
     elseif active then
         borderColor = (entry.buff or entry.debuff) and GREEN or RED
+    end
+
+    -- a recommendation overrides the aura border
+    if entry.recommend and rowKey ~= "trackers" then
+        local ok, recommended = pcall(entry.recommend, c)
+        if not ok then
+            if not entry.recommendErrored then
+                entry.recommendErrored = true
+                ns.Print("recommend error in " .. tostring(entry.spell or auraName) .. ": " .. tostring(recommended))
+            end
+        elseif recommended then
+            borderColor, expiring = GOLD, false
+        end
     end
 
     -- what the Alt tooltip shows: the aura while it is up, otherwise the ability

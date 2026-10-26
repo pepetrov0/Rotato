@@ -127,6 +127,14 @@ function c.cd(name)
     return math.max(0, start + duration - GetTime())
 end
 
+-- known, off cooldown (ignoring the global cooldown) and usable right now
+function c.ready(name)
+    local start, duration = GetSpellCooldown(name)
+    if not start then return false end
+    local remaining = start > 0 and (start + duration - GetTime()) or 0
+    return (duration <= GCD_MAX or remaining <= LOOKAHEAD) and (IsUsableSpell(name)) and true or false
+end
+
 function c.usable(name) return (IsUsableSpell(name)) and true or false end
 
 ns.c = c
