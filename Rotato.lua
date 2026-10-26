@@ -49,10 +49,12 @@ SlashCmdList["ROTATO"] = function(msg)
     elseif msg == "lock" then
         ns.SetLocked(true)
         ns.Print("locked.")
+    elseif msg == "spec" then
+        ns.DumpSpec()
     elseif msg == "reset" then
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Usage: /rotato unlock | lock | reset")
+        ns.Print("Usage: /rotato unlock | lock | reset | spec")
     end
 end

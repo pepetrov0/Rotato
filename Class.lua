@@ -20,6 +20,8 @@ end
 local function Report(force)
     local className, classToken = UnitClass("player")
     local index, specName, group = DetectSpec()
+    -- talent data arrives a moment after login; don't announce "No spec" before we've reported anything
+    if not index and not force and not ns.class then return end
     if not force and ns.class == classToken and ns.specIndex == index and ns.specGroup == group then
         return
     end
@@ -30,10 +32,34 @@ local function Report(force)
     ns.Print(format("%s - %s (talent group %d)", colored, specName, group))
 end
 
+-- Prints the raw talent API values, for when detection looks wrong.
+function ns.DumpSpec()
+    local group = GetActiveTalentGroup()
+    ns.Print(format("tabs=%s activeGroup=%s groups=%s", tostring(GetNumTalentTabs()),
+        tostring(group), tostring(GetNumTalentGroups())))
+    for i = 1, GetNumTalentTabs() do
+        local name, _, points = GetTalentTabInfo(i, false, false, group)
+        ns.Print(format("  tab %d: %s, %s points", i, tostring(name), tostring(points)))
+    end
+end
+
 function ns.InitClass()
-    Report(true)
     local f = CreateFrame("Frame")
     f:RegisterEvent("PLAYER_TALENT_UPDATE")
     f:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     f:SetScript("OnEvent", function() Report(false) end)
+
+    -- Talents may not be loaded at login: retry for a few seconds, then report whatever we have.
+    if DetectSpec() then
+        Report(true)
+        return
+    end
+    local waited = 0
+    f:SetScript("OnUpdate", function(self, elapsed)
+        waited = waited + elapsed
+        if DetectSpec() or waited >= 10 then
+            self:SetScript("OnUpdate", nil)
+            Report(true)
+        end
+    end)
 end
