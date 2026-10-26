@@ -14,7 +14,7 @@ ns.Rotation{
     spec = 2, -- Marksmanship
 
     -- raid flasks/elixirs worth reminding about for this spec
-    consumables = { "Flask of Endless Rage", "Elixir of Lightning Speed" },
+    consumables = { "Flask of Endless Rage" },
 
     -- out of combat with no hostile target; keeps the UI up until done
     reminders = {

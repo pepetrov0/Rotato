@@ -5,7 +5,7 @@ ns.Rotation{
     spec = 1, -- Discipline
 
     -- raid flasks/elixirs worth reminding about for this spec
-    consumables = { "Flask of the Frost Wyrm", "Elixir of Mighty Thoughts" },
+    consumables = { "Flask of the Frost Wyrm" },
 
     -- out of combat with no hostile target
     reminders = {
