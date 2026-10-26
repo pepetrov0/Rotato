@@ -85,6 +85,16 @@ function ns.InitSlots()
             overlay:SetFrameLevel(cooldown:GetFrameLevel() + 2)
 
             slot.cooldown = cooldown
+
+            -- trackers count down by graying out from the top instead of the cooldown sweep
+            if key == "trackers" then
+                slot.gray = slot:CreateTexture(nil, "ARTWORK")
+                slot.gray:SetDesaturated(true)
+                slot.gray:SetVertexColor(0.45, 0.45, 0.45)
+                slot.gray:SetPoint("TOPLEFT", slot.icon, "TOPLEFT")
+                slot.gray:SetPoint("TOPRIGHT", slot.icon, "TOPRIGHT")
+                slot.gray:Hide()
+            end
             slot.time = overlay:CreateFontString(nil, "OVERLAY")
             slot.time:SetFont(font, 12, "OUTLINE")
             slot.time:SetPoint("CENTER")
@@ -92,14 +102,40 @@ function ns.InitSlots()
         end
     end
 
+    -- size of one screen pixel in UI units at scale 1 (UI height is 768 units)
+    local _, screenHeight = strmatch(GetCVar("gxResolution") or "", "(%d+)x(%d+)")
+    local pixelBase = screenHeight and 768 / screenHeight or 1
+
+    -- Grays the top of a tracker in proportion to the time elapsed. The strip is snapped to whole
+    -- screen pixels, with its texture crop derived from the same height, so it lines up with the icon.
+    local function Swipe(slot)
+        local gray = slot.gray
+        local duration = slot.sweepDuration or 0
+        if duration <= 0 or not slot:IsShown() then gray:Hide() return end
+        local fraction = math.max(0, math.min((GetTime() - slot.sweepStart) / duration, 1))
+        local height = slot.icon:GetHeight()
+        local pixel = pixelBase / slot:GetEffectiveScale()
+        local pixels = math.floor(fraction * height / pixel + 0.5)
+        if pixels <= 0 then gray:Hide() return end
+        local shown = pixels * pixel
+        local left, top, _, bottom, right = slot.icon:GetTexCoord()
+        gray:SetTexCoord(left, right, top, top + (shown / height) * (bottom - top))
+        gray:SetHeight(shown)
+        gray:Show()
+    end
+
     local function Paint(slot, icon, start, duration, remaining, dimmed)
         if slot.shownIcon ~= icon then
             slot.shownIcon = icon
             slot.icon:SetTexture(icon)
+            if slot.gray then slot.gray:SetTexture(icon) end
         end
-        if slot.shownStart ~= start or slot.shownDuration ~= duration then
-            slot.shownStart, slot.shownDuration = start, duration
-            CooldownFrame_SetTimer(slot.cooldown, start, duration, duration > 0 and 1 or 0)
+        slot.sweepStart, slot.sweepDuration = start, duration
+        local cdStart, cdDuration = start, duration
+        if slot.gray then cdStart, cdDuration = 0, 0 end -- trackers use the gray swipe instead
+        if slot.shownStart ~= cdStart or slot.shownDuration ~= cdDuration then
+            slot.shownStart, slot.shownDuration = cdStart, cdDuration
+            CooldownFrame_SetTimer(slot.cooldown, cdStart, cdDuration, cdDuration > 0 and 1 or 0)
         end
         slot.icon:SetDesaturated(dimmed and true or false)
         local shade = dimmed and 0.5 or 1
@@ -107,6 +143,11 @@ function ns.InitSlots()
         slot.time:SetText(remaining and FormatTime(remaining) or "")
         slot:Show()
     end
+
+    -- the swipe runs every frame; everything else is throttled
+    CreateFrame("Frame"):SetScript("OnUpdate", function()
+        for _, slot in ipairs(ns.trackers) do Swipe(slot) end
+    end)
 
     local elapsedTotal = 0
     CreateFrame("Frame"):SetScript("OnUpdate", function(_, elapsed)
