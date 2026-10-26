@@ -52,7 +52,24 @@ end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
 -- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash, tip, coolingDown, idleReady
+local VARIANT_FIELDS = { "spell", "buff", "debuff", "targetBuff", "playerDebuff", "healTargetDebuff" }
+
+-- Fields written as { variant = "name" } are replaced by the current spell of that variant, on a proxy
+-- that reads through to the real entry (so flags like errored/lastIcon still land on the entry).
+local function ResolveVariants(entry)
+    local proxy
+    for _, field in ipairs(VARIANT_FIELDS) do
+        local value = rawget(entry, field)
+        if type(value) == "table" and value.variant then
+            proxy = proxy or setmetatable({}, { __index = entry, __newindex = entry })
+            rawset(proxy, field, ns.VariantSpell(value.variant))
+        end
+    end
+    return proxy or entry
+end
+
 local function Resolve(entry, rowKey)
+    entry = ResolveVariants(entry)
     local c = ns.c
     local typeList = entry.targetBuffType
     local healTypeList = entry.healTargetDebuffType

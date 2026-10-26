@@ -98,7 +98,10 @@ local pet = setmetatable({}, {
 
 function pet.buff(name) return Aura(UnitBuff, "pet", name) end
 
-local c = setmetatable({ target = target, pet = pet }, {
+-- c.variant.judgement -> the current option of the rotation's "judgement" variant
+local variant = setmetatable({}, { __index = function(_, name) return ns.GetVariant(name) end })
+
+local c = setmetatable({ target = target, pet = pet, variant = variant }, {
     __index = function(_, k)
         if k == "combat" then return UnitAffectingCombat("player") and true or false
         elseif k == "mana" then return Percent(UnitPower("player", 0), UnitPowerMax("player", 0))
@@ -111,6 +114,9 @@ local c = setmetatable({ target = target, pet = pet }, {
         end
     end,
 })
+
+-- the spell name the current option of a variant stands for, e.g. "Judgement of Light"
+function c.variantName(name) return ns.VariantSpell(name) end
 
 function c.buff(name) return Aura(UnitBuff, "player", name) end
 
@@ -212,7 +218,10 @@ end
 ns.Passes = Passes
 
 -- Entries are spells ({ "Name" }) or items ({ item = "Name" }, only when it is in the bags).
-local function EntryName(entry) return entry.item or ns.SpellName(entry[1]) end
+local function EntryName(entry)
+    if entry.variant then return ns.VariantSpell(entry.variant) end
+    return entry.item or ns.SpellName(entry[1])
+end
 
 local function EntryCooldown(entry, name)
     if not entry.item then return GetSpellCooldown(name) end
@@ -314,7 +323,11 @@ function ns.InRotation(spell)
         for _, list in pairs(rotation.rotations or {}) do lists[#lists + 1] = list end
         for _, list in ipairs(lists) do
             for _, entry in ipairs(list) do
-                set[EntryName(entry)] = true
+                if entry.variant then
+                    for _, spell in ipairs(ns.VariantAllSpells(entry.variant)) do set[spell] = true end
+                else
+                    set[EntryName(entry)] = true
+                end
             end
         end
         inRotation[rotation] = set

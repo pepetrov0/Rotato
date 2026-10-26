@@ -8,12 +8,25 @@ ns.Rotation{
     consumables = { "Elixir of Lightning Speed", "Elixir of Mighty Thoughts" },
 
     -- Seal of Wisdom is the only seal that matters
+    -- which Judgement you use: casting one of them makes it the current one (saved)
+    variants = {
+        judgement = {
+            default = "light",
+            light = { "Judgement of Light" },
+            wisdom = { "Judgement of Wisdom" },
+        },
+    },
+
     reminders = {
         { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
     },
 
     highprio = {
         { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
+        -- keep the current Judgement on the target (from any paladin)
+        { variant = "judgement", when = function(c)
+            return c.target.hostile and not c.debuff(c.variantName("judgement"), { any = true }).up
+        end },
     },
 
     rotations = {
@@ -28,7 +41,7 @@ ns.Rotation{
                 return not shield.up or shield.remains < 15
             end },
             -- keeps Judgements of the Pure up
-            { "Judgement of Light", when = function(c)
+            { variant = "judgement", when = function(c)
                 local pure = c.buff("Judgements of the Pure")
                 return not pure.up or pure.remains < 30
             end },
@@ -39,6 +52,7 @@ ns.Rotation{
     trackers = {
         { buff = "Seal of Wisdom" },
         { buff = "Judgements of the Pure", always = true },
+        { debuff = { variant = "judgement" }, any = true },
         -- something you can Cleanse on mouseover, else target, else yourself
         { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
     },

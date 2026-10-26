@@ -9,7 +9,11 @@ local ADDON_NAME, ns = ...
 local function NameSet(list)
     local set = {}
     for _, entry in ipairs(list or {}) do
-        set[ns.SpellName(entry[1])] = true
+        if entry.variant then
+            for _, spell in ipairs(ns.VariantAllSpells(entry.variant)) do set[spell] = true end
+        else
+            set[ns.SpellName(entry[1])] = true
+        end
     end
     return set
 end
@@ -42,6 +46,7 @@ function ns.InitMode()
         if unit ~= "player" then return end
         local rotation = ns.GetRotation()
         if not rotation then return end
+        if event == "UNIT_SPELLCAST_SUCCEEDED" then ns.CheckVariants(rotation, spell) end
         local sets = ModeSpells(rotation)
         if sets[ns.mode][spell] then return end
         for _, mode in ipairs(ns.MODES) do
