@@ -107,6 +107,7 @@ local c = setmetatable({ target = target, pet = pet, variant = variant }, {
         elseif k == "mana" then return Percent(UnitPower("player", 0), UnitPowerMax("player", 0))
         elseif k == "hp" then return Percent(UnitHealth("player"), UnitHealthMax("player"))
         elseif k == "moving" then return GetUnitSpeed("player") > 0
+        elseif k == "inGroup" then return GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0
         elseif k == "mode" then return ns.mode
         elseif k == "inRaid" then
             local _, instanceType = IsInInstance()

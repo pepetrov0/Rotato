@@ -60,10 +60,13 @@ ns.Rotation{
         { spell = "Deterrence", buff = "Deterrence" },
     },
     utility = {
-        -- best used right before Chimera Shot
-        { spell = "Misdirection", buff = "Misdirection", recommend = function(c)
-            return c.ready("Misdirection") and c.ready("Chimera Shot") and not c.buff("Misdirection").up
-        end },
+        -- best used right before Chimera Shot; pointless in a group without a focus to misdirect to
+        { spell = "Misdirection", buff = "Misdirection",
+          discourage = function(c) return c.inGroup and not UnitExists("focus") end,
+          recommend = function(c)
+              return c.ready("Misdirection") and c.ready("Chimera Shot") and not c.buff("Misdirection").up
+                  and not (c.inGroup and not UnitExists("focus"))
+          end },
         -- worth it once Misdirection or Rapid Fire is deep into its cooldown
         { spell = "Readiness", recommend = function(c)
             return c.ready("Readiness") and (c.cd("Misdirection") > 15 or c.cd("Rapid Fire") > 15)
@@ -73,7 +76,7 @@ ns.Rotation{
         { spell = "Revive Pet", when = function(c) return c.pet.dead end },
     },
     offensives = {
-        { spell = "Rapid Fire", buff = "Rapid Fire" },
+        { spell = "Rapid Fire", buff = "Rapid Fire", recommend = function(c) return c.ready("Rapid Fire") end },
     },
     trackers = {
         { buff = ASPECTS },
