@@ -41,6 +41,8 @@ local function Resolve(entry)
     end
     local active = aura and aura.up
 
+    -- entries that read the target have nothing to show without one
+    if (entry.debuff or entry.targetBuff) and not UnitExists("target") then return end
     if entry.show == "active" and not active then return end
     if entry.when and not ns.Passes(entry, auraName or entry.spell) then return end
 
@@ -117,11 +119,26 @@ function ns.InitSlots()
         local pixel = pixelBase / slot:GetEffectiveScale()
         local pixels = math.floor(fraction * height / pixel + 0.5)
         if pixels <= 0 then gray:Hide() return end
-        local shown = pixels * pixel
+        local shown = math.min(pixels * pixel, height)
         local left, top, _, bottom, right = slot.icon:GetTexCoord()
         gray:SetTexCoord(left, right, top, top + (shown / height) * (bottom - top))
-        gray:SetHeight(shown)
+        -- bottom edge anchored relative to the icon's top, so the strip can never leave the icon
+        gray:ClearAllPoints()
+        gray:SetPoint("TOPLEFT", slot.icon, "TOPLEFT")
+        gray:SetPoint("BOTTOMRIGHT", slot.icon, "TOPRIGHT", 0, -shown)
         gray:Show()
+    end
+
+    -- Prints the geometry of the tracker slots, for when the swipe looks wrong.
+    function ns.DumpSlots()
+        ns.Print(format("pixelBase=%.3f screenHeight=%s", pixelBase, tostring(screenHeight)))
+        for i, slot in ipairs(ns.trackers) do
+            if slot:IsShown() then
+                ns.Print(format("  tracker %d: slot %.1fx%.1f icon %.1fx%.1f gray h=%.1f shown=%s scale=%.3f", i,
+                    slot:GetWidth(), slot:GetHeight(), slot.icon:GetWidth(), slot.icon:GetHeight(),
+                    slot.gray:GetHeight(), tostring(slot.gray:IsShown()), slot:GetEffectiveScale()))
+            end
+        end
     end
 
     function ns.ApplyTextSize()
