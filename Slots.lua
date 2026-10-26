@@ -8,6 +8,7 @@ local ADDON_NAME, ns = ...
 -- Entry fields (all optional except one of spell / buff / debuff / targetBuff):
 --   spell      = "Name"  cooldown of an ability
 --   buff       = "Name"  aura on the player, or { "Name", "Other" } for interchangeable ones (the one that is up is shown)
+--   playerDebuff = "Name" debuff on the player
 --   debuff     = "Name"  aura on the target (yours only, unless any = true)
 --   targetBuff = "Name"  buff on the target
 --   show       = "always" (default) or "active": hide while the aura is not up
@@ -16,6 +17,8 @@ local ADDON_NAME, ns = ...
 -- remaining time sweeps, otherwise the ability's cooldown does. A missing aura is shown dimmed.
 
 local TICK = 0.1
+local GREEN = { 0, 1, 0 }
+local RED = { 1, 0, 0 }
 local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 
 local ROW_KEYS = { "defensives", "utility", "trackers", "offensives" }
@@ -29,22 +32,23 @@ local function FormatTime(seconds)
 end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
--- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, highlight
+-- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor
 local function Resolve(entry)
     local c = ns.c
     -- buff may be a list of interchangeable buffs, the first one that is up is shown
     local buffList = type(entry.buff) == "table" and entry.buff or nil
-    local auraName = buffList and buffList[1] or entry.buff or entry.debuff or entry.targetBuff
+    local auraName = buffList and buffList[1] or entry.buff or entry.playerDebuff or entry.debuff or entry.targetBuff
     local aura
     if buffList then aura = c.anyBuff(buffList)
     elseif entry.buff then aura = c.buff(entry.buff)
+    elseif entry.playerDebuff then aura = c.selfDebuff(entry.playerDebuff)
     elseif entry.debuff then aura = c.debuff(entry.debuff, { any = entry.any })
     elseif entry.targetBuff then aura = c.target.buff(entry.targetBuff)
     end
     local active = aura and aura.up
 
     -- entries that read the target have nothing to show without one
-    if (entry.debuff or entry.targetBuff) and not UnitExists("target") then return end
+    if (entry.debuff or entry.targetBuff) and not UnitExists("target") then return end -- playerDebuff reads the player
     if entry.show == "active" and not active then return end
     if entry.when and not ns.Passes(entry, auraName or entry.spell) then return end
 
@@ -75,9 +79,13 @@ local function Resolve(entry)
 
     -- only a bare aura (no ability) is dimmed while missing; an ability that is ready is normal
     local dimmed = auraName and not entry.spell and not active
-    -- an ability whose own aura is up (Misdirection, Deterrence...) gets a border; bare auras do not
-    local highlight = active and entry.spell ~= nil
-    return icon, start, duration, remaining, dimmed, fromAura, highlight
+    -- an active aura gets a border: green when it is good for you (a buff on you, your debuff on the
+    -- target), red when it is bad for you (a debuff on you, a buff on the target)
+    local borderColor
+    if active then
+        borderColor = (entry.buff or entry.debuff) and GREEN or RED
+    end
+    return icon, start, duration, remaining, dimmed, fromAura, borderColor
 end
 
 function ns.InitSlots()
@@ -98,12 +106,11 @@ function ns.InitSlots()
 
             slot.cooldown = cooldown
 
-            -- yellow border while the ability is active
+            -- colored border while an aura is active
             local border = CreateFrame("Frame", nil, slot)
             border:SetAllPoints()
             border:SetFrameLevel(cooldown:GetFrameLevel() + 3)
             border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 2 })
-            border:SetBackdropBorderColor(1, 0.85, 0, 1)
             border:Hide()
             slot.border = border
             slot.time = overlay:CreateFontString(nil, "OVERLAY")
@@ -113,7 +120,7 @@ function ns.InitSlots()
         end
     end
 
-    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, highlight)
+    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, borderColor)
         if slot.shownIcon ~= icon then
             slot.shownIcon = icon
             slot.icon:SetTexture(icon)
@@ -127,7 +134,12 @@ function ns.InitSlots()
         local shade = dimmed and 0.5 or 1
         slot.icon:SetVertexColor(shade, shade, shade)
         slot.time:SetText(remaining and FormatTime(remaining) or "")
-        if highlight then slot.border:Show() else slot.border:Hide() end
+        if borderColor then
+            slot.border:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
+            slot.border:Show()
+        else
+            slot.border:Hide()
+        end
         slot:Show()
     end
 
@@ -145,10 +157,10 @@ function ns.InitSlots()
             for _, list in ipairs({ rotation and rotation[key] or {}, ns.common[key] or {} }) do
                 for _, entry in ipairs(list) do
                     if used >= #row then break end
-                    local icon, start, duration, remaining, dimmed, fromAura, highlight = Resolve(entry)
+                    local icon, start, duration, remaining, dimmed, fromAura, borderColor = Resolve(entry)
                     if icon then
                         used = used + 1
-                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, highlight)
+                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, borderColor)
                     end
                 end
             end
