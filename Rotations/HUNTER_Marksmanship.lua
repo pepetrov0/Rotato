@@ -10,6 +10,7 @@ local ASPECTS = {
 }
 
 -- Dragonhawk and Wild are interchangeable for damage, so being in either means "no need to swap".
+-- Which one to suggest is the dpsAspect variant below.
 local DPS_ASPECTS = { "Aspect of the Dragonhawk", "Aspect of the Wild" }
 
 ns.Rotation{
@@ -17,6 +18,16 @@ ns.Rotation{
     spec = 2, -- Marksmanship
 
     consumables = { "Flask of Endless Rage" },
+
+    -- Which damage aspect to go back to after Viper is whichever one was used last, which can only
+    -- be known from what the player casts (see Rotation.lua). Casting Viper changes nothing here.
+    variants = {
+        dpsAspect = {
+            default = "dragonhawk",
+            dragonhawk = { "Aspect of the Dragonhawk" },
+            wild = { "Aspect of the Wild" },
+        },
+    },
 
     -- Out of combat with no hostile target, most important first. Trueshot Aura only has to be
     -- recast after a death, which makes it easy to forget, so it leads.
@@ -55,13 +66,13 @@ ns.Rotation{
             return c.combat and c.pet.exists and c.pet.hp < 50 and not c.pet.buff("Mend Pet").up
         end },
 
-        -- Viper below 10% mana to recover, Dragonhawk above 80% to get the damage back. The gap
+        -- Viper below 10% mana to recover, the last damage aspect above 80% to get the damage back. The gap
         -- between the two stops it from flip-flopping around a single threshold.
         { "Aspect of the Viper", when = function(c)
             return c.mana < 10 and not c.buff("Aspect of the Viper").up
         end },
         { "Kill Shot", when = function(c) return c.target.hostile and c.target.hp < 20 end },
-        { "Aspect of the Dragonhawk", when = function(c)
+        { variant = "dpsAspect", when = function(c)
             return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
     },
