@@ -254,8 +254,8 @@ function ns.CreateUI()
     center:SetPoint("CENTER", f, "CENTER")
     ns.center = center
 
-    ns.defensives = BuildRow(f, center, "LEFT", "TOP")
-    ns.utility    = BuildRow(f, center, "LEFT", "BOTTOM")
+    ns.defensives = BuildRow(f, center, "LEFT", "BOTTOM")
+    ns.utility    = BuildRow(f, center, "LEFT", "TOP")
     ns.trackers   = BuildRow(f, center, "RIGHT", "TOP")
     ns.offensives = BuildRow(f, center, "RIGHT", "BOTTOM")
 

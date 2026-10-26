@@ -2,8 +2,8 @@ local ADDON_NAME, ns = ...
 
 -- The four side rows. Each rotation lists entries per row, shown left to right outward from the
 -- center, packed with no gaps:
---   defensives (left, top)   trackers   (right, top)
---   utility    (left, bottom) offensives (right, bottom)
+--   utility    (left, top)    trackers   (right, top)
+--   defensives (left, bottom) offensives (right, bottom)
 --
 -- Entry fields (all optional except one of spell / buff / debuff / targetBuff):
 --   spell      = "Name"  cooldown of an ability
