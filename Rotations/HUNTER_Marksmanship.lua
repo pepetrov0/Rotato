@@ -25,13 +25,13 @@ ns.Rotation{
 
     -- in combat (and with a hostile target out of it), checked before the rotations
     highprio = {
+        { "Tranquilizing Shot", when = function(c) return c.target.hasBuffType("Enrage", "Magic") end },
         { "Mend Pet", when = function(c)
             return c.combat and c.pet.exists and c.pet.hp < 50 and not c.pet.buff("Mend Pet").up
         end },
         { "Aspect of the Viper", when = function(c)
             return c.mana < 10 and not c.buff("Aspect of the Viper").up
         end },
-        { "Tranquilizing Shot", when = function(c) return c.target.hasBuffType("Enrage", "Magic") end },
         { "Kill Shot", when = function(c) return c.target.hostile and c.target.hp < 20 end },
         { "Aspect of the Dragonhawk", when = function(c)
             return c.mana > 80 and not c.buff("Aspect of the Dragonhawk").up
