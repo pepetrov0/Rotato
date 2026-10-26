@@ -28,17 +28,24 @@ frame:SetScript("OnEvent", function(self, event, arg1)
     elseif event == "PLAYER_LOGIN" then
         -- everything else (ElvUI included) is loaded by now
         ns.CreateUI()
-        ns.Print("loaded. shift-right-click for options, shift-drag to move. /rotato reset to reposition.")
+        ns.Print("loaded. /rotato unlock to move or resize, /rotato lock when done.")
     end
 end)
 
 SLASH_ROTATO1 = "/rotato"
+SLASH_ROTATO2 = "/rota"
 SlashCmdList["ROTATO"] = function(msg)
     msg = strlower(strtrim(msg or ""))
-    if msg == "reset" then
+    if msg == "unlock" then
+        ns.SetLocked(false)
+        ns.Print("unlocked. Left-drag to move, right-click for options. /rotato lock when done.")
+    elseif msg == "lock" then
+        ns.SetLocked(true)
+        ns.Print("locked.")
+    elseif msg == "reset" then
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Shift-right-click the frame for options, shift-drag to move. /rotato reset to reposition.")
+        ns.Print("Usage: /rotato unlock | lock | reset")
     end
 end

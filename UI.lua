@@ -178,7 +178,6 @@ local function DragUpdate(f)
 end
 
 local function DragStart(f)
-    if not IsShiftKeyDown() then return end
     local cx, cy = f:GetCenter()
     local ux, uy = UIParent:GetCenter()
     local s = UIParent:GetEffectiveScale()
@@ -201,7 +200,14 @@ local function DragStop(f)
         RotatoDB.pos = f.pos
         f.pos = nil
     end
-    f:EnableMouse(IsShiftKeyDown())
+end
+
+-- Locked: click-through, so targets behind the frame stay selectable.
+-- Unlocked: the frame takes the mouse; left-drag moves it, right-click opens the menu.
+function ns.SetLocked(locked)
+    ns.unlocked = not locked
+    ns.frame:EnableMouse(not locked)
+    if ns.CheckVisibility then ns.CheckVisibility() end
 end
 
 -- Main -------------------------------------------------------------------
@@ -210,12 +216,7 @@ function ns.CreateUI()
     local f = CreateFrame("Frame", "RotatoFrame", UIParent)
     f:SetFrameStrata("MEDIUM")
     f:SetClampedToScreen(true)
-    -- Click-through unless shift is held (needed to drag), so targets behind it stay selectable.
-    f:EnableMouse(false)
-    f:RegisterEvent("MODIFIER_STATE_CHANGED")
-    f:SetScript("OnEvent", function(self)
-        if not self.dragging then self:EnableMouse(IsShiftKeyDown()) end
-    end)
+    f:EnableMouse(false) -- locked by default, see ns.SetLocked
     f:RegisterForDrag("LeftButton")
     SkinPanel(f)
     ns.frame = f
@@ -224,7 +225,7 @@ function ns.CreateUI()
     f:SetScript("OnDragStart", DragStart)
     f:SetScript("OnDragStop", DragStop)
     f:SetScript("OnMouseUp", function(self, button)
-        if button == "RightButton" and IsShiftKeyDown() then ns.OpenMenu() end
+        if button == "RightButton" then ns.OpenMenu() end
     end)
 
     -- big "next spell" icon, spanning both rows
