@@ -8,6 +8,9 @@ ns.Rotation{
 
     -- out of combat with no hostile target; keeps the UI up until done
     reminders = {
+        { "Mend Pet", when = function(c)
+            return c.pet.exists and c.pet.hp < 100 and not c.pet.buff("Mend Pet").up
+        end },
         { "Aspect of the Viper", when = function(c)
             return not c.buff("Aspect of the Viper").up
         end },
@@ -22,16 +25,32 @@ ns.Rotation{
 
     -- in combat (and with a hostile target out of it), checked before the rotations
     highprio = {
-        { "Tranquilizing Shot", when = function(c) return c.target.hasBuffType("Enrage", "Magic") end },
+        { "Mend Pet", when = function(c)
+            return c.combat and c.pet.exists and c.pet.hp < 50 and not c.pet.buff("Mend Pet").up
+        end },
         { "Aspect of the Viper", when = function(c)
             return c.mana < 10 and not c.buff("Aspect of the Viper").up
         end },
+        { "Tranquilizing Shot", when = function(c) return c.target.hasBuffType("Enrage", "Magic") end },
+        { "Kill Shot", when = function(c) return c.target.hostile and c.target.hp < 20 end },
         { "Aspect of the Dragonhawk", when = function(c)
             return c.mana > 80 and not c.buff("Aspect of the Dragonhawk").up
         end },
     },
 
     -- the side slots; see Slots.lua for the entry fields
+    defensives = {
+        { spell = "Feign Death", buff = "Feign Death" },
+        { spell = "Disengage" },
+        { spell = "Deterrence", buff = "Deterrence" },
+    },
+    utility = {
+        { spell = "Misdirection", buff = "Misdirection" },
+        { spell = "Readiness" },
+    },
+    offensives = {
+        { spell = "Rapid Fire", buff = "Rapid Fire" },
+    },
     trackers = {
         { debuff = "Hunter's Mark", any = true },
         { debuff = "Serpent Sting" },

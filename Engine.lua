@@ -53,7 +53,18 @@ function target.hasBuffType(...)
     return false
 end
 
-local c = setmetatable({ target = target }, {
+-- the player's pet; "exists" is false for a dead pet
+local pet = setmetatable({}, {
+    __index = function(_, k)
+        if k == "exists" then return UnitExists("pet") and not UnitIsDead("pet") and true or false
+        elseif k == "hp" then return Percent(UnitHealth("pet"), UnitHealthMax("pet"))
+        end
+    end,
+})
+
+function pet.buff(name) return Aura(UnitBuff, "pet", name) end
+
+local c = setmetatable({ target = target, pet = pet }, {
     __index = function(_, k)
         if k == "combat" then return UnitAffectingCombat("player") and true or false
         elseif k == "mana" then return Percent(UnitPower("player", 0), UnitPowerMax("player", 0))
