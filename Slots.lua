@@ -11,14 +11,21 @@ local ADDON_NAME, ns = ...
 --   playerDebuff = "Name" debuff on the player
 --   debuff     = "Name"  aura on the target (yours only, unless any = true)
 --   targetBuff = "Name"  buff on the target
+--   targetBuffType = { "Magic", "Enrage" }  any buff of those dispel types on the target (shown only while present)
 --   show       = "always" (default) or "active": hide while the aura is not up
 --   when       = function(c) extra condition for showing the entry at all
 -- An entry can combine an ability with an aura (e.g. spell + buff): while the aura is up its
 -- remaining time sweeps, otherwise the ability's cooldown does. A missing aura is shown dimmed.
+--
+-- Borders: an active aura is green when good for you (a buff on you, your debuff on the target) and
+-- red when bad for you (a debuff on you, a buff on the target). Trackers differ: only buff/debuff
+-- entries (and targetBuffType) are shown there; a missing buff or debuff gets a red border, a present one
+-- none, and a targetBuffType buff is red. Any border flashes while its aura is about to expire.
 
 local TICK = 0.1
 local GREEN = { 0, 1, 0 }
 local RED = { 1, 0, 0 }
+local FLASH_BELOW = 5 -- seconds left at which a border starts flashing
 local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 
 local ROW_KEYS = { "defensives", "utility", "trackers", "offensives" }
@@ -32,9 +39,10 @@ local function FormatTime(seconds)
 end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
--- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor
-local function Resolve(entry)
+-- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash
+local function Resolve(entry, rowKey)
     local c = ns.c
+    local typeList = entry.targetBuffType
     -- buff may be a list of interchangeable buffs, the first one that is up is shown
     local buffList = type(entry.buff) == "table" and entry.buff or nil
     local auraName = buffList and buffList[1] or entry.buff or entry.playerDebuff or entry.debuff or entry.targetBuff
@@ -44,12 +52,14 @@ local function Resolve(entry)
     elseif entry.playerDebuff then aura = c.selfDebuff(entry.playerDebuff)
     elseif entry.debuff then aura = c.debuff(entry.debuff, { any = entry.any })
     elseif entry.targetBuff then aura = c.target.buff(entry.targetBuff)
+    elseif typeList then aura = c.target.buffOfType(unpack(typeList))
     end
     local active = aura and aura.up
 
     -- entries that read the target have nothing to show without one
-    if (entry.debuff or entry.targetBuff) and not UnitExists("target") then return end -- playerDebuff reads the player
-    if entry.show == "active" and not active then return end
+    if (entry.debuff or entry.targetBuff or typeList) and not UnitExists("target") then return end -- playerDebuff reads the player
+    if rowKey == "trackers" and not (entry.buff or entry.debuff or typeList) then return end
+    if (entry.show == "active" or typeList) and not active then return end
     if entry.when and not ns.Passes(entry, auraName or entry.spell) then return end
 
     -- unknown abilities are hidden, unless their aura happens to be up
@@ -63,7 +73,7 @@ local function Resolve(entry)
     end
 
     if active and aura.icon then entry.lastIcon = aura.icon end
-    local icon = (active and aura.icon) or select(3, GetSpellInfo(entry.spell or auraName)) or entry.lastIcon or UNKNOWN_ICON
+    local icon = (active and aura.icon) or ((entry.spell or auraName) and select(3, GetSpellInfo(entry.spell or auraName))) or entry.lastIcon or UNKNOWN_ICON
 
     local now = GetTime()
     local start, duration, remaining = 0, 0, nil
@@ -81,11 +91,15 @@ local function Resolve(entry)
     local dimmed = auraName and not entry.spell and not active
     -- an active aura gets a border: green when it is good for you (a buff on you, your debuff on the
     -- target), red when it is bad for you (a debuff on you, a buff on the target)
+    local expiring = fromAura and remaining and remaining < FLASH_BELOW
     local borderColor
-    if active then
+    if rowKey == "trackers" then
+        -- a tracker only draws attention when something is missing, wrong, or about to run out
+        if typeList or not active or expiring then borderColor = RED end
+    elseif active then
         borderColor = (entry.buff or entry.debuff) and GREEN or RED
     end
-    return icon, start, duration, remaining, dimmed, fromAura, borderColor
+    return icon, start, duration, remaining, dimmed, fromAura, borderColor, borderColor and expiring or false
 end
 
 function ns.InitSlots()
@@ -120,7 +134,7 @@ function ns.InitSlots()
         end
     end
 
-    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, borderColor)
+    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, borderColor, flash)
         if slot.shownIcon ~= icon then
             slot.shownIcon = icon
             slot.icon:SetTexture(icon)
@@ -134,6 +148,7 @@ function ns.InitSlots()
         local shade = dimmed and 0.5 or 1
         slot.icon:SetVertexColor(shade, shade, shade)
         slot.time:SetText(remaining and FormatTime(remaining) or "")
+        slot.flashing = flash
         if borderColor then
             slot.border:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
             slot.border:Show()
@@ -142,6 +157,16 @@ function ns.InitSlots()
         end
         slot:Show()
     end
+
+    -- flashing borders pulse every frame
+    CreateFrame("Frame"):SetScript("OnUpdate", function()
+        local alpha = 0.3 + 0.7 * math.abs(math.sin(GetTime() * 4))
+        for _, key in ipairs(ROW_KEYS) do
+            for _, slot in ipairs(ns[key]) do
+                slot.border:SetAlpha(slot.flashing and alpha or 1)
+            end
+        end
+    end)
 
     local elapsedTotal = 0
     CreateFrame("Frame"):SetScript("OnUpdate", function(_, elapsed)
@@ -157,10 +182,10 @@ function ns.InitSlots()
             for _, list in ipairs({ rotation and rotation[key] or {}, ns.common[key] or {} }) do
                 for _, entry in ipairs(list) do
                     if used >= #row then break end
-                    local icon, start, duration, remaining, dimmed, fromAura, borderColor = Resolve(entry)
+                    local icon, start, duration, remaining, dimmed, fromAura, borderColor, flash = Resolve(entry, key)
                     if icon then
                         used = used + 1
-                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, borderColor)
+                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, borderColor, flash)
                     end
                 end
             end

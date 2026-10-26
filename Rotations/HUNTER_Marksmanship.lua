@@ -64,6 +64,7 @@ ns.Rotation{
         { buff = ASPECTS },
         { debuff = "Hunter's Mark", any = true },
         { debuff = "Serpent Sting" },
+        { targetBuffType = { "Magic", "Enrage" } }, -- something to Tranquilizing Shot off the target
     },
 
     rotations = {

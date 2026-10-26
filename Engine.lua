@@ -39,6 +39,28 @@ local target = setmetatable({}, {
     end,
 })
 
+-- the first buff on the target whose dispel type is one of the given types (NO_AURA if none)
+function target.buffOfType(...)
+    for i = 1, 40 do
+        local name, _, icon, count, buffType, duration, expires, caster = UnitBuff("target", i)
+        if not name then break end
+        for j = 1, select("#", ...) do
+            if buffType == select(j, ...) then
+                return {
+                    up = true,
+                    icon = icon,
+                    duration = duration or 0,
+                    expires = expires or 0,
+                    remains = (expires and expires > 0) and (expires - GetTime()) or math.huge,
+                    stacks = (count and count > 0) and count or 1,
+                    mine = caster == "player",
+                }
+            end
+        end
+    end
+    return NO_AURA
+end
+
 function target.buff(name) return Aura(UnitBuff, "target", name) end
 
 -- true if the target has a buff whose dispel type is one of the given types
