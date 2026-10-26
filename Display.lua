@@ -50,7 +50,7 @@ function ns.InitDisplay()
         if not spell and center:IsShown() then center:Hide() end
         if spell ~= shown then
             shown = spell
-            local texture = spell and select(3, GetSpellInfo(spell)) or nil
+            local texture = spell and (select(3, GetSpellInfo(spell)) or select(10, GetItemInfo(spell))) or nil
             center.icon:SetTexture(texture)
             nameText:SetText(spell or "")
             center.tip = spell and { spell = spell } or nil

@@ -168,6 +168,7 @@ ns.c = c
 -- IsUsableSpell also looks at the current target, which is wrong for spells cast on someone else
 -- (a Power Word: Shield with an enemy targeted). Entries with manaOnly = true only check the cost.
 local function Usable(entry, name)
+    if entry.item then return (IsUsableItem(name)) and true or false end
     if not entry.manaOnly then return (IsUsableSpell(name)) and true or false end
     local _, _, _, cost, _, powerType = GetSpellInfo(name)
     return not cost or cost == 0 or UnitPower("player", powerType or 0) >= cost
@@ -188,6 +189,32 @@ end
 
 ns.Passes = Passes
 
+-- Entries are spells ({ "Name" }) or items ({ item = "Name" }, only when it is in the bags).
+local function EntryName(entry) return entry.item or ns.SpellName(entry[1]) end
+
+local function EntryCooldown(entry, name)
+    if not entry.item then return GetSpellCooldown(name) end
+    if GetItemCount(name) == 0 then return nil end
+    local _, link = GetItemInfo(name)
+    local id = link and tonumber(link:match("item:(%d+)"))
+    if not id then return nil end
+    return GetItemCooldown(id)
+end
+
+-- A tier of the rotation plus the shared entries of the same tier (ns.common), cached.
+local tiers = setmetatable({}, { __mode = "k" })
+local function Tier(rotation, key)
+    local cache = tiers[rotation]
+    if not cache then cache = {}; tiers[rotation] = cache end
+    if not cache[key] then
+        local list = {}
+        for _, entry in ipairs(rotation[key] or {}) do list[#list + 1] = entry end
+        for _, entry in ipairs(ns.common and ns.common[key] or {}) do list[#list + 1] = entry end
+        cache[key] = list
+    end
+    return cache[key]
+end
+
 -- Returns spell, state ("ready" | "cd"), cooldown start, cooldown duration and the list it came from
 -- ("reminders", "preparation", "highprio", or the mode); nothing if there is no suggestion.
 -- Out of combat, no hostile target: reminders, then preparation.
@@ -200,19 +227,19 @@ function ns.Evaluate()
     local combat = UnitAffectingCombat("player")
     local hostile = target.hostile
     local lists = {}
-    if not combat and not hostile then lists[#lists + 1] = { "reminders", rotation.reminders } end
+    if not combat and not hostile then lists[#lists + 1] = { "reminders", Tier(rotation, "reminders") } end
     if not combat then lists[#lists + 1] = { "preparation", rotation.preparation } end
     if combat or hostile then
         local rotations = rotation.rotations or {}
-        lists[#lists + 1] = { "highprio", rotation.highprio }
+        lists[#lists + 1] = { "highprio", Tier(rotation, "highprio") }
         lists[#lists + 1] = { ns.mode, rotations[ns.mode] or rotations.single }
     end
 
     for _, source in ipairs(lists) do
         for _, entry in ipairs(source[2] or {}) do
-            local name = ns.SpellName(entry[1])
+            local name = EntryName(entry)
             local start, duration
-            if name then start, duration = GetSpellCooldown(name) end
+            if name then start, duration = EntryCooldown(entry, name) end
             if start and Passes(entry, name) then -- start is nil for spells we don't know
                 local remaining = start > 0 and (start + duration - GetTime()) or 0
                 if duration <= GCD_MAX or remaining <= LOOKAHEAD then
@@ -232,13 +259,13 @@ function ns.DebugEvaluate()
         tostring(ns.specIndex), rotation and "found" or "NONE", ns.mode, tostring(c.combat), tostring(target.hostile)))
     if not rotation then return end
     local rotations = rotation.rotations or {}
-    for _, source in ipairs({ { "reminders", rotation.reminders }, { "preparation", rotation.preparation },
-                              { "highprio", rotation.highprio }, { ns.mode, rotations[ns.mode] } }) do
+    for _, source in ipairs({ { "reminders", Tier(rotation, "reminders") }, { "preparation", rotation.preparation },
+                              { "highprio", Tier(rotation, "highprio") }, { ns.mode, rotations[ns.mode] } }) do
         local key = source[1]
         for _, entry in ipairs(source[2] or {}) do
-            local name = ns.SpellName(entry[1])
+            local name = EntryName(entry)
             local start, duration
-            if name then start, duration = GetSpellCooldown(name) end
+            if name then start, duration = EntryCooldown(entry, name) end
             ns.Print(format("  %s: %s known=%s when=%s usable=%s cd=%s", key, tostring(name), tostring(start ~= nil),
                 tostring(start and Passes(entry, name)), tostring(name and Usable(entry, name)),
                 tostring(start and format("%.1f/%.1f", start, duration))))
@@ -259,7 +286,7 @@ function ns.InRotation(spell)
         for _, list in pairs(rotation.rotations or {}) do lists[#lists + 1] = list end
         for _, list in ipairs(lists) do
             for _, entry in ipairs(list) do
-                set[ns.SpellName(entry[1])] = true
+                set[EntryName(entry)] = true
             end
         end
         inRotation[rotation] = set

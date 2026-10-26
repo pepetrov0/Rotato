@@ -21,8 +21,12 @@ local function ShowTip(slot)
     end
     local link = tip.spell and GetSpellLink(tip.spell)
     local id = link and link:match("spell:(%d+)")
+    local _, itemLink = GetItemInfo(tip.spell or "")
     if id then
         GameTooltip:SetHyperlink("spell:" .. id)
+        GameTooltip:Show()
+    elseif itemLink then
+        GameTooltip:SetHyperlink(itemLink)
         GameTooltip:Show()
     else
         GameTooltip:Hide()

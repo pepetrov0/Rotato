@@ -7,6 +7,7 @@ local ADDON_NAME, ns = ...
 --
 -- Entry fields (all optional except one of spell / buff / debuff / targetBuff):
 --   spell      = "Name"  cooldown of an ability
+--   (reminder / highprio entries can also be items: { item = "Name" }, offered only while it is in the bags)
 --   buff       = "Name"  aura on the player, or { "Name", "Other" } for interchangeable ones (the one that is up is shown)
 --   playerDebuff = "Name" debuff on the player
 --   debuff     = "Name"  aura on the target (yours only, unless any = true)
