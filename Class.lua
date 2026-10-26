@@ -17,11 +17,34 @@ local function DetectSpec()
     return nil, "No spec", group
 end
 
-local function Report(force)
+local Report
+
+-- Talent data can briefly read as empty (entering an instance, zoning). When that happens while we
+-- already know the spec, keep the old one and look again for a few seconds before believing it.
+local retry
+local function Recheck()
+    if retry then return end
+    local waited = 0
+    retry = CreateFrame("Frame")
+    retry:SetScript("OnUpdate", function(self, elapsed)
+        waited = waited + elapsed
+        if DetectSpec() or waited >= 5 then
+            self:SetScript("OnUpdate", nil)
+            retry = nil
+            Report(waited >= 5 and not DetectSpec())
+        end
+    end)
+end
+
+function Report(force)
     local className, classToken = UnitClass("player")
     local index, specName, group = DetectSpec()
     -- talent data arrives a moment after login; don't announce "No spec" before we've reported anything
     if not index and not force and not ns.class then return end
+    if not index and not force and ns.specIndex then
+        Recheck()
+        return
+    end
     if not force and ns.class == classToken and ns.specIndex == index and ns.specGroup == group then
         return
     end
