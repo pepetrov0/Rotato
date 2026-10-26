@@ -2,7 +2,7 @@ local ADDON_NAME, ns = ...
 
 -- Picks the active rotation (single / multi / aoe) from what the player casts.
 -- Casting a spell the current rotation doesn't contain switches to the first rotation
--- (in ns.MODES order) that does; spells in no rotation (prep, common) change nothing.
+-- (in ns.MODES order) that does; spells in no rotation (reminders, preparation, highprio) change nothing.
 -- This happens when a cast or channel starts (or an instant goes off), not when it ends.
 -- Leaving combat goes back to single.
 
@@ -21,7 +21,7 @@ local function ModeSpells(rotation)
     if not sets then
         sets = {}
         for _, mode in ipairs(ns.MODES) do
-            sets[mode] = NameSet(rotation[mode])
+            sets[mode] = NameSet(rotation.rotations and rotation.rotations[mode])
         end
         cache[rotation] = sets
     end

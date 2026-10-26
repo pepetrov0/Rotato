@@ -127,7 +127,7 @@ function ns.InitDisplay()
         if spell ~= preview then preview = nil end
         -- while the global cooldown runs, the suggestion is what to press next
         local gcdRunning = start and duration and start > 0 and duration <= ns.GCD_MAX and start + duration > GetTime()
-        local text = (source == "prep" and "Reminder") or (state == "cd" and "Cooldown") or ((spell == preview or gcdRunning) and "Next") or nil
+        local text = (source == "reminders" and "Reminder") or (state == "cd" and "Cooldown") or ((spell == preview or gcdRunning) and "Next") or nil
         Render(spell, start, duration, text)
     end
 

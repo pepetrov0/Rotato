@@ -6,19 +6,22 @@ ns.Rotation{
     class = "HUNTER",
     spec = 2, -- Marksmanship
 
-    -- out of combat
-    prep = {
-        { "Hunter's Mark", when = function(c)
-            return c.target.hostile and not c.debuff("Hunter's Mark", { any = true }).up
-        end },
-        -- stays on screen until pressed, target or not: regenerate mana between fights
+    -- out of combat with no hostile target; keeps the UI up until done
+    reminders = {
         { "Aspect of the Viper", when = function(c)
             return not c.buff("Aspect of the Viper").up
         end },
     },
 
-    -- in combat, checked before the mode lists
-    common = {
+    -- out of combat
+    preparation = {
+        { "Hunter's Mark", when = function(c)
+            return c.target.hostile and not c.debuff("Hunter's Mark", { any = true }).up
+        end },
+    },
+
+    -- in combat (and with a hostile target out of it), checked before the rotations
+    highprio = {
         { "Tranquilizing Shot", when = function(c) return c.target.hasBuffType("Enrage", "Magic") end },
         { "Aspect of the Viper", when = function(c)
             return c.mana < 10 and not c.buff("Aspect of the Viper").up
@@ -28,20 +31,22 @@ ns.Rotation{
         end },
     },
 
-    single = {
-        { "Aimed Shot" },
-        { "Chimera Shot" },
-        { "Steady Shot" },
-    },
+    rotations = {
+        single = {
+            { "Aimed Shot" },
+            { "Chimera Shot" },
+            { "Steady Shot" },
+        },
 
-    multi = {
-        { "Multi-Shot" },
-        { "Chimera Shot" },
-        { "Steady Shot" },
-    },
+        multi = {
+            { "Multi-Shot" },
+            { "Chimera Shot" },
+            { "Steady Shot" },
+        },
 
-    aoe = {
-        { "Multi-Shot" },
-        { "Volley" },
+        aoe = {
+            { "Multi-Shot" },
+            { "Volley" },
+        },
     },
 }

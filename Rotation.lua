@@ -1,6 +1,6 @@
 local ADDON_NAME, ns = ...
 
--- Registry of rotation definitions. Rotation files call ns.Rotation{ class=, spec=, prep=, common=, single=, multi=, aoe= };
+-- Registry of rotation definitions. Rotation files call ns.Rotation{ class=, spec=, reminders=, preparation=, highprio=, rotations={ single=, multi=, aoe= } };
 -- omitting spec makes the rotation apply to every spec of that class.
 ns.rotations = {}
 

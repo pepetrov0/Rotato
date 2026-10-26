@@ -91,18 +91,23 @@ local function Passes(entry, name)
 end
 
 -- Returns spell, state ("ready" | "cd"), cooldown start, cooldown duration and the list it came from
--- ("prep", "common", or the mode); nothing if there is no suggestion.
--- Out of combat: prep entries first; with a living hostile target (or in combat): common, then the mode's list.
+-- ("reminders", "preparation", "highprio", or the mode); nothing if there is no suggestion.
+-- Out of combat, no hostile target: reminders, then preparation.
+-- Out of combat, hostile target: preparation, then high priority, then the mode's rotation.
+-- In combat: high priority, then the mode's rotation.
 function ns.Evaluate()
     local rotation = ns.GetRotation()
     if not rotation then return end
 
     local combat = UnitAffectingCombat("player")
+    local hostile = target.hostile
     local lists = {}
-    if not combat then lists[#lists + 1] = { "prep", rotation.prep } end
-    if combat or target.hostile then
-        lists[#lists + 1] = { "common", rotation.common }
-        lists[#lists + 1] = { ns.mode, rotation[ns.mode] or rotation.single }
+    if not combat and not hostile then lists[#lists + 1] = { "reminders", rotation.reminders } end
+    if not combat then lists[#lists + 1] = { "preparation", rotation.preparation } end
+    if combat or hostile then
+        local rotations = rotation.rotations or {}
+        lists[#lists + 1] = { "highprio", rotation.highprio }
+        lists[#lists + 1] = { ns.mode, rotations[ns.mode] or rotations.single }
     end
 
     for _, source in ipairs(lists) do
@@ -128,8 +133,11 @@ function ns.DebugEvaluate()
     ns.Print(format("class=%s spec=%s rotation=%s mode=%s combat=%s hostile=%s", tostring(ns.class),
         tostring(ns.specIndex), rotation and "found" or "NONE", ns.mode, tostring(c.combat), tostring(target.hostile)))
     if not rotation then return end
-    for _, key in ipairs({ "prep", "common", ns.mode }) do
-        for _, entry in ipairs(rotation[key] or {}) do
+    local rotations = rotation.rotations or {}
+    for _, source in ipairs({ { "reminders", rotation.reminders }, { "preparation", rotation.preparation },
+                              { "highprio", rotation.highprio }, { ns.mode, rotations[ns.mode] } }) do
+        local key = source[1]
+        for _, entry in ipairs(source[2] or {}) do
             local name = ns.SpellName(entry[1])
             local start, duration
             if name then start, duration = GetSpellCooldown(name) end
@@ -149,8 +157,10 @@ function ns.InRotation(spell)
     local set = inRotation[rotation]
     if not set then
         set = {}
-        for _, key in ipairs({ "prep", "common", "single", "multi", "aoe" }) do
-            for _, entry in ipairs(rotation[key] or {}) do
+        local lists = { rotation.reminders, rotation.preparation, rotation.highprio }
+        for _, list in pairs(rotation.rotations or {}) do lists[#lists + 1] = list end
+        for _, list in ipairs(lists) do
+            for _, entry in ipairs(list) do
                 set[ns.SpellName(entry[1])] = true
             end
         end
