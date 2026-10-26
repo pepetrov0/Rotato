@@ -43,6 +43,8 @@ ns.Rotation{
 
     trackers = {
         { buff = SEALS },
+        -- something you can Cleanse on mouseover, else target, else yourself
+        { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
     },
 
     defensives = {

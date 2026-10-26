@@ -40,6 +40,8 @@ ns.Rotation{
     trackers = {
         { buff = "Seal of Wisdom" },
         { buff = "Judgements of the Pure", always = true },
+        -- something you can Cleanse on mouseover, else target, else yourself
+        { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
     },
 
     defensives = {
