@@ -51,6 +51,9 @@ ns.Rotation{
     },
 
     offensives = {
-        { spell = "Power Infusion", buff = "Power Infusion" },
+        -- pointless during Bloodlust/Heroism, so it is grayed out then
+        { spell = "Power Infusion", buff = "Power Infusion", discourage = function(c)
+            return c.anyBuff({ "Bloodlust", "Heroism" }).up
+        end },
     },
 }

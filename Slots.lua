@@ -19,6 +19,7 @@ local ADDON_NAME, ns = ...
 --   when       = function(c) extra condition for showing the entry at all
 --   always     = true: show a missing aura even if no spell of that name is in the spellbook (talent passives)
 --   manaOnly   = true: only the mana cost decides if the spell is usable (for spells cast on others)
+--   discourage = function(c) true while using it is pointless right now: the icon is grayed out
 --   recommend  = function(c) true while using it is a good idea: flashing white border (not in trackers)
 --   lockout    = true: the aura is a restriction counting down (Weakened Soul), blue border while it is up
 -- An entry can combine an ability with an aura (e.g. spell + buff): while the aura is up its
@@ -107,6 +108,16 @@ local function Resolve(entry, rowKey)
 
     -- only a bare aura (no ability) is dimmed while missing; an ability that is ready is normal
     local dimmed = auraName and not entry.spell and not active
+    -- a discouraged ability (pointless right now) is grayed out
+    if entry.discourage and not dimmed then
+        local ok, discouraged = pcall(entry.discourage, c)
+        if ok then
+            dimmed = discouraged and true or false
+        elseif not entry.discourageErrored then
+            entry.discourageErrored = true
+            ns.Print("discourage error in " .. tostring(entry.spell or auraName) .. ": " .. tostring(discouraged))
+        end
+    end
     -- an active aura gets a border: green when it is good for you (a buff on you, your debuff on the
     -- target), red when it is bad for you (a debuff on you, a buff on the target), blue for a lockout
     local expiring = fromAura and remaining and remaining < FLASH_BELOW
