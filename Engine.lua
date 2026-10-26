@@ -106,7 +106,8 @@ function ns.Evaluate()
     for _, list in ipairs(lists) do
         for _, entry in ipairs(list) do
             local name = ns.SpellName(entry[1])
-            local start, duration = name and GetSpellCooldown(name)
+            local start, duration
+            if name then start, duration = GetSpellCooldown(name) end
             if start and Passes(entry, name) then -- start is nil for spells we don't know
                 local remaining = start > 0 and (start + duration - GetTime()) or 0
                 if duration <= GCD_MAX or remaining <= LOOKAHEAD then
@@ -117,6 +118,25 @@ function ns.Evaluate()
             end
         end
     end
+end
+
+-- Prints why the suggestion is what it is, for /rotato debug.
+function ns.DebugEvaluate()
+    local rotation = ns.GetRotation()
+    ns.Print(format("class=%s spec=%s rotation=%s mode=%s combat=%s hostile=%s", tostring(ns.class),
+        tostring(ns.specIndex), rotation and "found" or "NONE", ns.mode, tostring(c.combat), tostring(target.hostile)))
+    if not rotation then return end
+    for _, key in ipairs({ "prep", "common", ns.mode }) do
+        for _, entry in ipairs(rotation[key] or {}) do
+            local name = ns.SpellName(entry[1])
+            local start, duration
+            if name then start, duration = GetSpellCooldown(name) end
+            ns.Print(format("  %s: %s known=%s when=%s usable=%s cd=%s", key, tostring(name), tostring(start ~= nil),
+                tostring(start and Passes(entry, name)), tostring(name and (IsUsableSpell(name)) and true or false),
+                tostring(start and format("%.1f/%.1f", start, duration))))
+        end
+    end
+    ns.Print("suggestion: " .. tostring((ns.Evaluate())))
 end
 
 -- Whether a spell appears anywhere in the active rotation.
