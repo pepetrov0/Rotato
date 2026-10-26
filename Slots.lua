@@ -81,6 +81,13 @@ function ns.InitSlots()
             local cooldown = CreateFrame("Cooldown", nil, slot, "CooldownFrameTemplate")
             cooldown:SetAllPoints()
             cooldown.noCooldownCount = true -- we draw our own numbers
+            -- reversed: starts with the icon fully visible and darkens as time runs out
+            if cooldown.SetReverse then
+                cooldown:SetReverse(true)
+            elseif not ns.warnedReverse then
+                ns.warnedReverse = true
+                ns.Print("this client has no Cooldown:SetReverse, the side slot sweep can't be reversed")
+            end
 
             local overlay = CreateFrame("Frame", nil, slot)
             overlay:SetAllPoints()
