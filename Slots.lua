@@ -49,7 +49,7 @@ local function FormatTime(seconds)
 end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
--- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash, tip, coolingDown
+-- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash, tip, coolingDown, idleReady
 local function Resolve(entry, rowKey)
     local c = ns.c
     local typeList = entry.targetBuffType
@@ -144,7 +144,9 @@ local function Resolve(entry, rowKey)
     end
     -- showing nothing but an ability's cooldown (no aura up): the first thing to drop when a row is full
     local coolingDown = not active and duration > 0
-    return icon, start, duration, remaining, dimmed, fromAura, borderColor, borderColor and expiring or false, tip, coolingDown
+    -- an ability that is simply ready, with nothing to say (no aura, no recommendation): dropped second
+    local idleReady = entry.spell ~= nil and not active and not coolingDown and borderColor == nil
+    return icon, start, duration, remaining, dimmed, fromAura, borderColor, borderColor and expiring or false, tip, coolingDown, idleReady
 end
 
 function ns.InitSlots()
@@ -241,13 +243,16 @@ function ns.InitSlots()
                     end
                 end
             end
-            -- more than fit: drop abilities that are only showing a cooldown, last ones first
+            -- more than fit: first drop abilities that are only showing a cooldown, then abilities that are
+            -- just ready (nothing active or recommended), last ones first each time
             local excess = #shown - #row
-            for i = #shown, 1, -1 do
-                if excess <= 0 then break end
-                if shown[i][10] then
-                    table.remove(shown, i)
-                    excess = excess - 1
+            for _, field in ipairs({ 10, 11 }) do
+                for i = #shown, 1, -1 do
+                    if excess <= 0 then break end
+                    if shown[i][field] then
+                        table.remove(shown, i)
+                        excess = excess - 1
+                    end
                 end
             end
             for i, slot in ipairs(row) do
