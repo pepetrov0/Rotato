@@ -4,7 +4,6 @@ local SPACING = 2
 local PADDING = 6
 local PER_ROW = 5
 local SNAP = 20 -- pixels from a screen center line at which we snap
-local PLACEHOLDER = "Interface\\Icons\\INV_Misc_QuestionMark"
 
 local TOOLTIP_BACKDROP = {
     bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
@@ -63,7 +62,6 @@ end
 local function CreateSlot(parent)
     local f = CreateFrame("Frame", nil, parent)
     f.icon = f:CreateTexture(nil, "ARTWORK")
-    f.icon:SetTexture(PLACEHOLDER)
     SkinSlot(f)
     return f
 end
