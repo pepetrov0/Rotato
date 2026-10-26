@@ -7,8 +7,6 @@ ns.Rotation{
     class = "PALADIN",
     spec = 1, -- Holy
 
-    consumables = { "Elixir of Lightning Speed", "Elixir of Mighty Thoughts" },
-
     -- Which Judgement is in use cannot be read from the game, only from what the player casts, so
     -- casting one makes it the current one (see Rotation.lua). Entries say { variant = "judgement" }
     -- and follow it. The choice is not saved, a new session starts on the default.

@@ -9,7 +9,6 @@ local ADDON_NAME, ns = ...
 --   highprio             checked before the rotations, in combat or with a hostile target
 --   rotations            { single = {...}, multi = {...}, aoe = {...} }, see Mode.lua
 --   defensives, utility, trackers, offensives    the side slots, see Slots.lua
---   consumables          the raid flasks/elixirs this spec wants reminders for, see Common.lua
 --   variants             named choices that follow what the player casts, see below
 
 ns.rotations = {}

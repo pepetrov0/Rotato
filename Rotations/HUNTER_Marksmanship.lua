@@ -17,8 +17,6 @@ ns.Rotation{
     class = "HUNTER",
     spec = 2, -- Marksmanship
 
-    consumables = { "Flask of Endless Rage" },
-
     -- Which damage aspect to go back to after Viper is whichever one was used last, which can only
     -- be known from what the player casts (see Rotation.lua). Casting Viper changes nothing here.
     variants = {

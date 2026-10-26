@@ -28,7 +28,7 @@ local function ShowTip(slot)
     end
 
     -- Entries only know a name. GetSpellLink resolves it for spells the player knows, and
-    -- GetItemInfo does the same for items such as flasks.
+    -- GetItemInfo does the same for items.
     local link = tip.spell and GetSpellLink(tip.spell)
     local id = link and link:match("spell:(%d+)")
     local _, itemLink = GetItemInfo(tip.spell or "")

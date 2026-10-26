@@ -12,7 +12,6 @@ local defaults = {
     labelSize = 12,
     nameSize = 16,
 
-    remindRaidFlasks = true,
 }
 
 -- Text styling ---------------------------------------------------------
@@ -92,17 +91,7 @@ SLASH_ROTATO2 = "/rota"
 
 SlashCmdList["ROTATO"] = function(msg)
     msg = strlower(strtrim(msg or ""))
-    local command, argument = strmatch(msg, "^(%S+)%s*(.*)$")
-
-    if command == "flask" or command == "flasks" then
-        if argument == "on" or argument == "off" then
-            RotatoDB.remindRaidFlasks = argument == "on"
-            ns.Print("raid flask reminders " .. argument .. ".")
-        else
-            ns.Print("raid flask reminders are " .. (RotatoDB.remindRaidFlasks and "on" or "off")
-                .. ". Usage: /rotato flask on|off")
-        end
-    elseif msg == "unlock" then
+    if msg == "unlock" then
         ns.SetLocked(false)
         ns.Print("unlocked. Left-drag to move, right-click for options. /rotato lock when done.")
     elseif msg == "lock" then
@@ -117,6 +106,6 @@ SlashCmdList["ROTATO"] = function(msg)
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Usage: /rotato unlock | lock | reset | spec | debug | flask on|off")
+        ns.Print("Usage: /rotato unlock | lock | reset | spec | debug")
     end
 end

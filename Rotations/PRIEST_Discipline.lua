@@ -7,8 +7,6 @@ ns.Rotation{
     class = "PRIEST",
     spec = 1, -- Discipline
 
-    consumables = { "Flask of the Frost Wyrm" },
-
     reminders = {
         { "Inner Fire", when = function(c) return not c.buff("Inner Fire").up end },
     },

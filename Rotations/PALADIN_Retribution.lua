@@ -12,8 +12,6 @@ ns.Rotation{
     class = "PALADIN",
     spec = 3, -- Retribution
 
-    consumables = { "Flask of Endless Rage" },
-
     -- Which Judgement is in use cannot be read from the game, only from what the player casts, so
     -- casting one makes it the current one (see Rotation.lua). Retribution defaults to Wisdom: it is
     -- the one that returns mana.

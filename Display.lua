@@ -59,7 +59,7 @@ function ns.InitDisplay()
 
         if spell ~= shown then
             shown = spell
-            -- a spell, or an item (flasks) when the name is not a spell
+            -- a spell, or an item when the name is not a spell
             local texture = spell and (select(3, GetSpellInfo(spell)) or select(10, GetItemInfo(spell))) or nil
             center.icon:SetTexture(texture)
             nameText:SetText(spell or "")

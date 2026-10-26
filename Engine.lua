@@ -121,9 +121,6 @@ local c = setmetatable({ target = target, pet = pet, variant = variant }, {
         elseif key == "moving" then return GetUnitSpeed("player") > 0
         elseif key == "inGroup" then return GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0
         elseif key == "mode" then return ns.mode
-        elseif key == "inRaid" then
-            local _, instanceType = IsInInstance()
-            return instanceType == "raid"
         end
     end,
 })
@@ -136,7 +133,7 @@ function c.variantName(name) return ns.VariantSpell(name) end
 
 function c.buff(name) return Aura(UnitBuff, "player", name) end
 
--- The first of several interchangeable buffs that is up (aspects, flasks...), so a rule does not
+-- The first of several interchangeable buffs that is up (aspects...), so a rule does not
 -- have to care which of them the player chose.
 function c.anyBuff(names)
     for _, name in ipairs(names) do
