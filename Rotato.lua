@@ -9,13 +9,15 @@ function ns.Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99Rotato|r: " .. tostring(msg))
 end
 
--- Current rotation, "single" | "aoe". Not saved: it always starts as single (see Mode.lua).
+-- Rotation modes in switch-priority order. Not saved: the mode always starts as single (see Mode.lua).
+ns.MODES = { "single", "multi", "aoe" }
+local MODE_LABEL = { single = "Single", multi = "Multi-target", aoe = "AoE" }
 ns.mode = "single"
 
 function ns.SetMode(mode, reason)
     if ns.mode == mode then return end
     ns.mode = mode
-    ns.Print((mode == "aoe" and "AoE" or "Single") .. " rotation" .. (reason and (" (" .. reason .. ")") or ""))
+    ns.Print(MODE_LABEL[mode] .. " rotation" .. (reason and (" (" .. reason .. ")") or ""))
 end
 
 local frame = CreateFrame("Frame")

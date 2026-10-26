@@ -1,7 +1,9 @@
 local ADDON_NAME, ns = ...
 
--- Picks the single/aoe rotation automatically: casting a spell that only appears in one
--- rotation switches to it, and leaving combat goes back to single.
+-- Picks the active rotation (single / multi / aoe) from what the player casts.
+-- Casting a spell the current rotation doesn't contain switches to the first rotation
+-- (in ns.MODES order) that does; spells in no rotation (prep, common) change nothing.
+-- Leaving combat goes back to single.
 
 local function NameSet(list)
     local set = {}
@@ -13,17 +15,16 @@ end
 
 local cache = setmetatable({}, { __mode = "k" })
 
--- Spells that appear in only one of the two rotations, per rotation definition.
-local function UniqueSpells(rotation)
-    local u = cache[rotation]
-    if not u then
-        local single, aoe = NameSet(rotation.single), NameSet(rotation.aoe)
-        u = { single = {}, aoe = {} }
-        for name in pairs(single) do if not aoe[name] then u.single[name] = true end end
-        for name in pairs(aoe) do if not single[name] then u.aoe[name] = true end end
-        cache[rotation] = u
+local function ModeSpells(rotation)
+    local sets = cache[rotation]
+    if not sets then
+        sets = {}
+        for _, mode in ipairs(ns.MODES) do
+            sets[mode] = NameSet(rotation[mode])
+        end
+        cache[rotation] = sets
     end
-    return u
+    return sets
 end
 
 function ns.InitMode()
@@ -38,11 +39,13 @@ function ns.InitMode()
         if unit ~= "player" then return end
         local rotation = ns.GetRotation()
         if not rotation then return end
-        local unique = UniqueSpells(rotation)
-        if unique.aoe[spell] then
-            ns.SetMode("aoe", "cast " .. spell)
-        elseif unique.single[spell] then
-            ns.SetMode("single", "cast " .. spell)
+        local sets = ModeSpells(rotation)
+        if sets[ns.mode][spell] then return end
+        for _, mode in ipairs(ns.MODES) do
+            if sets[mode][spell] then
+                ns.SetMode(mode, "cast " .. spell)
+                return
+            end
         end
     end)
 end

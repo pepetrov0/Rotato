@@ -11,5 +11,5 @@ UI.lua
 Visibility.lua
 Class.lua
 Rotation.lua
-Rotations\HUNTER_Test.lua
+Rotations\HUNTER_Marksmanship.lua
 Mode.lua
