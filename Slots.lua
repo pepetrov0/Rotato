@@ -30,7 +30,7 @@ local function FormatTime(seconds)
 end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
--- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed
+-- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura
 local function Resolve(entry)
     local c = ns.c
     local auraName = entry.buff or entry.debuff or entry.targetBuff
@@ -61,16 +61,18 @@ local function Resolve(entry)
 
     local now = GetTime()
     local start, duration, remaining = 0, 0, nil
+    local fromAura = false
     if active then
         if aura.duration > 0 then
             start, duration, remaining = aura.expires - aura.duration, aura.duration, aura.expires - now
+            fromAura = true
         end
     elseif cdDuration > ns.GCD_MAX and cdStart > 0 and cdStart + cdDuration > now then
         start, duration, remaining = cdStart, cdDuration, cdStart + cdDuration - now
     end
 
     local dimmed = auraName and not active and duration == 0
-    return icon, start, duration, remaining, dimmed
+    return icon, start, duration, remaining, dimmed, fromAura
 end
 
 function ns.InitSlots()
@@ -81,10 +83,8 @@ function ns.InitSlots()
             local cooldown = CreateFrame("Cooldown", nil, slot, "CooldownFrameTemplate")
             cooldown:SetAllPoints()
             cooldown.noCooldownCount = true -- we draw our own numbers
-            -- reversed: starts with the icon fully visible and darkens as time runs out
-            if cooldown.SetReverse then
-                cooldown:SetReverse(true)
-            elseif not ns.warnedReverse then
+            -- aura timers are reversed (icon starts visible and darkens), cooldowns use the default sweep
+            if not cooldown.SetReverse and not ns.warnedReverse then
                 ns.warnedReverse = true
                 ns.Print("this client has no Cooldown:SetReverse, the side slot sweep can't be reversed")
             end
@@ -110,13 +110,14 @@ function ns.InitSlots()
     end
     ns.ApplyTextSize()
 
-    local function Paint(slot, icon, start, duration, remaining, dimmed)
+    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura)
         if slot.shownIcon ~= icon then
             slot.shownIcon = icon
             slot.icon:SetTexture(icon)
         end
-        if slot.shownStart ~= start or slot.shownDuration ~= duration then
-            slot.shownStart, slot.shownDuration = start, duration
+        if slot.shownStart ~= start or slot.shownDuration ~= duration or slot.shownAura ~= fromAura then
+            slot.shownStart, slot.shownDuration, slot.shownAura = start, duration, fromAura
+            if slot.cooldown.SetReverse then slot.cooldown:SetReverse(fromAura) end
             CooldownFrame_SetTimer(slot.cooldown, start, duration, duration > 0 and 1 or 0)
         end
         slot.icon:SetDesaturated(dimmed and true or false)
@@ -138,10 +139,10 @@ function ns.InitSlots()
             local used = 0
             for _, entry in ipairs(rotation and rotation[key] or {}) do
                 if used >= #row then break end
-                local icon, start, duration, remaining, dimmed = Resolve(entry)
+                local icon, start, duration, remaining, dimmed, fromAura = Resolve(entry)
                 if icon then
                     used = used + 1
-                    Paint(row[used], icon, start, duration, remaining, dimmed)
+                    Paint(row[used], icon, start, duration, remaining, dimmed, fromAura)
                 end
             end
             for i = used + 1, #row do row[i]:Hide() end
