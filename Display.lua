@@ -27,7 +27,7 @@ function ns.InitDisplay()
     -- name of the ability to press, right above the panel
     local nameText = ns.frame:CreateFontString(nil, "OVERLAY")
     ns.RegisterText(nameText, "name")
-    nameText:SetPoint("BOTTOM", ns.frame, "TOP", 0, 4)
+    nameText:SetPoint("BOTTOM", ns.frame, "TOP", 0, 1)
 
     local shown, shownStart, shownDuration, shownReverse
 
