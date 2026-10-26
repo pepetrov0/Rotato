@@ -11,6 +11,7 @@ local ADDON_NAME, ns = ...
 --   playerDebuff = "Name" debuff on the player
 --   debuff     = "Name"  aura on the target (yours only, unless any = true)
 --   targetBuff = "Name"  buff on the target
+--   healTargetDebuff = "Name"  debuff on whoever a heal would go to (mouseover, else target, else you); see c.healTarget
 --   targetBuffType = { "Magic", "Enrage" }  any buff of those dispel types on the target (shown only while present)
 --   show       = "always" (default) or "active": hide while the aura is not up
 --   when       = function(c) extra condition for showing the entry at all
@@ -48,20 +49,23 @@ local function Resolve(entry, rowKey)
     local typeList = entry.targetBuffType
     -- buff may be a list of interchangeable buffs, the first one that is up is shown
     local buffList = type(entry.buff) == "table" and entry.buff or nil
-    local auraName = buffList and buffList[1] or entry.buff or entry.playerDebuff or entry.debuff or entry.targetBuff
-    local aura
+    local auraName = buffList and buffList[1] or entry.buff or entry.playerDebuff or entry.debuff or entry.targetBuff or entry.healTargetDebuff
+    local aura, healUnit
     if buffList then aura = c.anyBuff(buffList)
     elseif entry.buff then aura = c.buff(entry.buff)
     elseif entry.playerDebuff then aura = c.selfDebuff(entry.playerDebuff)
     elseif entry.debuff then aura = c.debuff(entry.debuff, { any = entry.any })
     elseif entry.targetBuff then aura = c.target.buff(entry.targetBuff)
     elseif typeList then aura = c.target.buffOfType(unpack(typeList))
+    elseif entry.healTargetDebuff then
+        healUnit = c.healTarget()
+        aura = c.debuffOn(healUnit, entry.healTargetDebuff)
     end
     local active = aura and aura.up
 
     -- entries that read the target have nothing to show without one
     if (entry.debuff or entry.targetBuff or typeList) and not UnitExists("target") then return end -- playerDebuff reads the player
-    if rowKey == "trackers" and not (entry.buff or entry.debuff or typeList) then return end
+    if rowKey == "trackers" and not (entry.buff or entry.debuff or typeList or entry.healTargetDebuff) then return end
     if (entry.show == "active" or typeList) and not active then return end
     if entry.when and not ns.Passes(entry, auraName or entry.spell) then return end
 
@@ -123,6 +127,7 @@ local function Resolve(entry, rowKey)
         if entry.buff then tip.unit, tip.helpful = "player", true
         elseif entry.playerDebuff then tip.unit, tip.helpful = "player", false
         elseif entry.debuff then tip.unit, tip.helpful = "target", false
+        elseif entry.healTargetDebuff then tip.unit, tip.helpful = healUnit, false
         else tip.unit, tip.helpful = "target", true
         end
     end
