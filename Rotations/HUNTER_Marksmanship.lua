@@ -1,7 +1,7 @@
 local ADDON_NAME, ns = ...
 
--- Conditions are written against the planned condition API (c = state snapshot);
--- nothing evaluates them yet. c.mana is a percentage.
+-- Conditions run against the condition API in Engine.lua (c);
+-- c.mana is a percentage.
 ns.Rotation{
     class = "HUNTER",
     spec = 2, -- Marksmanship

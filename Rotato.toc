@@ -13,3 +13,5 @@ Class.lua
 Rotation.lua
 Rotations\HUNTER_Marksmanship.lua
 Mode.lua
+Engine.lua
+Display.lua
