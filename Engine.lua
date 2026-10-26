@@ -77,11 +77,13 @@ function target.hasBuffType(...)
     return false
 end
 
--- the player's pet; "exists" is false for a dead pet
+-- the player's pet; "exists" is false for a dead pet, "missing" means no pet at all, "dead" a dead one
 local pet = setmetatable({}, {
     __index = function(_, k)
         if k == "exists" then return UnitExists("pet") and not UnitIsDead("pet") and true or false
         elseif k == "hp" then return Percent(UnitHealth("pet"), UnitHealthMax("pet"))
+        elseif k == "missing" then return not UnitExists("pet")
+        elseif k == "dead" then return UnitExists("pet") and UnitIsDead("pet") and true or false
         end
     end,
 })

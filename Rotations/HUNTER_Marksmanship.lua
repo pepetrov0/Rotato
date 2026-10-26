@@ -56,6 +56,8 @@ ns.Rotation{
     utility = {
         { spell = "Misdirection", buff = "Misdirection" },
         { spell = "Readiness" },
+        { spell = "Call Pet", when = function(c) return c.pet.missing end },
+        { spell = "Revive Pet", when = function(c) return c.pet.dead end },
     },
     offensives = {
         { spell = "Rapid Fire", buff = "Rapid Fire" },
