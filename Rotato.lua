@@ -1,7 +1,6 @@
 local ADDON_NAME, ns = ...
 
 local defaults = {
-    mode = "single", -- "single" | "aoe"
     pos = { x = 0, y = -200 }, -- offset from the screen center
     centerSize = 70, -- main icon size in pixels; the small icons derive from it
 }
@@ -10,9 +9,13 @@ function ns.Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99Rotato|r: " .. tostring(msg))
 end
 
--- Will be driven automatically by the addon later.
-function ns.SetMode(mode)
-    RotatoDB.mode = mode
+-- Current rotation, "single" | "aoe". Not saved: it always starts as single (see Mode.lua).
+ns.mode = "single"
+
+function ns.SetMode(mode, reason)
+    if ns.mode == mode then return end
+    ns.mode = mode
+    ns.Print((mode == "aoe" and "AoE" or "Single") .. " rotation" .. (reason and (" (" .. reason .. ")") or ""))
 end
 
 local frame = CreateFrame("Frame")
@@ -29,6 +32,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         -- everything else (ElvUI included) is loaded by now
         ns.CreateUI()
         ns.InitClass()
+        ns.InitMode()
         ns.Print("loaded. /rotato unlock to move or resize, /rotato lock when done.")
     end
 end)

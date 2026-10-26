@@ -10,3 +10,6 @@ Rotato.lua
 UI.lua
 Visibility.lua
 Class.lua
+Rotation.lua
+Rotations\HUNTER_Test.lua
+Mode.lua
