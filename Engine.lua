@@ -77,6 +77,15 @@ local c = setmetatable({ target = target, pet = pet }, {
 
 function c.buff(name) return Aura(UnitBuff, "player", name) end
 
+-- the first of several interchangeable buffs that is up (NO_AURA if none)
+function c.anyBuff(names)
+    for _, name in ipairs(names) do
+        local aura = c.buff(name)
+        if aura.up then return aura end
+    end
+    return NO_AURA
+end
+
 -- debuffs on the target; only yours unless opts.any
 function c.debuff(name, opts)
     return Aura(UnitDebuff, "target", name, not (opts and opts.any) and "PLAYER" or nil)

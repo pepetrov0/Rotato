@@ -7,7 +7,7 @@ local ADDON_NAME, ns = ...
 --
 -- Entry fields (all optional except one of spell / buff / debuff / targetBuff):
 --   spell      = "Name"  cooldown of an ability
---   buff       = "Name"  aura on the player
+--   buff       = "Name"  aura on the player, or { "Name", "Other" } for interchangeable ones (the one that is up is shown)
 --   debuff     = "Name"  aura on the target (yours only, unless any = true)
 --   targetBuff = "Name"  buff on the target
 --   show       = "always" (default) or "active": hide while the aura is not up
@@ -32,9 +32,12 @@ end
 -- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, highlight
 local function Resolve(entry)
     local c = ns.c
-    local auraName = entry.buff or entry.debuff or entry.targetBuff
+    -- buff may be a list of interchangeable buffs, the first one that is up is shown
+    local buffList = type(entry.buff) == "table" and entry.buff or nil
+    local auraName = buffList and buffList[1] or entry.buff or entry.debuff or entry.targetBuff
     local aura
-    if entry.buff then aura = c.buff(entry.buff)
+    if buffList then aura = c.anyBuff(buffList)
+    elseif entry.buff then aura = c.buff(entry.buff)
     elseif entry.debuff then aura = c.debuff(entry.debuff, { any = entry.any })
     elseif entry.targetBuff then aura = c.target.buff(entry.targetBuff)
     end

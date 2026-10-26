@@ -2,6 +2,13 @@ local ADDON_NAME, ns = ...
 
 -- Conditions run against the condition API in Engine.lua (c);
 -- c.mana is a percentage.
+-- the aspects tracked on the side; Dragonhawk and Wild are interchangeable for damage
+local ASPECTS = {
+    "Aspect of the Dragonhawk", "Aspect of the Wild", "Aspect of the Viper", "Aspect of the Hawk",
+    "Aspect of the Beast", "Aspect of the Monkey", "Aspect of the Pack", "Aspect of the Cheetah",
+}
+local DPS_ASPECTS = { "Aspect of the Dragonhawk", "Aspect of the Wild" }
+
 ns.Rotation{
     class = "HUNTER",
     spec = 2, -- Marksmanship
@@ -34,7 +41,7 @@ ns.Rotation{
         end },
         { "Kill Shot", when = function(c) return c.target.hostile and c.target.hp < 20 end },
         { "Aspect of the Dragonhawk", when = function(c)
-            return c.mana > 80 and not c.buff("Aspect of the Dragonhawk").up
+            return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
     },
 
@@ -52,6 +59,7 @@ ns.Rotation{
         { spell = "Rapid Fire", buff = "Rapid Fire" },
     },
     trackers = {
+        { buff = ASPECTS },
         { debuff = "Hunter's Mark", any = true },
         { debuff = "Serpent Sting" },
     },
