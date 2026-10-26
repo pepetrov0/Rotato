@@ -9,7 +9,7 @@ ns.Rotation{
             { "Penance" },
             { "Prayer of Mending" },
             -- on whoever the heal would go to: mouseover, else target, else yourself
-            { "Power Word: Shield", when = function(c)
+            { "Power Word: Shield", manaOnly = true, when = function(c)
                 return not c.debuffOn(c.healTarget(), "Weakened Soul").up
             end },
             { "Flash Heal" },

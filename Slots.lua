@@ -14,6 +14,7 @@ local ADDON_NAME, ns = ...
 --   targetBuffType = { "Magic", "Enrage" }  any buff of those dispel types on the target (shown only while present)
 --   show       = "always" (default) or "active": hide while the aura is not up
 --   when       = function(c) extra condition for showing the entry at all
+--   manaOnly   = true: only the mana cost decides if the spell is usable (for spells cast on others)
 --   recommend  = function(c) true while using it is a good idea: gold border (not in trackers)
 -- An entry can combine an ability with an aura (e.g. spell + buff): while the aura is up its
 -- remaining time sweeps, otherwise the ability's cooldown does. A missing aura is shown dimmed.

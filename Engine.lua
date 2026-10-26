@@ -159,6 +159,14 @@ ns.c = c
 
 -- Evaluation ------------------------------------------------------------
 
+-- IsUsableSpell also looks at the current target, which is wrong for spells cast on someone else
+-- (a Power Word: Shield with an enemy targeted). Entries with manaOnly = true only check the cost.
+local function Usable(entry, name)
+    if not entry.manaOnly then return (IsUsableSpell(name)) and true or false end
+    local _, _, _, cost, _, powerType = GetSpellInfo(name)
+    return not cost or cost == 0 or UnitPower("player", powerType or 0) >= cost
+end
+
 local function Passes(entry, name)
     if not entry.when then return true end
     local ok, result = pcall(entry.when, c)
@@ -202,7 +210,7 @@ function ns.Evaluate()
             if start and Passes(entry, name) then -- start is nil for spells we don't know
                 local remaining = start > 0 and (start + duration - GetTime()) or 0
                 if duration <= GCD_MAX or remaining <= LOOKAHEAD then
-                    if IsUsableSpell(name) then return name, "ready", start, duration, source[1] end
+                    if Usable(entry, name) then return name, "ready", start, duration, source[1] end
                 elseif entry.wait then
                     return name, "cd", start, duration, source[1]
                 end
@@ -226,7 +234,7 @@ function ns.DebugEvaluate()
             local start, duration
             if name then start, duration = GetSpellCooldown(name) end
             ns.Print(format("  %s: %s known=%s when=%s usable=%s cd=%s", key, tostring(name), tostring(start ~= nil),
-                tostring(start and Passes(entry, name)), tostring(name and (IsUsableSpell(name)) and true or false),
+                tostring(start and Passes(entry, name)), tostring(name and Usable(entry, name)),
                 tostring(start and format("%.1f/%.1f", start, duration))))
         end
     end
