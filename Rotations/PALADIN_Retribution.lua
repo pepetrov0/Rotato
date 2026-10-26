@@ -10,6 +10,13 @@ ns.Rotation{
     -- raid flasks/elixirs worth reminding about for this spec
     consumables = { "Flask of Endless Rage" },
 
+    -- out of combat with no hostile target: the first seal you know, until one is up
+    reminders = {
+        { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
+        { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
+        { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
+    },
+
     highprio = {
         -- the first of these that you know
         { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
