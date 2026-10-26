@@ -17,6 +17,7 @@ local ADDON_NAME, ns = ...
 --   targetBuffType = { "Magic", "Enrage" }  any buff of those dispel types on the target (shown only while present)
 --   show       = "always" (default) or "active": hide while the aura is not up
 --   when       = function(c) extra condition for showing the entry at all
+--   always     = true: show a missing aura even if no spell of that name is in the spellbook (talent passives)
 --   manaOnly   = true: only the mana cost decides if the spell is usable (for spells cast on others)
 --   recommend  = function(c) true while using it is a good idea: flashing white border (not in trackers)
 --   lockout    = true: the aura is a restriction counting down (Weakened Soul), blue border while it is up
@@ -85,7 +86,7 @@ local function Resolve(entry, rowKey)
         cdStart, cdDuration = GetSpellCooldown(entry.spell)
         if not cdStart and not active then return end
         cdStart, cdDuration = cdStart or 0, cdDuration or 0
-    elseif auraName and not active and not GetSpellInfo(auraName) then
+    elseif auraName and not active and not entry.always and not GetSpellInfo(auraName) then
         return
     end
 

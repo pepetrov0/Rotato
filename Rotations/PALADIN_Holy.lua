@@ -36,7 +36,7 @@ ns.Rotation{
 
     trackers = {
         { buff = "Seal of Wisdom" },
-        { buff = "Judgements of the Pure" },
+        { buff = "Judgements of the Pure", always = true },
     },
 
     defensives = {
