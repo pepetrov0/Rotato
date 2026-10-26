@@ -53,6 +53,7 @@ function ns.InitDisplay()
             local texture = spell and select(3, GetSpellInfo(spell)) or nil
             center.icon:SetTexture(texture)
             nameText:SetText(spell or "")
+            center.tip = spell and { spell = spell } or nil
         end
         start, duration = start or 0, duration or 0
         reverse = reverse and true or false

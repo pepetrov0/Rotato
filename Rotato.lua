@@ -59,6 +59,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         ns.InitMode()
         ns.InitDisplay()
         ns.InitSlots()
+        ns.InitTooltips()
         ns.Print("loaded. /rotato unlock to move or resize, /rotato lock when done.")
     end
 end)

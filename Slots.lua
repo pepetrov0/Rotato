@@ -39,7 +39,7 @@ local function FormatTime(seconds)
 end
 
 -- Works out what an entry should look like right now. Returns nil when it should not be shown,
--- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash
+-- otherwise: icon, sweepStart, sweepDuration, remaining, dimmed, fromAura, borderColor, flash, tip
 local function Resolve(entry, rowKey)
     local c = ns.c
     local typeList = entry.targetBuffType
@@ -99,7 +99,18 @@ local function Resolve(entry, rowKey)
     elseif active then
         borderColor = (entry.buff or entry.debuff) and GREEN or RED
     end
-    return icon, start, duration, remaining, dimmed, fromAura, borderColor, borderColor and expiring or false
+
+    -- what the Alt tooltip shows: the aura while it is up, otherwise the ability
+    local tip = { spell = entry.spell or auraName }
+    if active and aura.name then
+        tip.aura = aura.name
+        if entry.buff then tip.unit, tip.helpful = "player", true
+        elseif entry.playerDebuff then tip.unit, tip.helpful = "player", false
+        elseif entry.debuff then tip.unit, tip.helpful = "target", false
+        else tip.unit, tip.helpful = "target", true
+        end
+    end
+    return icon, start, duration, remaining, dimmed, fromAura, borderColor, borderColor and expiring or false, tip
 end
 
 function ns.InitSlots()
@@ -134,7 +145,7 @@ function ns.InitSlots()
         end
     end
 
-    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, borderColor, flash)
+    local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, borderColor, flash, tip)
         if slot.shownIcon ~= icon then
             slot.shownIcon = icon
             slot.icon:SetTexture(icon)
@@ -149,6 +160,7 @@ function ns.InitSlots()
         slot.icon:SetVertexColor(shade, shade, shade)
         slot.time:SetText(remaining and FormatTime(remaining) or "")
         slot.flashing = flash
+        slot.tip = tip
         if borderColor then
             slot.border:SetBackdropBorderColor(borderColor[1], borderColor[2], borderColor[3], 1)
             slot.border:Show()
@@ -182,10 +194,10 @@ function ns.InitSlots()
             for _, list in ipairs({ rotation and rotation[key] or {}, ns.common[key] or {} }) do
                 for _, entry in ipairs(list) do
                     if used >= #row then break end
-                    local icon, start, duration, remaining, dimmed, fromAura, borderColor, flash = Resolve(entry, key)
+                    local icon, start, duration, remaining, dimmed, fromAura, borderColor, flash, tip = Resolve(entry, key)
                     if icon then
                         used = used + 1
-                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, borderColor, flash)
+                        Paint(row[used], icon, start, duration, remaining, dimmed, fromAura, borderColor, flash, tip)
                     end
                 end
             end

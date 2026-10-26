@@ -13,6 +13,7 @@ local function Aura(fn, unit, name, filter)
     if not found then return NO_AURA end
     return {
         up = true,
+        name = found,
         icon = icon,
         duration = duration or 0,
         expires = expires or 0,
@@ -48,6 +49,7 @@ function target.buffOfType(...)
             if buffType == select(j, ...) then
                 return {
                     up = true,
+                    name = name,
                     icon = icon,
                     duration = duration or 0,
                     expires = expires or 0,
