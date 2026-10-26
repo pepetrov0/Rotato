@@ -71,7 +71,8 @@ local function Resolve(entry)
         start, duration, remaining = cdStart, cdDuration, cdStart + cdDuration - now
     end
 
-    local dimmed = auraName and not active and duration == 0
+    -- only a bare aura (no ability) is dimmed while missing; an ability that is ready is normal
+    local dimmed = auraName and not entry.spell and not active
     return icon, start, duration, remaining, dimmed, fromAura
 end
 
