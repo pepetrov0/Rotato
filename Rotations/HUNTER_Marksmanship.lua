@@ -15,6 +15,7 @@ ns.Rotation{
 
     -- out of combat with no hostile target; keeps the UI up until done
     reminders = {
+        { "Trueshot Aura", when = function(c) return not c.buff("Trueshot Aura").up end },
         { "Mend Pet", when = function(c)
             return c.pet.exists and c.pet.hp < 100 and not c.pet.buff("Mend Pet").up
         end },
