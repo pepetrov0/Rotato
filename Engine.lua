@@ -6,13 +6,16 @@ local GCD_MAX = 1.5      -- a cooldown this short or shorter is just the global 
 ns.GCD_MAX = GCD_MAX
 local LOOKAHEAD = 0.25   -- a spell this close to ready counts as ready
 
-local NO_AURA = { up = false, remains = 0, stacks = 0, mine = false }
+local NO_AURA = { up = false, remains = 0, stacks = 0, mine = false, duration = 0, expires = 0 }
 
 local function Aura(fn, unit, name, filter)
-    local found, _, _, count, _, _, expires, caster = fn(unit, name, nil, filter)
+    local found, _, icon, count, _, duration, expires, caster = fn(unit, name, nil, filter)
     if not found then return NO_AURA end
     return {
         up = true,
+        icon = icon,
+        duration = duration or 0,
+        expires = expires or 0,
         remains = (expires and expires > 0) and (expires - GetTime()) or math.huge,
         stacks = (count and count > 0) and count or 1,
         mine = caster == "player",
@@ -35,6 +38,8 @@ local target = setmetatable({}, {
         end
     end,
 })
+
+function target.buff(name) return Aura(UnitBuff, "target", name) end
 
 -- true if the target has a buff whose dispel type is one of the given types
 function target.hasBuffType(...)
@@ -75,6 +80,8 @@ end
 
 function c.usable(name) return (IsUsableSpell(name)) and true or false end
 
+ns.c = c
+
 -- Evaluation ------------------------------------------------------------
 
 local function Passes(entry, name)
@@ -89,6 +96,8 @@ local function Passes(entry, name)
     end
     return result and true or false
 end
+
+ns.Passes = Passes
 
 -- Returns spell, state ("ready" | "cd"), cooldown start, cooldown duration and the list it came from
 -- ("reminders", "preparation", "highprio", or the mode); nothing if there is no suggestion.

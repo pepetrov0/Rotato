@@ -31,6 +31,12 @@ ns.Rotation{
         end },
     },
 
+    -- the side slots; see Slots.lua for the entry fields
+    trackers = {
+        { debuff = "Hunter's Mark", any = true },
+        { debuff = "Serpent Sting" },
+    },
+
     rotations = {
         single = {
             { "Aimed Shot" },
