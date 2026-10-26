@@ -40,13 +40,14 @@ local target = setmetatable({}, {
     end,
 })
 
--- the first buff on the target whose dispel type is one of the given types (NO_AURA if none)
-function target.buffOfType(...)
+-- the first aura on a unit whose dispel type is one of the given types (NO_AURA if none);
+-- fn is UnitBuff or UnitDebuff
+local function AuraOfType(fn, unit, ...)
     for i = 1, 40 do
-        local name, _, icon, count, buffType, duration, expires, caster = UnitBuff("target", i)
+        local name, _, icon, count, auraType, duration, expires, caster = fn(unit, i)
         if not name then break end
         for j = 1, select("#", ...) do
-            if buffType == select(j, ...) then
+            if auraType == select(j, ...) then
                 return {
                     up = true,
                     name = name,
@@ -62,6 +63,8 @@ function target.buffOfType(...)
     end
     return NO_AURA
 end
+
+function target.buffOfType(...) return AuraOfType(UnitBuff, "target", ...) end
 
 function target.buff(name) return Aura(UnitBuff, "target", name) end
 
@@ -109,6 +112,9 @@ function c.buff(name) return Aura(UnitBuff, "player", name) end
 
 -- debuffs on the player
 function c.selfDebuff(name) return Aura(UnitDebuff, "player", name) end
+
+-- the first debuff on a unit whose dispel type is one of the given types ("Magic", "Disease", ...)
+function c.debuffOfType(unit, ...) return AuraOfType(UnitDebuff, unit, ...) end
 
 -- debuffs on any unit, from any caster (e.g. Weakened Soul on an ally)
 function c.debuffOn(unit, name) return Aura(UnitDebuff, unit, name) end
