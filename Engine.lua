@@ -36,6 +36,7 @@ local target = setmetatable({}, {
         elseif k == "hp" then return Percent(UnitHealth("target"), UnitHealthMax("target"))
         elseif k == "boss" then return UnitClassification("target") == "worldboss" or UnitLevel("target") == -1
         elseif k == "casting" then return UnitCastingInfo("target") ~= nil
+        elseif k == "creatureType" then return UnitCreatureType("target") -- localized, e.g. "Undead"
         end
     end,
 })
