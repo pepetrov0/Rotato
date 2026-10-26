@@ -65,6 +65,14 @@ local function SkinSlot(f)
     end
 end
 
+-- The fill is the only part made see-through; the border stays so the panel is still findable
+-- at 100%. The base color is read back from whatever skin was applied (ElvUI's own, or ours) and
+-- only its alpha is replaced, so the tint still follows the user's theme.
+function ns.ApplyBackground()
+    local r, g, b = unpack(ns.panelColor)
+    ns.frame:SetBackdropColor(r, g, b, 1 - RotatoDB.backgroundTransparency / 100)
+end
+
 -- Slots --------------------------------------------------------------------
 
 local function SetSlotSize(f, size)
@@ -208,6 +216,21 @@ function ns.OpenMenu()
         })
     end
     tinsert(menu, { text = "Card size", hasArrow = true, notCheckable = true, menuList = cardSizes })
+
+    local transparencies = {}
+    for percent = 0, 100, 10 do
+        tinsert(transparencies, {
+            text = percent .. "%",
+            checked = RotatoDB.backgroundTransparency == percent,
+            func = function()
+                RotatoDB.backgroundTransparency = percent
+                ns.ApplyBackground()
+                CloseDropDownMenus()
+            end,
+        })
+    end
+    tinsert(menu, { text = "Background transparency", hasArrow = true, notCheckable = true,
+        menuList = transparencies })
     tinsert(menu, { text = "Font", hasArrow = true, notCheckable = true, menuList = FontMenu() })
     tinsert(menu, { text = "Cooldown text size", hasArrow = true, notCheckable = true,
         menuList = SizeMenu("cooldownTextSize") })
@@ -321,6 +344,8 @@ function ns.CreateUI()
     f:RegisterForDrag("LeftButton")
     SkinPanel(f)
     ns.frame = f
+    ns.panelColor = { f:GetBackdropColor() }
+    if #ns.panelColor < 3 then ns.panelColor = { 0, 0, 0 } end -- a skin that sets no backdrop color
     ns.guideV, ns.guideH = CreateGuides()
 
     f:SetScript("OnDragStart", DragStart)
@@ -341,5 +366,6 @@ function ns.CreateUI()
 
     ns.ApplySize()
     ns.ApplyPosition()
+    ns.ApplyBackground()
     ns.InitVisibility()
 end
