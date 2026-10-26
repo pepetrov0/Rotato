@@ -104,6 +104,9 @@ local c = setmetatable({ target = target, pet = pet }, {
         elseif k == "hp" then return Percent(UnitHealth("player"), UnitHealthMax("player"))
         elseif k == "moving" then return GetUnitSpeed("player") > 0
         elseif k == "mode" then return ns.mode
+        elseif k == "inRaid" then
+            local _, instanceType = IsInInstance()
+            return instanceType == "raid"
         end
     end,
 })
