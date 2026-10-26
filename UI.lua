@@ -190,6 +190,11 @@ function ns.OpenMenu()
     tinsert(menu, { text = "Label text size", hasArrow = true, notCheckable = true, menuList = SizeMenu("labelSize") })
     tinsert(menu, { text = "Spell name size", hasArrow = true, notCheckable = true, menuList = SizeMenu("nameSize") })
 
+    tinsert(menu, { text = "Lock", notCheckable = true, func = function()
+        ns.SetLocked(true)
+        ns.Print("locked.")
+    end })
+
     EasyMenu(menu, ns.menuFrame, "cursor", 0, 0, "MENU")
 end
 
