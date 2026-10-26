@@ -34,7 +34,7 @@ ns.Rotation{
     },
 
     utility = {
-        { spell = "Shadowfiend" },
+        { spell = "Shadowfiend", recommend = function(c) return c.mana < 20 and c.ready("Shadowfiend") end },
         { spell = "Hymn of Hope" },
         { spell = "Divine Hymn" },
         { spell = "Fear Ward" },
