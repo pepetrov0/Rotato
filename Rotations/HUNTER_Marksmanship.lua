@@ -11,9 +11,9 @@ ns.Rotation{
         { "Hunter's Mark", when = function(c)
             return c.target.hostile and not c.debuff("Hunter's Mark", { any = true }).up
         end },
-        -- stays on screen until pressed: regenerate mana between fights
+        -- stays on screen until pressed, target or not: regenerate mana between fights
         { "Aspect of the Viper", when = function(c)
-            return c.mana < 100 and not c.buff("Aspect of the Viper").up
+            return not c.buff("Aspect of the Viper").up
         end },
     },
 
