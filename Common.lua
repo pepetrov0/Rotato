@@ -10,7 +10,7 @@ local FLASKS = {
 }
 local function NeedsFlask(c) return not c.anyBuff(FLASKS).up end
 -- the other flasks are expensive: only worth suggesting inside a raid instance
-local function NeedsRaidFlask(c) return c.inRaid and NeedsFlask(c) end
+local function NeedsRaidFlask(c) return RotatoDB.remindRaidFlasks and c.inRaid and NeedsFlask(c) end
 
 ns.common = {
     -- suggested when it is in the bags and no flask is active

@@ -190,6 +190,9 @@ function ns.OpenMenu()
     tinsert(menu, { text = "Label text size", hasArrow = true, notCheckable = true, menuList = SizeMenu("labelSize") })
     tinsert(menu, { text = "Spell name size", hasArrow = true, notCheckable = true, menuList = SizeMenu("nameSize") })
 
+    tinsert(menu, { text = "Remind about raid flasks", isNotRadio = true, keepShownOnClick = true,
+        checked = RotatoDB.remindRaidFlasks,
+        func = function(_, _, _, checked) RotatoDB.remindRaidFlasks = checked end })
     tinsert(menu, { text = "Lock", notCheckable = true, func = function()
         ns.SetLocked(true)
         ns.Print("locked.")
