@@ -28,6 +28,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
     elseif event == "PLAYER_LOGIN" then
         -- everything else (ElvUI included) is loaded by now
         ns.CreateUI()
+        ns.InitClass()
         ns.Print("loaded. /rotato unlock to move or resize, /rotato lock when done.")
     end
 end)

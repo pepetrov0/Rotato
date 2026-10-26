@@ -9,3 +9,4 @@
 Rotato.lua
 UI.lua
 Visibility.lua
+Class.lua
