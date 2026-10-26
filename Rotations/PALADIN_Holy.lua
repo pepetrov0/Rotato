@@ -25,12 +25,18 @@ ns.Rotation{
                 local shield = c.groupBuff("Sacred Shield")
                 return not shield.up or shield.remains < 30
             end },
+            -- keeps Judgements of the Pure up
+            { "Judgement of Light", when = function(c)
+                local pure = c.buff("Judgements of the Pure")
+                return not pure.up or pure.remains < 30
+            end },
             { "Holy Light" },
         },
     },
 
     trackers = {
         { buff = "Seal of Wisdom" },
+        { buff = "Judgements of the Pure" },
     },
 
     defensives = {
