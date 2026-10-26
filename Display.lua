@@ -22,10 +22,18 @@ function ns.InitDisplay()
     -- desaturated copy of the icon, covering the right-hand part that has not turned to color yet
     local gray = overlay:CreateTexture(nil, "ARTWORK")
     gray:SetDesaturated(true)
-    gray:SetVertexColor(0.8, 0.8, 0.8)
+    gray:SetVertexColor(0.45, 0.45, 0.45) -- dark enough to contrast even if desaturation is unsupported
     gray:SetPoint("TOPRIGHT", center.icon, "TOPRIGHT")
     gray:SetPoint("BOTTOMRIGHT", center.icon, "BOTTOMRIGHT")
     gray:Hide()
+
+    -- bright edge on the boundary, so the movement is easy to follow
+    local edge = overlay:CreateTexture(nil, "OVERLAY")
+    edge:SetTexture(1, 1, 1, 0.9)
+    edge:SetWidth(2)
+    edge:SetPoint("TOPRIGHT", gray, "TOPLEFT")
+    edge:SetPoint("BOTTOMRIGHT", gray, "BOTTOMLEFT")
+    edge:Hide()
 
     local label = overlay:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     label:SetPoint("BOTTOM", 0, 3)
@@ -52,8 +60,10 @@ function ns.InitDisplay()
             gray:SetTexCoord(left + (1 - grayFraction) * (right - left), right, top, bottom)
             gray:SetWidth(math.max(0.001, grayFraction * center.icon:GetWidth()))
             gray:Show()
+            edge:Show()
         else
             gray:Hide()
+            edge:Hide()
         end
         label:SetText(text or "")
     end
