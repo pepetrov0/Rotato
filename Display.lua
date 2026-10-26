@@ -6,6 +6,7 @@ local ADDON_NAME, ns = ...
 -- the next suggestion if it differs, so it can be queued.
 
 local TICK = 0.05
+local FALLBACK_FONT = "Fonts\\FRIZQT__.TTF"
 local NEXT_WINDOW = 0.5 -- seconds before a cast/channel ends at which the next spell is shown
 
 function ns.InitDisplay()
@@ -35,8 +36,17 @@ function ns.InitDisplay()
     edge:SetPoint("BOTTOMRIGHT", gray, "BOTTOMLEFT")
     edge:Hide()
 
-    local label = overlay:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    -- text uses the combat text font (ElvUI sets DAMAGE_TEXT_FONT to its own choice)
+    local font = DAMAGE_TEXT_FONT or FALLBACK_FONT
+
+    local label = overlay:CreateFontString(nil, "OVERLAY")
+    label:SetFont(font, 12, "OUTLINE")
     label:SetPoint("BOTTOM", 0, 3)
+
+    -- name of the ability to press, right above the panel
+    local nameText = ns.frame:CreateFontString(nil, "OVERLAY")
+    nameText:SetFont(font, 16, "OUTLINE")
+    nameText:SetPoint("BOTTOM", ns.frame, "TOP", 0, 4)
 
     local shown, shownStart, shownDuration
     local preview -- spell last shown as "Next"; keeps its label until you start casting something
@@ -48,6 +58,7 @@ function ns.InitDisplay()
             local texture = spell and select(3, GetSpellInfo(spell)) or nil
             center.icon:SetTexture(texture)
             gray:SetTexture(texture)
+            nameText:SetText(spell or "")
         end
         start, duration = start or 0, duration or 0
         if start ~= shownStart or duration ~= shownDuration then
@@ -95,7 +106,10 @@ function ns.InitDisplay()
 
         local spell, state, start, duration = ns.Evaluate()
         if spell ~= preview then preview = nil end
-        Render(spell, start, duration, (spell == preview and "Next") or (state == "cd" and "Cooldown") or nil)
+        -- while the global cooldown runs, the suggestion is what to press next
+        local gcdRunning = start and duration and start > 0 and duration <= ns.GCD_MAX and start + duration > GetTime()
+        local text = (state == "cd" and "Cooldown") or ((spell == preview or gcdRunning) and "Next") or nil
+        Render(spell, start, duration, text)
     end
 
     local elapsedTotal = 0

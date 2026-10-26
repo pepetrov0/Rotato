@@ -3,6 +3,7 @@ local ADDON_NAME, ns = ...
 -- Condition API ("c") handed to rotation `when` functions. Everything is read live.
 
 local GCD_MAX = 1.5      -- a cooldown this short or shorter is just the global cooldown
+ns.GCD_MAX = GCD_MAX
 local LOOKAHEAD = 0.25   -- a spell this close to ready counts as ready
 
 local NO_AURA = { up = false, remains = 0, stacks = 0, mine = false }
