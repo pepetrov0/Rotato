@@ -121,19 +121,23 @@ local TEXT_SIZES = { 8, 10, 12, 14, 16, 18, 20, 24 }
 
 function ns.OpenMenu()
     ns.menuFrame = ns.menuFrame or CreateFrame("Frame", "RotatoMenu", UIParent, "UIDropDownMenuTemplate")
-    local menu = { { text = "Rotato", isTitle = true, notCheckable = true },
-                   { text = "Main icon size", isTitle = true, notCheckable = true } }
+    local menu = { { text = "Rotato", isTitle = true, notCheckable = true } }
+
+    local cardSizes = {}
     for _, preset in ipairs(SIZE_PRESETS) do
         local name, size = preset[1], preset[2]
-        tinsert(menu, {
+        tinsert(cardSizes, {
             text = name .. " (" .. size .. ")",
             checked = RotatoDB.centerSize == size,
             func = function()
                 RotatoDB.centerSize = size
                 ns.ApplySize()
+                CloseDropDownMenus()
             end,
         })
     end
+    tinsert(menu, { text = "Card size", hasArrow = true, notCheckable = true, menuList = cardSizes })
+
     local textSizes = {}
     for _, size in ipairs(TEXT_SIZES) do
         tinsert(textSizes, {
