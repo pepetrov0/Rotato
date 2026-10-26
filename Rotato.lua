@@ -12,7 +12,7 @@ local defaults = {
     labelSize = 12,
     nameSize = 16,
 
-    backgroundTransparency = 20, -- percent; 0 is opaque, 100 is invisible. 20 matches the old fixed 0.8 alpha
+    backgroundTransparency = 50, -- percent; 0 is opaque, 100 is invisible
 
 }
 
