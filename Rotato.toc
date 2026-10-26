@@ -12,6 +12,7 @@ Visibility.lua
 Class.lua
 Rotation.lua
 Rotations\HUNTER_Marksmanship.lua
+Rotations\PRIEST_Discipline.lua
 Mode.lua
 Engine.lua
 Display.lua

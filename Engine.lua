@@ -110,6 +110,20 @@ function c.buff(name) return Aura(UnitBuff, "player", name) end
 -- debuffs on the player
 function c.selfDebuff(name) return Aura(UnitDebuff, "player", name) end
 
+-- debuffs on any unit, from any caster (e.g. Weakened Soul on an ally)
+function c.debuffOn(unit, name) return Aura(UnitDebuff, unit, name) end
+
+-- Who a heal would go to, as a mouseover/target/self macro would pick: the mouseover if it is a
+-- living friend, else the target if it is, else the player.
+function c.healTarget()
+    for _, unit in ipairs({ "mouseover", "target" }) do
+        if UnitExists(unit) and UnitIsFriend("player", unit) and not UnitIsDeadOrGhost(unit) then
+            return unit
+        end
+    end
+    return "player"
+end
+
 -- the first of several interchangeable buffs that is up (NO_AURA if none)
 function c.anyBuff(names)
     for _, name in ipairs(names) do
