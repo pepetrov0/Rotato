@@ -71,10 +71,10 @@ ns.Rotation{
         { "Aspect of the Viper", when = function(c)
             return c.mana < 10 and not c.buff("Aspect of the Viper").up
         end },
-        { "Kill Shot", when = function(c) return c.target.hostile and c.target.hp < 20 end },
         { variant = "dpsAspect", when = function(c)
             return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
+        { "Kill Shot", when = function(c) return c.target.hostile and c.target.hp < 20 end },
     },
 
     rotations = {
