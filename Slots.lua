@@ -124,6 +124,15 @@ function ns.InitSlots()
         gray:Show()
     end
 
+    function ns.ApplyTextSize()
+        for _, key in ipairs(ROW_KEYS) do
+            for _, slot in ipairs(ns[key]) do
+                slot.time:SetFont(font, RotatoDB.cooldownTextSize, "OUTLINE")
+            end
+        end
+    end
+    ns.ApplyTextSize()
+
     local function Paint(slot, icon, start, duration, remaining, dimmed)
         if slot.shownIcon ~= icon then
             slot.shownIcon = icon

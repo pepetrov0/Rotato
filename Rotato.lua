@@ -2,6 +2,7 @@ local ADDON_NAME, ns = ...
 
 local defaults = {
     pos = { x = 0, y = -200 }, -- offset from the screen center
+    cooldownTextSize = 12, -- font size of the countdown numbers on the side slots
     centerSize = 70, -- main icon size in pixels; the small icons derive from it
 }
 

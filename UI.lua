@@ -117,6 +117,8 @@ local SIZE_PRESETS = {
     { "Huge", 150 },
 }
 
+local TEXT_SIZES = { 8, 10, 12, 14, 16, 18, 20, 24 }
+
 function ns.OpenMenu()
     ns.menuFrame = ns.menuFrame or CreateFrame("Frame", "RotatoMenu", UIParent, "UIDropDownMenuTemplate")
     local menu = { { text = "Rotato", isTitle = true, notCheckable = true },
@@ -132,6 +134,20 @@ function ns.OpenMenu()
             end,
         })
     end
+    local textSizes = {}
+    for _, size in ipairs(TEXT_SIZES) do
+        tinsert(textSizes, {
+            text = tostring(size),
+            checked = RotatoDB.cooldownTextSize == size,
+            func = function()
+                RotatoDB.cooldownTextSize = size
+                ns.ApplyTextSize()
+                CloseDropDownMenus()
+            end,
+        })
+    end
+    tinsert(menu, { text = "Cooldown text size", hasArrow = true, notCheckable = true, menuList = textSizes })
+
     EasyMenu(menu, ns.menuFrame, "cursor", 0, 0, "MENU")
 end
 
