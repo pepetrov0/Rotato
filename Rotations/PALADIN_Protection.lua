@@ -63,9 +63,6 @@ ns.Rotation{
             return not shield.up or shield.remains < SACRED_SHIELD_REFRESH
         end },
 
-        -- Kept up whenever it is off cooldown; the buff only lasts 15 seconds of its 60 second cooldown
-        { "Divine Plea", when = function(c) return not c.buff("Divine Plea").up end },
-
         { "Holy Shield", when = function(c)
             local shield = c.buff("Holy Shield")
             return not shield.up or shield.remains < HOLY_SHIELD_REFRESH
@@ -113,7 +110,8 @@ ns.Rotation{
         { spell = "Hammer of Justice", recommend = function(c)
             return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
         end },
-        { spell = "Divine Plea", buff = "Divine Plea" },
+        { spell = "Hand of Reckoning" },
+        { spell = "Righteous Defense" },
         { spell = "Hand of Salvation", buff = "Hand of Salvation" },
         { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },
