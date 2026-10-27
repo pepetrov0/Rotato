@@ -3,35 +3,29 @@ local ADDON_NAME, ns = ...
 -- Holy paladin. Conditions are functions of `c`, the condition API in Engine.lua; c.mana is a
 -- percentage. The entry fields for the side slots are described in Slots.lua.
 
+local Paladin = ns.Paladin
+
+local function SealOfWisdom()
+    return { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end }
+end
+
 ns.Rotation{
     class = "PALADIN",
     spec = 1, -- Holy
 
-    -- Which Judgement is in use cannot be read from the game, only from what the player casts, so
-    -- casting one makes it the current one (see Rotation.lua). Entries say { variant = "judgement" }
-    -- and follow it. The choice is not saved, a new session starts on the default.
-    variants = {
-        judgement = {
-            default = "light",
-            light = { "Judgement of Light" },
-            wisdom = { "Judgement of Wisdom" },
-        },
-    },
+    -- The current Judgement follows what the player casts (see Rotation.lua).
+    variants = { judgement = Paladin.JudgementVariant("light") },
 
     -- Seal of Wisdom is the only seal that matters for a healer, so unlike Retribution there is
     -- no list of alternatives to choose from.
     reminders = {
-        { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
+        SealOfWisdom(),
     },
 
     highprio = {
-        { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
+        SealOfWisdom(),
 
-        -- Dispelling a friend outranks keeping debuffs and shields up. The unit is the one a heal
-        -- would land on (mouseover, else target, else yourself).
-        { "Cleanse", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
-        end },
+        Paladin.Cleanse(),
 
         -- Beacon and Sacred Shield are single-target, so "missing" means missing on everyone in
         -- the group, not on whoever happens to be targeted. Refreshed under 15 seconds so they
@@ -51,10 +45,8 @@ ns.Rotation{
         { variant = "judgement", when = function(c)
             local pure = c.buff("Judgements of the Pure")
             if not pure.up or pure.remains < 30 then return true end
-            -- without a target there is no debuff to read, and its absence would look like a missing one
-            if not c.target.hostile then return false end
-            local judgement = c.debuff(c.variantName("judgement"), { any = true })
-            return not judgement.up or judgement.remains < 5
+            -- the debuff needs a target to be read, the Pure upkeep above does not
+            return Paladin.JudgementDue(c)
         end },
 
         -- Below this mana the Plea is worth its healing penalty; it is not suggested while it is up
@@ -68,13 +60,11 @@ ns.Rotation{
     },
 
     trackers = {
-        { buff = "Seal of Wisdom" },
         -- `always`: this is a talent passive, so its name is not in the spellbook and it would be
         -- hidden while missing, which is exactly when it should be shown
         { buff = "Judgements of the Pure", always = true },
         { debuff = { variant = "judgement" }, any = true },
-        -- something you can Cleanse on the unit the next heal would go to
-        { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
+        Paladin.CleanseTracker(),
     },
 
     defensives = {
@@ -85,9 +75,7 @@ ns.Rotation{
     },
 
     utility = {
-        { spell = "Hammer of Justice", recommend = function(c)
-            return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
-        end },
+        Paladin.HammerOfJustice(),
         -- Early, at 75%, because the offensive cooldowns below are recommended while it is up
         { spell = "Hand of Salvation", buff = "Hand of Salvation" },
         { spell = "Hand of Freedom", buff = "Hand of Freedom" },

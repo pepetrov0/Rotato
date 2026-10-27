@@ -3,42 +3,25 @@ local ADDON_NAME, ns = ...
 -- Retribution paladin. Conditions are functions of `c`, the condition API in Engine.lua; c.mana is
 -- a percentage. The entry fields for the side slots are described in Slots.lua.
 
--- Any seal will do for upkeep. Vengeance is the Alliance seal and Corruption the Horde one, and
--- Command is a talent, so each character only knows some of them; the entries below are tried in
--- order and the first one that is known wins.
-local SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
+local Paladin = ns.Paladin
+local SEALS = Paladin.SEALS
 
 ns.Rotation{
     class = "PALADIN",
     spec = 3, -- Retribution
 
-    -- Which Judgement is in use cannot be read from the game, only from what the player casts, so
-    -- casting one makes it the current one (see Rotation.lua). Retribution defaults to Wisdom: it is
-    -- the one that returns mana.
-    variants = {
-        judgement = {
-            default = "wisdom",
-            light = { "Judgement of Light" },
-            wisdom = { "Judgement of Wisdom" },
-        },
+    -- The current Judgement follows what the player casts (see Rotation.lua).
+    -- Retribution defaults to Wisdom: it is the one that returns mana.
+    variants = { judgement = Paladin.JudgementVariant("wisdom") },
+
+    reminders = Paladin.List{
+        Paladin.SealUpkeep(),
     },
 
-    reminders = {
-        { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
-    },
+    highprio = Paladin.List{
+        Paladin.SealUpkeep(),
 
-    highprio = {
-        { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
-
-        -- Dispelling a friend outranks keeping debuffs and shields up. The unit is the one a heal
-        -- would land on (mouseover, else target, else yourself).
-        { "Cleanse", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
-        end },
+        Paladin.Cleanse(),
 
         -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops.
@@ -48,8 +31,7 @@ ns.Rotation{
             if not c.target.hostile then return false end
             local replenishment = c.buff("Replenishment")
             if not replenishment.up or replenishment.remains < 5 then return true end
-            local judgement = c.debuff(c.variantName("judgement"), { any = true })
-            return not judgement.up or judgement.remains < 5
+            return Paladin.JudgementDue(c)
         end },
 
         -- Below this mana the Plea is worth its healing penalty; it is not suggested while it is up
@@ -79,8 +61,7 @@ ns.Rotation{
     trackers = {
         { buff = SEALS },
         { debuff = { variant = "judgement" }, any = true },
-        -- something you can Cleanse on the unit the next heal would go to
-        { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
+        Paladin.CleanseTracker(),
     },
 
     defensives = {
@@ -90,9 +71,7 @@ ns.Rotation{
     },
 
     utility = {
-        { spell = "Hammer of Justice", recommend = function(c)
-            return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
-        end },
+        Paladin.HammerOfJustice(),
         { spell = "Hand of Salvation", buff = "Hand of Salvation" },
         { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },

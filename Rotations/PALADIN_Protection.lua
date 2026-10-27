@@ -1,13 +1,10 @@
 local ADDON_NAME, ns = ...
 
--- Protection paladin, built on the Retribution file. Conditions are functions of `c`, the condition
--- API in Engine.lua; c.mana is a percentage. The entry fields for the side slots are described in
--- Slots.lua.
+-- Protection paladin. Conditions are functions of `c`, the condition API in Engine.lua; c.mana is
+-- a percentage. The entry fields for the side slots are described in Slots.lua.
 
--- Any seal will do for upkeep. Vengeance is the Alliance seal and Corruption the Horde one, and
--- Command is a talent, so each character only knows some of them; the entries below are tried in
--- order and the first one that is known wins.
-local SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
+local Paladin = ns.Paladin
+local SEALS = Paladin.SEALS
 
 -- Either blessing counts, and so does another paladin's: only one Sanctuary can be on a target, so
 -- covering it ourselves would just overwrite theirs. The single blessing is the one suggested
@@ -19,44 +16,38 @@ local SANCTUARY = { "Blessing of Sanctuary", "Greater Blessing of Sanctuary" }
 local SACRED_SHIELD_REFRESH = 15
 local HOLY_SHIELD_REFRESH = 3
 
+local function RighteousFury()
+    return { "Righteous Fury", when = function(c) return not c.buff("Righteous Fury").up end }
+end
+
+local function Sanctuary()
+    return { "Blessing of Sanctuary", when = function(c) return not c.anyBuff(SANCTUARY).up end }
+end
+
 ns.Rotation{
     class = "PALADIN",
     spec = 2, -- Protection
 
-    -- Which Judgement is in use cannot be read from the game, only from what the player casts, so
-    -- casting one makes it the current one (see Rotation.lua). Protection defaults to Light: the
-    -- healing on the tank's own hits is worth more than the mana of Wisdom.
-    variants = {
-        judgement = {
-            default = "light",
-            light = { "Judgement of Light" },
-            wisdom = { "Judgement of Wisdom" },
-        },
+    -- The current Judgement follows what the player casts (see Rotation.lua).
+    -- Protection defaults to Light: the healing on the tank's own hits is worth more than the mana
+    -- of Wisdom.
+    variants = { judgement = Paladin.JudgementVariant("light") },
+
+    reminders = Paladin.List{
+        RighteousFury(),
+        Sanctuary(),
+        Paladin.SealUpkeep(),
     },
 
-    reminders = {
-        { "Righteous Fury", when = function(c) return not c.buff("Righteous Fury").up end },
-        { "Blessing of Sanctuary", when = function(c) return not c.anyBuff(SANCTUARY).up end },
-        { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
-    },
-
-    highprio = {
+    highprio = Paladin.List{
         -- Without it the paladin generates no threat, so it outranks everything else
-        { "Righteous Fury", when = function(c) return not c.buff("Righteous Fury").up end },
+        RighteousFury(),
 
-        { "Blessing of Sanctuary", when = function(c) return not c.anyBuff(SANCTUARY).up end },
+        Sanctuary(),
 
-        { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
-        { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
+        Paladin.SealUpkeep(),
 
-        -- Dispelling a friend outranks keeping debuffs and shields up. The unit is the one a heal
-        -- would land on (mouseover, else target, else yourself).
-        { "Cleanse", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
-        end },
+        Paladin.Cleanse(),
 
         { "Sacred Shield", when = function(c)
             local shield = c.buff("Sacred Shield")
@@ -74,9 +65,7 @@ ns.Rotation{
         -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops.
         { variant = "judgement", when = function(c)
-            if not c.target.hostile then return false end
-            local judgement = c.debuff(c.variantName("judgement"), { any = true })
-            return not judgement.up or judgement.remains < 5
+            return Paladin.JudgementDue(c)
         end },
     },
 
@@ -95,8 +84,7 @@ ns.Rotation{
     trackers = {
         { buff = SEALS },
         { debuff = { variant = "judgement" }, any = true },
-        -- something you can Cleanse on the unit the next heal would go to
-        { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
+        Paladin.CleanseTracker(),
     },
 
     defensives = {
@@ -108,9 +96,7 @@ ns.Rotation{
     },
 
     utility = {
-        { spell = "Hammer of Justice", recommend = function(c)
-            return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
-        end },
+        Paladin.HammerOfJustice(),
         { spell = "Hand of Reckoning" },
         { spell = "Righteous Defense" },
     },
