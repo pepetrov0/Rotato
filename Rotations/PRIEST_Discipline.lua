@@ -63,7 +63,9 @@ ns.Rotation{
         { spell = "Shadowfiend", recommend = function(c) return c.mana < 20 and c.ready("Shadowfiend") end },
         { spell = "Hymn of Hope" },
         { spell = "Divine Hymn" },
-        { spell = "Fear Ward" },
+        -- the buff is included so the slot shows the aura (green, with its remaining time) while the
+        -- ward is on you, whoever cast it, and the cooldown the rest of the time
+        { spell = "Fear Ward", buff = "Fear Ward" },
     },
 
     defensives = {
