@@ -5,7 +5,9 @@ local ADDON_NAME, ns = ...
 -- There is no reliable way to count enemies in 3.3.5, but the player's own spell choice is a good
 -- signal: a spell that only exists in the aoe list means they are doing aoe. So a cast of a spell
 -- the current rotation lacks switches to the first rotation (in ns.MODES order) that has it.
--- Spells that are in no rotation (reminders, preparation, highprio) never change the mode.
+-- Spells that are in no rotation (reminders, preparation, highprio) never change the mode, and
+-- neither does a spell that a highprio entry is asking for right now: it was cast for the upkeep,
+-- not as a choice of rotation.
 --
 -- It reacts when a cast or channel starts, not when it lands, so the suggestion follows the
 -- player immediately instead of one spell late. Leaving combat goes back to single.
@@ -39,6 +41,17 @@ local function ModeSpells(rotation)
     return sets
 end
 
+-- True when a highprio entry for this spell currently passes its condition
+local function AskedForByHighprio(rotation, spell)
+    for _, entry in ipairs(ns.Tier(rotation, "highprio")) do
+        local spells = entry.variant and ns.VariantAllSpells(entry.variant) or { entry[1] }
+        for _, name in ipairs(spells) do
+            if ns.SpellName(name) == spell and ns.Passes(entry, spell) then return true end
+        end
+    end
+    return false
+end
+
 function ns.InitMode()
     local f = CreateFrame("Frame")
     f:RegisterEvent("UNIT_SPELLCAST_START")         -- cast-time spells, the moment the cast begins
@@ -60,6 +73,7 @@ function ns.InitMode()
         if event == "UNIT_SPELLCAST_SUCCEEDED" then ns.CheckVariants(rotation, spell) end
 
         local sets = ModeSpells(rotation)
+        if AskedForByHighprio(rotation, spell) then return end
         if sets[ns.mode][spell] then return end -- the current rotation has it, nothing to switch
         for _, mode in ipairs(ns.MODES) do
             if sets[mode][spell] then

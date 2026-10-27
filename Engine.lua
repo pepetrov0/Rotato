@@ -297,6 +297,7 @@ local function Tier(rotation, key)
     end
     return cache[key]
 end
+ns.Tier = Tier
 
 -- Returns the suggestion: spell, state ("ready" | "cd"), cooldown start, cooldown duration and the
 -- tier it came from ("reminders", "preparation", "highprio", or the mode). Nothing when there is none.
