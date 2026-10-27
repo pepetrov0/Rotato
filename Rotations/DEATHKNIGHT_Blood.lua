@@ -75,6 +75,8 @@ ns.Rotation{
         { spell = "Icebound Fortitude", buff = "Icebound Fortitude" },
         { spell = "Anti-Magic Shell", buff = "Anti-Magic Shell" },
         { spell = "Death Pact" },
+        -- the aura sits on the enemy, so it is read as a debuff on the target
+        { spell = "Mark of Blood", debuff = "Mark of Blood" },
         { spell = "Blood Tap", buff = "Blood Armor" },
     },
 }
