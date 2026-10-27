@@ -41,6 +41,11 @@ ns.Rotation{
         { debuff = "Rupture" }, -- only yours counts: the bleed it tracks is your own
     },
 
+    offensives = {
+        -- worth using on cooldown
+        { spell = "Blade Flurry", buff = "Blade Flurry", recommend = function(c) return c.ready("Blade Flurry") end },
+    },
+
     defensives = {
         { spell = "Evasion", buff = "Evasion" },
         { spell = "Feint", buff = "Feint" },
