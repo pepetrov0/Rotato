@@ -3,7 +3,18 @@ local ADDON_NAME, ns = ...
 -- Discipline priest. Conditions are functions of `c`, the condition API in Engine.lua; c.mana is a
 -- percentage. The entry fields for the side slots are described in Slots.lua.
 
-local HASTE_EFFECTS = { "Bloodlust", "Heroism" }
+-- Buffs Power Infusion does not stack with: the other haste buffs, and Arcane Power, which a cast
+-- of it on the mage is refused over.
+local POWER_INFUSION_CONFLICTS = { "Bloodlust", "Heroism", "Arcane Power" }
+
+-- Checked on whoever it would go to (mouseover, else target, else yourself), like the shield.
+local function PowerInfusionBlocked(c)
+    local unit = c.healTarget()
+    for _, name in ipairs(POWER_INFUSION_CONFLICTS) do
+        if c.buffOnAny(unit, name).up then return true end
+    end
+    return false
+end
 
 ns.Rotation{
     class = "PRIEST",
@@ -57,6 +68,10 @@ ns.Rotation{
         { healTargetDebuffType = { "Disease", "Magic" } },
         -- only shown while an Abolish Disease is ticking on that same unit, whoever cast it
         { healTargetBuffAny = "Abolish Disease", show = "active" },
+        -- on that same unit, where Power Infusion would be wasted
+        { healTargetBuffAny = "Bloodlust", show = "active", blocking = true },
+        { healTargetBuffAny = "Heroism", show = "active", blocking = true },
+        { healTargetBuffAny = "Arcane Power", show = "active", blocking = true },
     },
 
     utility = {
@@ -79,12 +94,12 @@ ns.Rotation{
     },
 
     offensives = {
-        -- Worth casting whenever it is ready, except under Bloodlust/Heroism, where it is not worth
-        -- it: grayed out and not recommended then.
+        -- Worth casting whenever it is ready, except on someone with a buff it does not stack with:
+        -- grayed out and not recommended then.
         { spell = "Power Infusion", buff = "Power Infusion",
           recommend = function(c)
-              return c.ready("Power Infusion") and not c.anyBuff(HASTE_EFFECTS).up
+              return c.ready("Power Infusion") and not PowerInfusionBlocked(c)
           end,
-          discourage = function(c) return c.anyBuff(HASTE_EFFECTS).up end },
+          discourage = PowerInfusionBlocked },
     },
 }
