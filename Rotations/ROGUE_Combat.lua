@@ -52,6 +52,9 @@ ns.Rotation{
         { spell = "Kick", recommend = function(c)
             return c.target.hostile and c.target.casting and c.ready("Kick")
         end },
-        { spell = "Dismantle" },
+        -- it disarms, which only humanoids carry a weapon for
+        { spell = "Dismantle", recommend = function(c)
+            return c.target.hostile and c.target.creatureType == "Humanoid" and c.ready("Dismantle")
+        end },
     },
 }
