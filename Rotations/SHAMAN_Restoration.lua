@@ -13,7 +13,10 @@ local function EarthlivingWeapon()
 end
 
 local function WaterShield()
-    return { "Water Shield", when = function(c) return not c.buff("Water Shield").up end }
+    return { "Water Shield", when = function(c)
+        local shield = c.buff("Water Shield")
+        return not shield.up or shield.remains < 15
+    end }
 end
 
 -- Bloodlust is the Horde spell and Heroism the Alliance one; a character only knows one of them
