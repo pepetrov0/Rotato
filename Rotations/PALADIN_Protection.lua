@@ -75,6 +75,14 @@ ns.Rotation{
 
         -- Only usable under 20% health, which the game enforces, so no explicit threshold here
         { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
+
+        -- Last, so it only comes up when nothing more urgent is waiting. The unit is the one a heal
+        -- would land on (mouseover, else target, else yourself).
+        -- Cleanse only removes Magic with Holy's Sacred Cleansing talent, so suggesting it for a Magic
+        -- debuff here would never go away.
+        { "Cleanse", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Poison", "Disease").up
+        end },
     },
 
     rotations = {

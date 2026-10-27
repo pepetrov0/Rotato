@@ -34,6 +34,12 @@ ns.Rotation{
             local judgement = c.debuff(c.variantName("judgement"), { any = true })
             return not judgement.up or judgement.remains < 5
         end },
+
+        -- Last, so it only comes up when nothing more urgent is waiting. The unit is the one a heal
+        -- would land on (mouseover, else target, else yourself).
+        { "Cleanse", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
+        end },
     },
 
     rotations = {

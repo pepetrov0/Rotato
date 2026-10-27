@@ -15,6 +15,18 @@ ns.Rotation{
         { "Inner Fire", when = function(c) return not c.buff("Inner Fire").up end },
         -- below 20% mana the Shadowfiend is worth more than any heal, it is the mana source
         { "Shadowfiend", when = function(c) return c.mana < 20 end },
+
+        -- Last, so it only comes up when nothing more urgent is waiting. The unit is the one a heal
+        -- would land on (mouseover, else target, else yourself).
+        { "Dispel Magic", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Magic").up
+        end },
+        -- Abolish Disease keeps ticking on the unit for a while, so while it is up the disease is
+        -- already being handled and suggesting it again would just refresh it.
+        { "Abolish Disease", when = function(c)
+            local unit = c.healTarget()
+            return c.debuffOfType(unit, "Disease").up and not UnitBuff(unit, "Abolish Disease")
+        end },
     },
 
     rotations = {
