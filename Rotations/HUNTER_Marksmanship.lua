@@ -60,12 +60,14 @@ ns.Rotation{
         -- once per death, see the reminder above; kept here too in case it fell off mid-fight
         { "Trueshot Aura", when = function(c) return not c.buff("Trueshot Aura").up end },
 
+        -- Upkeep rather than damage: a boss is the only target worth a mid-fight refresh;
+        -- anything hostile is marked before a pull (see preparation).
+        { "Hunter's Mark", when = function(c)
+            return c.target.boss and not c.debuff("Hunter's Mark", { any = true }).up
+        end },
+
         -- Top priority: an enrage can kill a tank outright, so removing it beats any damage
         { "Tranquilizing Shot", when = function(c) return c.target.hasBuffType("Enrage", "Magic") end },
-
-        { "Mend Pet", when = function(c)
-            return c.combat and c.pet.exists and c.pet.hp < 50 and not c.pet.buff("Mend Pet").up
-        end },
 
         -- Viper below 10% mana to recover, the last damage aspect above 80% to get the damage back. The gap
         -- between the two stops it from flip-flopping around a single threshold.
@@ -75,10 +77,9 @@ ns.Rotation{
         { variant = "dpsAspect", when = function(c)
             return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
-        -- Last, because it is upkeep rather than damage. A boss is the only target worth a mid-fight
-        -- refresh; anything hostile is marked before a pull (see preparation).
-        { "Hunter's Mark", when = function(c)
-            return c.target.boss and not c.debuff("Hunter's Mark", { any = true }).up
+
+        { "Mend Pet", when = function(c)
+            return c.combat and c.pet.exists and c.pet.hp < 50 and not c.pet.buff("Mend Pet").up
         end },
     },
 
