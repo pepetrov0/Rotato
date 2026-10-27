@@ -67,11 +67,11 @@ ns.Rotation{
         -- `always`: this is a talent passive, so its name is not in the spellbook and it would be
         -- hidden while missing
         { buff = "Tidal Waves", always = true },
+        { buff = "Wrath of Air Totem" },
         { healTargetDebuffType = { "Poison", "Disease", "Curse" } },
     },
 
     utility = {
-        { spell = "Wrath of Air Totem" },
         { spell = "Mana Tide Totem", buff = "Mana Tide", recommend = function(c)
             return c.mana < 50 and c.ready("Mana Tide Totem")
         end },
