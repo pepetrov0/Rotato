@@ -40,6 +40,9 @@ ns.Rotation{
             local judgement = c.debuff(c.variantName("judgement"), { any = true })
             return not judgement.up or judgement.remains < 5
         end },
+
+        -- Below this mana the Plea is worth its healing penalty; it is not suggested while it is up
+        { "Divine Plea", when = function(c) return c.mana < 75 and not c.buff("Divine Plea").up end },
     },
 
     rotations = {
@@ -89,7 +92,6 @@ ns.Rotation{
             return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
         end },
         -- Early, at 75%, because the offensive cooldowns below are recommended while it is up
-        { spell = "Divine Plea", recommend = function(c) return c.mana < 75 and c.ready("Divine Plea") end },
         { spell = "Hand of Salvation", buff = "Hand of Salvation" },
         { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },
