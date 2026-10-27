@@ -314,35 +314,27 @@ local function Collect(rotation, key, slotCount)
         end
     end
 
-    -- More than fit: make room by dropping what says the least, last entries first. First the
-    -- abilities that only show a cooldown (10th value of Resolve), then abilities that are merely
-    -- ready (11th). Anything active, recommended or tracked is never dropped this way.
+    -- More than fit: make room by dropping what says the least, one class of entry at a time, the
+    -- last entries first. The order, from least to most worth keeping:
+    --   1 an ability only showing its cooldown (10th value of Resolve)
+    --   2 an ability that is merely ready, no aura and no recommendation (11th)
+    --   3 something active and fine: a green border, or none (a healthy tracker)
+    --   4 a lockout counting down (blue), which at least says why a spell cannot be used
+    --   5 whatever is left needs action (red) or is recommended (white)
+    local DROP_ORDER = {
+        function(result) return result[10] end,
+        function(result) return result[11] end,
+        function(result) return not result[7] or result[7] == GREEN end,
+        function(result) return result[7] == BLUE end,
+        function(result) return true end,
+    }
     local excess = #shown - slotCount
-    for _, field in ipairs({ 10, 11 }) do
+    for _, droppable in ipairs(DROP_ORDER) do
         for i = #shown, 1, -1 do
             if excess <= 0 then break end
-            if shown[i][field] then
+            if droppable(shown[i]) then
                 table.remove(shown, i)
                 excess = excess - 1
-            end
-        end
-    end
-
-    -- A tracker without a border is healthy and a blue one is just a lockout counting down: neither
-    -- asks anything of the player, so when the row is still over capacity they give way to the ones
-    -- that need action (red). The healthy ones go first, as a lockout at least says why a spell
-    -- cannot be used.
-    if key == "trackers" then
-        for _, droppable in ipairs({
-            function(result) return not result[7] end,
-            function(result) return result[7] == BLUE end,
-        }) do
-            for i = #shown, 1, -1 do
-                if excess <= 0 then break end
-                if droppable(shown[i]) then
-                    table.remove(shown, i)
-                    excess = excess - 1
-                end
             end
         end
     end
