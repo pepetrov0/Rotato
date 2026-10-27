@@ -143,6 +143,10 @@ function c.anyBuff(names)
     return NO_AURA
 end
 
+-- The player's own copy of a buff on any unit. Another druid's Rejuvenation does not stop yours from
+-- stacking with it, so only the caster counts for hots.
+function c.buffOn(unit, name) return Aura(UnitBuff, unit, name, "PLAYER") end
+
 function c.selfDebuff(name) return Aura(UnitDebuff, "player", name) end
 
 -- Debuffs on the target are only the player's own by default: another player's Serpent Sting says
