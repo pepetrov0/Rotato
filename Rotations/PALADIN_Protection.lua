@@ -44,14 +44,14 @@ ns.Rotation{
         { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
         { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
 
-        { "Holy Shield", when = function(c)
-            local shield = c.buff("Holy Shield")
-            return not shield.up or shield.remains < HOLY_SHIELD_REFRESH
-        end },
-
         { "Sacred Shield", when = function(c)
             local shield = c.buff("Sacred Shield")
             return not shield.up or shield.remains < SACRED_SHIELD_REFRESH
+        end },
+
+        { "Holy Shield", when = function(c)
+            local shield = c.buff("Holy Shield")
+            return not shield.up or shield.remains < HOLY_SHIELD_REFRESH
         end },
 
         -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
@@ -79,8 +79,8 @@ ns.Rotation{
     trackers = {
         { buff = SEALS },
         { debuff = { variant = "judgement" }, any = true },
-        { buff = "Holy Shield" },
         { buff = "Sacred Shield" },
+        { buff = "Holy Shield" },
         -- something you can Cleanse on the unit the next heal would go to
         { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
     },
