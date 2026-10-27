@@ -33,6 +33,12 @@ ns.Rotation{
 
     highprio = {
         EarthlivingWeapon(),
+
+        -- Cleanse Spirit takes poison, disease and curse off the unit a heal would land on
+        { "Cleanse Spirit", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Curse").up
+        end },
+
         WaterShield(),
 
         -- Earth Shield is single-target: "missing" means missing on everyone in the group
@@ -40,11 +46,6 @@ ns.Rotation{
             if not c.inGroup then return false end
             local shield = c.groupBuff("Earth Shield")
             return not shield.up or shield.remains < 15
-        end },
-
-        -- Cleanse Spirit takes poison, disease and curse off the unit a heal would land on
-        { "Cleanse Spirit", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Curse").up
         end },
     },
 
