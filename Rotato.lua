@@ -13,6 +13,8 @@ local defaults = {
     nameSize = 16,
 
     slotsPerRow = 5, -- how many entries each side row shows, 3 to 10
+    dynamicWidth = false, -- size each side to its longest row (slotsPerRow is then the maximum)
+    symmetric = true,     -- with dynamicWidth, keep both sides as wide as the widest one
     backgroundTransparency = 50, -- percent; 0 is opaque, 100 is invisible
 
 }

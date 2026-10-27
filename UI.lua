@@ -129,8 +129,35 @@ function ns.ApplySize()
     for _, row in ipairs({ ns.defensives, ns.utility, ns.trackers, ns.offensives }) do
         for _, slot in ipairs(row) do SetSlotSize(slot, small) end
     end
-    ns.frame:SetWidth(center + 2 * RotatoDB.slotsPerRow * (small + SPACING) + 2 * PADDING)
     ns.frame:SetHeight(center + 2 * PADDING)
+    ns.ApplyWidth()
+end
+
+-- How many slots each side is using right now, kept up to date by Slots.lua. Only read when the
+-- width is dynamic.
+ns.shownLeft, ns.shownRight = 0, 0
+-- How far the panel's center sits right of the center icon; non-zero only for an uneven panel.
+ns.offsetX = 0
+
+-- Fixed: both sides are as wide as the setting. Dynamic: each side is as wide as its longest row,
+-- or, when symmetric, both are as wide as the longest row of either. An uneven panel is shifted
+-- around the center icon, so the icon itself never moves.
+function ns.ApplyWidth()
+    local center = RotatoDB.centerSize
+    local step = (center - SPACING) / 2 + SPACING
+    local left, right = RotatoDB.slotsPerRow, RotatoDB.slotsPerRow
+    if RotatoDB.dynamicWidth then
+        left, right = ns.shownLeft, ns.shownRight
+        if RotatoDB.symmetric then
+            left = math.max(left, right)
+            right = left
+        end
+    end
+    ns.frame:SetWidth(center + (left + right) * step + 2 * PADDING)
+    ns.offsetX = (right - left) * step / 2
+    ns.center:ClearAllPoints()
+    ns.center:SetPoint("CENTER", ns.frame, "CENTER", -ns.offsetX, 0)
+    if not ns.frame.dragging then ns.ApplyPosition() end
 end
 
 -- Context menu -------------------------------------------------------------
@@ -234,6 +261,19 @@ function ns.OpenMenu()
         })
     end
     tinsert(menu, { text = "Buffs shown per row", hasArrow = true, notCheckable = true, menuList = counts })
+    -- with a dynamic width the count above becomes the maximum
+    tinsert(menu, { text = "Fit width to shown icons", checked = RotatoDB.dynamicWidth,
+        func = function()
+            RotatoDB.dynamicWidth = not RotatoDB.dynamicWidth
+            ns.ApplyWidth()
+            CloseDropDownMenus()
+        end })
+    tinsert(menu, { text = "Keep both sides equal", checked = RotatoDB.symmetric,
+        disabled = not RotatoDB.dynamicWidth, func = function()
+            RotatoDB.symmetric = not RotatoDB.symmetric
+            ns.ApplyWidth()
+            CloseDropDownMenus()
+        end })
 
     local transparencies = {}
     for percent = 0, 100, 10 do
@@ -268,11 +308,12 @@ end
 -- Positioning ------------------------------------------------------------
 
 -- The position is stored as an offset from the screen center, not from a corner, so it survives
--- a change of resolution or UI scale and the center snap stays meaningful.
+-- a change of resolution or UI scale and the center snap stays meaningful. It is the position of
+-- the center icon, not of the panel, which can be uneven (ns.ApplyWidth).
 function ns.ApplyPosition()
     local p = RotatoDB.pos
     ns.frame:ClearAllPoints()
-    ns.frame:SetPoint("CENTER", UIParent, "CENTER", p.x, p.y)
+    ns.frame:SetPoint("CENTER", UIParent, "CENTER", p.x + ns.offsetX, p.y)
 end
 
 -- Dragging is done by hand instead of with StartMoving: the built-in version follows the cursor
@@ -302,7 +343,8 @@ local function DragUpdate(f)
     local ux, uy = UIParent:GetCenter()
     local scale = UIParent:GetEffectiveScale()
     local mx, my = GetCursorPosition()
-    local x = mx / scale - ux + f.dragOffX
+    -- x is the center icon's position: that is what snaps and what is saved
+    local x = mx / scale - ux + f.dragOffX - ns.offsetX
     local y = my / scale - uy + f.dragOffY
 
     local snapX, snapY = math.abs(x) < SNAP, math.abs(y) < SNAP
@@ -310,7 +352,7 @@ local function DragUpdate(f)
     if snapY then y = 0 end
 
     f:ClearAllPoints()
-    f:SetPoint("CENTER", UIParent, "CENTER", x, y)
+    f:SetPoint("CENTER", UIParent, "CENTER", x + ns.offsetX, y)
     f.pos = { x = x, y = y } -- saved on release, not on every frame
 
     ns.guideV:SetTexture(snapX and 0 or 1, 1, snapX and 0 or 1, snapX and 0.9 or 0.5)

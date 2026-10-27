@@ -49,6 +49,7 @@ local FLASH_BELOW = 5 -- seconds left at which a border starts flashing
 local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 
 local ROW_KEYS = { "defensives", "utility", "trackers", "offensives" }
+local SIDE = { defensives = "LEFT", utility = "LEFT", trackers = "RIGHT", offensives = "RIGHT" }
 
 local function FormatTime(seconds)
     if seconds >= 3600 then return format("%dh", seconds / 3600)
@@ -376,10 +377,13 @@ function ns.InitSlots()
         elapsedTotal = 0
 
         local rotation = ns.GetRotation()
+        local widest = {}
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
             local limit = RotatoDB.slotsPerRow
             local shown = Collect(rotation, key, limit)
+            local side = SIDE[key]
+            widest[side] = math.max(widest[side] or 0, #shown)
             for i, slot in ipairs(row) do
                 local r = i <= limit and shown[i]
                 if r then
@@ -388,6 +392,12 @@ function ns.InitSlots()
                     slot:Hide()
                 end
             end
+        end
+
+        -- resizing only when a side's longest row changes, not every tick
+        if widest.LEFT ~= ns.shownLeft or widest.RIGHT ~= ns.shownRight then
+            ns.shownLeft, ns.shownRight = widest.LEFT, widest.RIGHT
+            if RotatoDB.dynamicWidth then ns.ApplyWidth() end
         end
     end)
 end
