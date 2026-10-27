@@ -73,7 +73,7 @@ ns.Rotation{
 
     utility = {
         { spell = "Mana Tide Totem", buff = "Mana Tide", recommend = function(c)
-            return c.mana < 50 and c.ready("Mana Tide Totem")
+            return c.mana < 75 and c.ready("Mana Tide Totem")
         end },
         { spell = "Nature's Swiftness", buff = "Nature's Swiftness" },
     },
