@@ -47,6 +47,11 @@ ns.Rotation{
             local shield = c.groupBuff("Earth Shield")
             return not shield.up or shield.remains < 15
         end },
+
+        -- Both heals grant Tidal Waves, so they are cast to get it back; Riptide first, and Chain
+        -- Heal takes over while Riptide is on cooldown
+        { "Riptide", when = function(c) return not c.buff("Tidal Waves").up end },
+        { "Chain Heal", when = function(c) return not c.buff("Tidal Waves").up end },
     },
 
     trackers = {
