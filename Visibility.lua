@@ -1,11 +1,11 @@
 local ADDON_NAME, ns = ...
 
 -- Decides when the frame is on screen. It is hidden unless something needs the player's
--- attention (a fight, a reminder, a timer running in the side rows), because a permanent overlay
--- would just be noise between fights.
+-- attention (a fight, a reminder), because a permanent overlay would just be noise between fights.
 
 local FADE_OUT_TIME = 0.25 -- fading out is cosmetic; showing never fades, it must be ready at once
 local HIDE_DELAY = 3       -- calm time before fading out, so the frame does not flicker between pulls
+local ACTIVE_HOLD = 30     -- longest calm time a running green slot keeps an already shown frame up
 local POLL = 0.1           -- some changes (a target dying, the hide delay) have no event to wait for
 
 -- Why the frame should be visible, or nil when it is calm. The reason is only used for the chat
@@ -22,10 +22,6 @@ local function DangerReason()
     -- the display's recent result when it has one (it is set up after this file)
     local _, _, _, _, source = (ns.EvaluateCached or ns.Evaluate)()
     if source == "reminders" then return "reminder" end
-
-    -- A green slot is running in the side rows (an active buff that helps the player), so its timer
-    -- is worth seeing even with no fight going on. Slots.lua sets this each update.
-    if ns.anySlotActive then return "active slot" end
 
     if ns.unlocked then return "unlocked" end -- so it can be moved and configured while calm
 end
@@ -74,7 +70,12 @@ function ns.InitVisibility()
             end
         elseif shown then
             calm = calm + dt
-            if calm >= HIDE_DELAY then
+            -- A green slot running in the side rows (an active buff that helps the player) keeps the
+            -- frame up a while after the fight so its timer can be seen, but never brings it back once
+            -- hidden: a long buff ticking down would otherwise pop it up out of nowhere.
+            -- Slots.lua sets ns.anySlotActive each update.
+            local held = ns.anySlotActive and calm < ACTIVE_HOLD
+            if calm >= HIDE_DELAY and not held then
                 shown = false
                 UIFrameFadeOut(f, FADE_OUT_TIME, f:GetAlpha(), 0)
                 ns.Print("hiding (no danger)")
