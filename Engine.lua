@@ -256,6 +256,19 @@ function c.ready(name)
     return (duration <= GCD_MAX or remaining <= LOOKAHEAD) and (IsUsableSpell(name)) and true or false
 end
 
+-- Seconds since the player last cast a spell successfully, for abilities that are paced by us
+-- rather than by a cooldown (Pestilence). Huge if it has not been cast this session.
+local lastCast = {}
+local castWatcher = CreateFrame("Frame")
+castWatcher:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+castWatcher:SetScript("OnEvent", function(_, _, unit, spell)
+    if unit == "player" then lastCast[spell] = GetTime() end
+end)
+
+function c.sinceCast(name)
+    return lastCast[name] and (GetTime() - lastCast[name]) or math.huge
+end
+
 function c.usable(name) return (IsUsableSpell(name)) and true or false end
 
 -- Evaluation ---------------------------------------------------------------

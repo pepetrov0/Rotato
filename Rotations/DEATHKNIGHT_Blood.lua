@@ -3,17 +3,25 @@ local ADDON_NAME, ns = ...
 -- Blood death knight tank. Conditions are functions of `c`, the condition API in Engine.lua. The
 -- entry fields for the side slots are described in Slots.lua.
 
--- The rotation shared by single target and AoE: only the blood rune spender differs.
-local function Rotation(bloodSpender)
-    return {
+-- The rotation shared by single target and AoE: `bloodSpenders` are the blood rune abilities.
+local function Rotation(bloodSpenders)
+    local list = {
         { "Icy Touch", when = function(c)
             return not c.debuff("Frost Fever").up or c.buff("Killing Machine").up
         end },
         { "Plague Strike", when = function(c) return not c.debuff("Blood Plague").up end },
-        { bloodSpender, when = function(c) return c.runes.blood > 0 end },
-        { "Death Strike" },
     }
+    for _, spender in ipairs(bloodSpenders) do list[#list + 1] = spender end
+    list[#list + 1] = { "Death Strike" }
+    return list
 end
+
+local function BloodRune(name, extra)
+    return { name, when = function(c) return c.runes.blood > 0 and (not extra or extra(c)) end }
+end
+
+-- Pestilence spreads the diseases, which is only worth doing now and then
+local PESTILENCE_INTERVAL = 15
 
 local function FrostPresence()
     return { "Frost Presence", when = function(c) return not c.buff("Frost Presence").up end }
@@ -36,9 +44,12 @@ ns.Rotation{
     },
 
     rotations = {
-        single = Rotation("Blood Strike"),
+        single = Rotation({ BloodRune("Blood Strike") }),
         aoe = (function()
-            local list = Rotation("Blood Boil")
+            local list = Rotation({
+                BloodRune("Pestilence", function(c) return c.sinceCast("Pestilence") >= PESTILENCE_INTERVAL end),
+                BloodRune("Blood Boil"),
+            })
             table.insert(list, 1, { "Death and Decay" })
             return list
         end)(),
