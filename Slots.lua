@@ -25,7 +25,7 @@ local ADDON_NAME, ns = ...
 --   when       = function(c)  extra condition for showing the entry at all
 --   always     = true: show a missing aura even when no spell of that name is in the spellbook
 --   manaOnly   = true: only the mana cost decides if the spell is usable (spells cast on others)
---   discourage = function(c)  true while using it is pointless right now: the icon is grayed out
+--   discourage = function(c)  true while using it is pointless right now: the icon is grayed out and drawn at 50% opacity
 --   recommend  = function(c)  true while using it is a good idea: flashing white border
 --   lockout    = true: the aura is a restriction counting down (Weakened Soul): blue border
 --
