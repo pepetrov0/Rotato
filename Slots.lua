@@ -80,6 +80,42 @@ local function ResolveVariants(entry)
     return proxy or entry
 end
 
+-- Tooltip cooldowns -----------------------------------------------------------
+
+-- The client has no call for a spell's full cooldown, so it is read off its tooltip
+-- ("8 sec cooldown", "1.5 min cooldown"). The patterns come from the client's own strings so they
+-- match its language.
+local scanTip
+local COOLDOWN_PATTERNS = {
+    { "^" .. SPELL_RECAST_TIME_SEC:gsub("%%%.3g", "([%%d%%.]+)") .. "$", 1 },
+    { "^" .. SPELL_RECAST_TIME_MIN:gsub("%%%.3g", "([%%d%%.]+)") .. "$", 60 },
+}
+local tooltipCooldowns = {} -- spell name -> seconds, or false when the tooltip has none
+
+local function TooltipCooldown(spell)
+    local cached = tooltipCooldowns[spell]
+    if cached ~= nil then return cached or nil end
+
+    local link = GetSpellLink(spell)
+    if not link then return end -- not known yet; try again next time
+    scanTip = scanTip or CreateFrame("GameTooltip", "RotatoScanTip", nil, "GameTooltipTemplate")
+    scanTip:SetOwner(WorldFrame, "ANCHOR_NONE") -- a tooltip loses its owner when hidden, so every time
+    scanTip:SetHyperlink(link)
+
+    local seconds = false
+    for i = 1, scanTip:NumLines() do
+        for _, side in ipairs({ "Right", "Left" }) do
+            local text = _G["RotatoScanTipText" .. side .. i]:GetText()
+            for _, pattern in ipairs(text and COOLDOWN_PATTERNS or {}) do
+                local value = text:match(pattern[1])
+                if value and tonumber(value) then seconds = tonumber(value) * pattern[2] end
+            end
+        end
+    end
+    tooltipCooldowns[spell] = seconds
+    return seconds or nil
+end
+
 -- Resolving an entry ---------------------------------------------------------
 
 -- Reads the aura an entry is about. Also returns the unit it was read from when that is a heal
@@ -169,9 +205,10 @@ local function Resolve(entry, rowKey)
     elseif cdDuration > ns.GCD_MAX and cdStart > 0 and cdStart + cdDuration > now then
         start, duration, remaining = cdStart, cdDuration, cdStart + cdDuration - now
     end
-    -- The client has no call for a spell's full cooldown, so it is learned the first time the spell
-    -- is seen cooling down. Used to order the ready abilities.
+    -- The full cooldown orders the ready abilities. What was seen on a real cooldown wins over the
+    -- tooltip, because the tooltip shows the base value, without talents or glyphs.
     if cdDuration > ns.GCD_MAX and cdStart > 0 then entry.knownCooldown = cdDuration end
+    local knownCooldown = entry.knownCooldown or (entry.spell and TooltipCooldown(entry.spell))
 
     -- Only a bare aura is dimmed while missing: that is how a tracker says "not up". An ability
     -- slot is not dimmed just because its buff is down, it is simply ready.
@@ -237,7 +274,7 @@ local function Resolve(entry, rowKey)
 
     return icon, start, duration, remaining, dimmed, fromAura, borderColor,
         borderColor and expiring or false, tip, coolingDown, idleReady, discouraged,
-        active and true or false, entry.knownCooldown
+        active and true or false, knownCooldown
 end
 
 -- Slots on screen ------------------------------------------------------------
@@ -310,7 +347,7 @@ end
 --   1 needs action (red) or is recommended (white)
 --   2 a lockout counting down (blue)
 --   3 active (an aura up, with a green border or none)
---   4 ready, the shortest cooldown first (an ability not yet seen on cooldown goes last)
+--   4 ready, the shortest cooldown first (one with no cooldown at all goes last)
 --   5 ready but discouraged
 --   6 cooling down, the soonest back first
 local function Group(result)
