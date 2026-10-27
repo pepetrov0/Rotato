@@ -6,7 +6,7 @@ local ADDON_NAME, ns = ...
 --   class, spec          which character it is for; no spec means every spec of the class
 --   reminders            out of combat with no hostile target; keeps the panel up until done
 --   preparation          out of combat setup
---   highprio             checked before the rotations, in combat or with a hostile target
+--   highprio             checked before the rotations, with or without a target
 --   rotations            { single = {...}, multi = {...}, aoe = {...} }, see Mode.lua
 --   defensives, utility, trackers, offensives    the side slots, see Slots.lua
 --   variants             named choices that follow what the player casts, see below

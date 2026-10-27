@@ -303,9 +303,11 @@ ns.Tier = Tier
 -- tier it came from ("reminders", "preparation", "highprio", or the mode). Nothing when there is none.
 --
 -- Which tiers are looked at depends on the situation:
---   out of combat, no hostile target:  reminders, then preparation
---   out of combat, hostile target:     preparation, then highprio, then the mode's rotation
---   in combat:                         highprio, then the mode's rotation
+--   out of combat, no hostile target:  reminders, preparation, highprio, the mode's rotation
+--   out of combat, hostile target:     preparation, highprio, the mode's rotation
+--   in combat:                         highprio, the mode's rotation
+-- Highprio and the rotation never need a target; entries that do (a debuff on the target) read as
+-- not applicable without one. What decides whether the frame is on screen is Visibility.lua.
 -- Reminders are skipped once a hostile target is up: a pull is about to happen, and a reminder
 -- that contradicts it (swap to Viper) would be wrong.
 function ns.Evaluate()
@@ -317,11 +319,9 @@ function ns.Evaluate()
     local lists = {}
     if not combat and not hostile then lists[#lists + 1] = { "reminders", Tier(rotation, "reminders") } end
     if not combat then lists[#lists + 1] = { "preparation", rotation.preparation } end
-    if combat or hostile then
-        local rotations = rotation.rotations or {}
-        lists[#lists + 1] = { "highprio", Tier(rotation, "highprio") }
-        lists[#lists + 1] = { ns.mode, rotations[ns.mode] or rotations.single }
-    end
+    local rotations = rotation.rotations or {}
+    lists[#lists + 1] = { "highprio", Tier(rotation, "highprio") }
+    lists[#lists + 1] = { ns.mode, rotations[ns.mode] or rotations.single }
 
     -- If nothing is ready, show the combat spell that comes off cooldown first rather than an
     -- empty icon: it tells the player what to expect next. Reminders and preparation are excluded
