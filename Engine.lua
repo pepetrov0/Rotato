@@ -182,6 +182,8 @@ local c = setmetatable({ target = target, pet = pet, variant = variant, runes = 
         elseif key == "mana" then return Percent(UnitPower("player", 0), UnitPowerMax("player", 0))
         elseif key == "hp" then return Percent(UnitHealth("player"), UnitHealthMax("player"))
         elseif key == "moving" then return GetUnitSpeed("player") > 0
+        -- points on the current target; zero when there is none, so a combo-point rule reads as false
+        elseif key == "comboPoints" then return GetComboPoints("player", "target")
         elseif key == "inGroup" then return GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0
         elseif key == "mode" then return ns.mode
         end
