@@ -15,6 +15,29 @@ local function UnholyAndFrostSpent()
     return true
 end
 
+-- Blood runes only: a blood slot that Blood Tap or a death rune conversion has turned into a death
+-- rune (rune type 4) is left for the abilities that can use either.
+local BLOOD_RUNE = 1
+local function BloodRuneReady()
+    for rune = 1, FIRST_UNHOLY - 1 do
+        local _, _, ready = GetRuneCooldown(rune)
+        if ready and GetRuneType(rune) == BLOOD_RUNE then return true end
+    end
+    return false
+end
+
+-- The rotation shared by single target and AoE: only the blood rune spender differs.
+local function Rotation(bloodSpender)
+    return {
+        { "Icy Touch", when = function(c)
+            return not c.debuff("Frost Fever").up or c.buff("Killing Machine").up
+        end },
+        { "Plague Strike", when = function(c) return not c.debuff("Blood Plague").up end },
+        { bloodSpender, when = BloodRuneReady },
+        { "Death Strike" },
+    }
+end
+
 local function FrostPresence()
     return { "Frost Presence", when = function(c) return not c.buff("Frost Presence").up end }
 end
@@ -30,6 +53,15 @@ ns.Rotation{
     -- Frost Presence is where the tank's threat and damage reduction come from
     highprio = {
         FrostPresence(),
+    },
+
+    rotations = {
+        single = Rotation("Blood Strike"),
+        aoe = (function()
+            local list = Rotation("Blood Boil")
+            table.insert(list, 1, { "Death and Decay" })
+            return list
+        end)(),
     },
 
     trackers = {
