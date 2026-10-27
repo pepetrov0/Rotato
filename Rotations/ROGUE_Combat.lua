@@ -50,7 +50,7 @@ ns.Rotation{
         { spell = "Sprint", buff = "Sprint" },
         -- recommended only while there is something to interrupt, so it does not flash all fight
         { spell = "Kick", recommend = function(c)
-            return c.target.hostile and c.target.casting and c.ready("Kick")
+            return c.target.hostile and c.target.interruptible and c.ready("Kick")
         end },
         -- it disarms, which only humanoids carry a weapon for
         { spell = "Dismantle", recommend = function(c)

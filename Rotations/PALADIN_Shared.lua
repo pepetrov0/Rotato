@@ -82,6 +82,6 @@ end
 
 function Paladin.HammerOfJustice()
     return { spell = "Hammer of Justice", recommend = function(c)
-        return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
+        return c.target.hostile and c.target.interruptible and c.ready("Hammer of Justice")
     end }
 end

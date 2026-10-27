@@ -93,7 +93,12 @@ local target = setmetatable({}, {
                 and true or false
         elseif key == "hp" then return Percent(UnitHealth("target"), UnitHealthMax("target"))
         elseif key == "boss" then return UnitClassification("target") == "worldboss" or UnitLevel("target") == -1
-        elseif key == "casting" then return UnitCastingInfo("target") ~= nil
+        elseif key == "casting" then return (UnitCastingInfo("target") or UnitChannelInfo("target")) ~= nil
+        elseif key == "interruptible" then
+            -- a cast or channel without the shield that makes interrupts fail
+            local name, _, _, _, _, _, _, _, shielded = UnitCastingInfo("target")
+            if not name then name, _, _, _, _, _, _, shielded = UnitChannelInfo("target") end
+            return name ~= nil and not shielded
         elseif key == "creatureType" then return UnitCreatureType("target") -- localized, "Undead" on an English client
         end
     end,
