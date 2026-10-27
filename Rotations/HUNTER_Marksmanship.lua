@@ -78,8 +78,11 @@ ns.Rotation{
             return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
 
+        -- Solo nothing else will heal the pet, so top it up early; in a group it catches splash
+        -- healing and only needs help when it is really hurt.
         { "Mend Pet", when = function(c)
-            return c.combat and c.pet.exists and c.pet.hp < 50 and not c.pet.buff("Mend Pet").up
+            return c.combat and c.pet.exists and not c.pet.buff("Mend Pet").up
+                and c.pet.hp < (c.inGroup and 40 or 90)
         end },
     },
 
