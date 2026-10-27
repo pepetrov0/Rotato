@@ -6,7 +6,7 @@ local ADDON_NAME, ns = ...
 
 local FADE_OUT_TIME = 0.25 -- fading out is cosmetic; showing never fades, it must be ready at once
 local HIDE_DELAY = 3       -- calm time before fading out, so the frame does not flicker between pulls
-local ACTIVE_HOLD = 30     -- longest calm time a running green slot keeps an already shown frame up
+local ACTIVE_HOLD = 30     -- longest time a running green slot keeps an already shown frame up
 local POLL = 0.1           -- some changes (a target dying, the hide delay) have no event to wait for
 
 -- Why the frame should be visible, or nil when it is calm. The reason is only used for the chat
@@ -42,7 +42,7 @@ end
 
 function ns.InitVisibility()
     local f = ns.frame
-    local shown, calm, elapsedTotal = false, 0, 0
+    local shown, calm, held, elapsedTotal = false, 0, 0, 0
     f:SetAlpha(0)
 
     local hiddenFor -- last reason for the hard hide, so it is reported once rather than every poll
@@ -66,7 +66,7 @@ function ns.InitVisibility()
 
         local reason = DangerReason()
         if reason then
-            calm = 0
+            calm, held = 0, 0
             if not shown then
                 shown = true
                 UIFrameFadeRemoveFrame(f) -- a fade-out that is still running would fight the SetAlpha
@@ -74,13 +74,17 @@ function ns.InitVisibility()
                 ns.Print("showing (" .. reason .. ")")
             end
         elseif shown then
-            calm = calm + dt
             -- A green slot running in the side rows (an active buff that helps the player) keeps the
-            -- frame up a while after the fight so its timer can be seen, but never brings it back once
-            -- hidden: a long buff ticking down would otherwise pop it up out of nowhere.
+            -- frame up so its timer can be seen, for at most ACTIVE_HOLD, and the usual hide delay only
+            -- starts after that. Only a just activated short buff brings a hidden frame back (above):
+            -- a long one ticking down would otherwise pop it up out of nowhere.
             -- Slots.lua sets ns.anySlotActive each update.
-            local held = ns.anySlotActive and calm < ACTIVE_HOLD
-            if calm >= HIDE_DELAY and not held then
+            if ns.anySlotActive and held < ACTIVE_HOLD then
+                held, calm = held + dt, 0
+            else
+                calm = calm + dt
+            end
+            if calm >= HIDE_DELAY then
                 shown = false
                 UIFrameFadeOut(f, FADE_OUT_TIME, f:GetAlpha(), 0)
                 ns.Print("hiding (no danger)")
