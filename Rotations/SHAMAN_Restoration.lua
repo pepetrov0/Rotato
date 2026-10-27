@@ -55,6 +55,14 @@ ns.Rotation{
         { "Chain Heal", when = function(c) return not c.buff("Tidal Waves").up end },
     },
 
+    -- The modes are fixed (see Mode.lua), so the middle one, multi, is the Lesser Healing Wave
+    -- rotation. Casting one of these heals switches to its rotation.
+    rotations = {
+        single = { { "Healing Wave" } },
+        multi = { { "Lesser Healing Wave" } },
+        aoe = { { "Chain Heal" } },
+    },
+
     trackers = {
         -- `always`: this is a talent passive, so its name is not in the spellbook and it would be
         -- hidden while missing
