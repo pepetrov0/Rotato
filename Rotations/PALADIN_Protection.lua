@@ -92,8 +92,6 @@ ns.Rotation{
     trackers = {
         { buff = SEALS },
         { debuff = { variant = "judgement" }, any = true },
-        { buff = "Sacred Shield" },
-        { buff = "Holy Shield" },
         -- something you can Cleanse on the unit the next heal would go to
         { healTargetDebuffType = { "Poison", "Disease", "Magic" } },
     },
