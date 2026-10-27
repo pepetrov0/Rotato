@@ -484,6 +484,7 @@ function ns.InitSlots()
 
         local rotation = ns.GetRotation()
         local left, right = 0, 0
+        local active = false
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
             local limit = RotatoDB.slotsPerRow
@@ -492,12 +493,15 @@ function ns.InitSlots()
             for i, slot in ipairs(row) do
                 local r = i <= limit and shown[i]
                 if r then
+                    if r[12] then active = true end
                     Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[11])
                 else
                     slot:Hide()
                 end
             end
         end
+        -- what Visibility.lua reads to keep the panel up out of combat while a timer is running
+        ns.anySlotActive = active
 
         -- resizing only when a side's longest row changes, not every tick
         if left ~= ns.shownLeft or right ~= ns.shownRight then
