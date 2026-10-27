@@ -24,6 +24,7 @@ ns.common = {
     utility = {
         { buff = "Hand of Salvation", show = "active" },
         { buff = "Hand of Freedom", show = "active" },
+        { buff = "Nitro Boosts", show = "active" }, -- engineering boots
     },
 
     offensives = {
