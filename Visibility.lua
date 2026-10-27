@@ -1,7 +1,8 @@
 local ADDON_NAME, ns = ...
 
 -- Decides when the frame is on screen. It is hidden unless something needs the player's
--- attention (a fight, a reminder), because a permanent overlay would just be noise between fights.
+-- attention (a fight, a reminder, a short buff just activated), because a permanent overlay would
+-- just be noise between fights.
 
 local FADE_OUT_TIME = 0.25 -- fading out is cosmetic; showing never fades, it must be ready at once
 local HIDE_DELAY = 3       -- calm time before fading out, so the frame does not flicker between pulls
@@ -22,6 +23,10 @@ local function DangerReason()
     -- the display's recent result when it has one (it is set up after this file)
     local _, _, _, _, source = (ns.EvaluateCached or ns.Evaluate)()
     if source == "reminders" then return "reminder" end
+
+    -- A short green buff was just activated (Sprint, Evasion), so its timer is worth seeing; once it
+    -- is up the hold below keeps the frame on screen until it ends. Slots.lua sets this each update.
+    if ns.slotJustActivated then return "activated" end
 
     if ns.unlocked then return "unlocked" end -- so it can be moved and configured while calm
 end

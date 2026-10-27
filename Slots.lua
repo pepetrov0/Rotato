@@ -42,6 +42,8 @@ local ADDON_NAME, ns = ...
 -- is red while present.
 
 local TICK = 0.1 -- how often the slots are re-evaluated; sweeps animate on their own in between
+local SHORT_AURA = 30  -- longest aura whose activation brings the hidden panel up (Sprint, Evasion)
+local JUST_STARTED = 1 -- seconds since an aura began during which it counts as just activated
 
 local GREEN = { 0, 1, 0 }
 local RED = { 1, 0, 0 }
@@ -484,7 +486,8 @@ function ns.InitSlots()
 
         local rotation = ns.GetRotation()
         local left, right = 0, 0
-        local active = false
+        local active, activated = false, false
+        local now = GetTime()
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
             local limit = RotatoDB.slotsPerRow
@@ -495,7 +498,11 @@ function ns.InitSlots()
                 if r then
                     -- Only a green slot counts as "something running": it is an active aura that is
                     -- good for the player. A red or blue one is a warning, not a timer to watch.
-                    if r[12] and r[7] == GREEN then active = true end
+                    if r[12] and r[7] == GREEN then
+                        active = true
+                        -- a short one that just began, so the player is likely to want its timer
+                        if r[6] and r[3] <= SHORT_AURA and now - r[2] < JUST_STARTED then activated = true end
+                    end
                     Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[11])
                 else
                     slot:Hide()
@@ -503,7 +510,7 @@ function ns.InitSlots()
             end
         end
         -- what Visibility.lua reads to keep the panel up a while after a fight while a timer is running
-        ns.anySlotActive = active
+        ns.anySlotActive, ns.slotJustActivated = active, activated
 
         -- resizing only when a side's longest row changes, not every tick
         if left ~= ns.shownLeft or right ~= ns.shownRight then
