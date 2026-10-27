@@ -12,6 +12,7 @@ local defaults = {
     labelSize = 12,
     nameSize = 16,
 
+    slotsPerRow = 5, -- how many entries each side row shows, 3 to 10
     backgroundTransparency = 50, -- percent; 0 is opaque, 100 is invisible
 
 }

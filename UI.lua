@@ -2,7 +2,7 @@ local ADDON_NAME, ns = ...
 
 -- The frame itself: skinning, layout, sizing, dragging and the right-click menu.
 --
--- Layout (the big icon is the suggestion, each side has two rows of PER_ROW small slots):
+-- Layout (the big icon is the suggestion, each side has two rows of up to MAX_PER_ROW small slots):
 --   utility    (left, top)    | center | trackers   (right, top)
 --   defensives (left, bottom) | center | offensives (right, bottom)
 -- The left block grows right to left and the right block left to right, so slot 1 of every row
@@ -10,7 +10,9 @@ local ADDON_NAME, ns = ...
 
 local SPACING = 2
 local PADDING = 6
-local PER_ROW = 5
+-- All the slots are built once and the setting only decides how many of them are used, so changing
+-- it needs no rebuild. The panel width follows the setting, not this maximum.
+local MAX_PER_ROW = 10
 local SNAP = 20 -- distance in pixels from a screen center line at which dragging locks onto it
 
 -- The tooltip look is the fallback when ElvUI is not installed, so the panel still matches the
@@ -103,7 +105,7 @@ local function BuildRow(parent, center, side, vertical)
     local inner = side == "LEFT" and "RIGHT" or "LEFT" -- the slot edge facing the center
     local outer = side == "LEFT" and "LEFT" or "RIGHT" -- the slot edge facing away
     local sign = side == "LEFT" and -1 or 1
-    for i = 1, PER_ROW do
+    for i = 1, MAX_PER_ROW do
         local slot = CreateSlot(parent)
         if i == 1 then
             -- the first slot lines up with the matching corner of the center icon
@@ -127,7 +129,7 @@ function ns.ApplySize()
     for _, row in ipairs({ ns.defensives, ns.utility, ns.trackers, ns.offensives }) do
         for _, slot in ipairs(row) do SetSlotSize(slot, small) end
     end
-    ns.frame:SetWidth(center + 2 * PER_ROW * (small + SPACING) + 2 * PADDING)
+    ns.frame:SetWidth(center + 2 * RotatoDB.slotsPerRow * (small + SPACING) + 2 * PADDING)
     ns.frame:SetHeight(center + 2 * PADDING)
 end
 
@@ -198,6 +200,8 @@ local function SizeMenu(key)
     return menu
 end
 
+local SLOT_COUNTS = { 3, 4, 5, 6, 7, 8, 9, 10 }
+
 function ns.OpenMenu()
     ns.menuFrame = ns.menuFrame or CreateFrame("Frame", "RotatoMenu", UIParent, "UIDropDownMenuTemplate")
     local menu = { { text = "Rotato", isTitle = true, notCheckable = true } }
@@ -216,6 +220,20 @@ function ns.OpenMenu()
         })
     end
     tinsert(menu, { text = "Size", hasArrow = true, notCheckable = true, menuList = cardSizes })
+
+    local counts = {}
+    for _, count in ipairs(SLOT_COUNTS) do
+        tinsert(counts, {
+            text = tostring(count),
+            checked = RotatoDB.slotsPerRow == count,
+            func = function()
+                RotatoDB.slotsPerRow = count
+                ns.ApplySize()
+                CloseDropDownMenus()
+            end,
+        })
+    end
+    tinsert(menu, { text = "Buffs shown per row", hasArrow = true, notCheckable = true, menuList = counts })
 
     local transparencies = {}
     for percent = 0, 100, 10 do

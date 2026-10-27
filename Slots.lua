@@ -366,9 +366,10 @@ function ns.InitSlots()
         local rotation = ns.GetRotation()
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
-            local shown = Collect(rotation, key, #row)
+            local limit = RotatoDB.slotsPerRow
+            local shown = Collect(rotation, key, limit)
             for i, slot in ipairs(row) do
-                local r = shown[i]
+                local r = i <= limit and shown[i]
                 if r then
                     Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9])
                 else
