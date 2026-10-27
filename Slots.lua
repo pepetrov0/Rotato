@@ -328,14 +328,21 @@ local function Collect(rotation, key, slotCount)
         end
     end
 
-    -- A tracker without a border is healthy and asks nothing of the player, so when the row is still
-    -- over capacity it gives way to the ones that need action (red) or are a lockout (blue).
+    -- A tracker without a border is healthy and a blue one is just a lockout counting down: neither
+    -- asks anything of the player, so when the row is still over capacity they give way to the ones
+    -- that need action (red). The healthy ones go first, as a lockout at least says why a spell
+    -- cannot be used.
     if key == "trackers" then
-        for i = #shown, 1, -1 do
-            if excess <= 0 then break end
-            if not shown[i][7] then
-                table.remove(shown, i)
-                excess = excess - 1
+        for _, droppable in ipairs({
+            function(result) return not result[7] end,
+            function(result) return result[7] == BLUE end,
+        }) do
+            for i = #shown, 1, -1 do
+                if excess <= 0 then break end
+                if droppable(shown[i]) then
+                    table.remove(shown, i)
+                    excess = excess - 1
+                end
             end
         end
     end
