@@ -25,7 +25,7 @@ ns.Rotation{
         -- already being handled and suggesting it again would just refresh it.
         { "Abolish Disease", when = function(c)
             local unit = c.healTarget()
-            return c.debuffOfType(unit, "Disease").up and not UnitBuff(unit, "Abolish Disease")
+            return c.debuffOfType(unit, "Disease").up and not c.buffOnAny(unit, "Abolish Disease").up
         end },
     },
 

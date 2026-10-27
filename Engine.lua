@@ -147,6 +147,9 @@ end
 -- stacking with it, so only the caster counts for hots.
 function c.buffOn(unit, name) return Aura(UnitBuff, unit, name, "PLAYER") end
 
+-- A buff on any unit from any caster, for effects that count no matter who cast them.
+function c.buffOnAny(unit, name) return Aura(UnitBuff, unit, name) end
+
 function c.selfDebuff(name) return Aura(UnitDebuff, "player", name) end
 
 -- Debuffs on the target are only the player's own by default: another player's Serpent Sting says
@@ -179,6 +182,21 @@ function c.groupBuff(name)
         if aura.up and (not best.up or aura.remains > best.remains) then best = aura end
     end
     return best
+end
+
+-- True when any other group member satisfies test(unit). Only party members who are really there
+-- count (they exist and are connected).
+function c.anyOtherMember(test)
+    local raid = GetNumRaidMembers()
+    local prefix, count = "party", GetNumPartyMembers()
+    if raid > 0 then prefix, count = "raid", raid end
+    for i = 1, count do
+        local unit = prefix .. i
+        if not UnitIsUnit(unit, "player") and UnitExists(unit) and UnitIsConnected(unit) and test(unit) then
+            return true
+        end
+    end
+    return false
 end
 
 -- Who a heal would go to, the way a mouseover/target/self macro picks: the mouseover if it is a

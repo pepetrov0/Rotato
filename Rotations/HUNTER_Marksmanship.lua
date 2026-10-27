@@ -13,6 +13,9 @@ local ASPECTS = {
 -- Which one to suggest is the dpsAspect variant below.
 local DPS_ASPECTS = { "Aspect of the Dragonhawk", "Aspect of the Wild" }
 
+-- Misdirection needs someone to hand the threat to
+local function NoMisdirectionTarget(c) return c.inGroup and not UnitExists("focus") end
+
 ns.Rotation{
     class = "HUNTER",
     spec = 2, -- Marksmanship
@@ -114,10 +117,10 @@ ns.Rotation{
         -- so it is grayed out then, and the recommendation is withheld so it never flashes while
         -- grayed out.
         { spell = "Misdirection", buff = "Misdirection",
-          discourage = function(c) return c.inGroup and not UnitExists("focus") end,
+          discourage = NoMisdirectionTarget,
           recommend = function(c)
               return c.ready("Misdirection") and c.ready("Chimera Shot") and not c.buff("Misdirection").up
-                  and not (c.inGroup and not UnitExists("focus"))
+                  and not NoMisdirectionTarget(c)
           end },
 
         -- Readiness resets the others, so it is only worth its long cooldown once they are far from ready

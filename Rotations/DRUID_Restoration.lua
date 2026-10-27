@@ -3,20 +3,6 @@ local ADDON_NAME, ns = ...
 -- Restoration druid. Conditions are functions of `c`, the condition API in Engine.lua. Healing goes
 -- to c.healTarget(): the mouseover if it is a living friend, else the target, else yourself, which
 -- is where a mouseover/target/self macro would send the spell.
--- True when any other group member satisfies test(unit). Only party members who are really there
--- count (they exist and are connected).
-local function AnyOtherMember(test)
-    local raid = GetNumRaidMembers()
-    local prefix, count = "party", GetNumPartyMembers()
-    if raid > 0 then prefix, count = "raid", raid end
-    for i = 1, count do
-        local unit = prefix .. i
-        if not UnitIsUnit(unit, "player") and UnitExists(unit) and UnitIsConnected(unit) and test(unit) then
-            return true
-        end
-    end
-    return false
-end
 
 ns.Rotation{
     class = "DRUID",
@@ -67,7 +53,7 @@ ns.Rotation{
         end },
         -- A combat resurrection is only worth pointing at when someone is actually down in a fight
         { spell = "Rebirth", recommend = function(c)
-            return c.combat and c.ready("Rebirth") and AnyOtherMember(UnitIsDead)
+            return c.combat and c.ready("Rebirth") and c.anyOtherMember(UnitIsDead)
         end },
         { spell = "Nature's Swiftness", buff = "Nature's Swiftness" },
     },
