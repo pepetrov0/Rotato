@@ -341,9 +341,9 @@ local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, b
 end
 
 -- What is drawn nearest the center icon, from most to least pressing:
---   1 needs action (red) or is recommended (white)
---   2 a lockout counting down (blue)
---   3 active (an aura up, with a green border or none)
+--   1 needs action (red) or is recommended (white), the soonest to run out first
+--   2 a lockout counting down (blue), the soonest over first
+--   3 active (an aura up, with a green border or none), the soonest to expire first
 --   4 ready, the shortest cooldown first (one with no cooldown at all goes last)
 --   5 ready but discouraged
 --   6 cooling down, the soonest back first
@@ -365,10 +365,11 @@ local function InnerFirst(a, b)
     local ka, kb
     if ga == 4 then
         ka, kb = a[13] or math.huge, b[13] or math.huge
-    elseif ga == 6 then
-        ka, kb = a[4], b[4]
+    else
+        -- the time left; without one (no timer, or nothing up) it goes last
+        ka, kb = a[4] or math.huge, b[4] or math.huge
     end
-    if ka and kb and ka ~= kb then return ka < kb end
+    if ka ~= kb then return ka < kb end
     return a.order < b.order
 end
 
