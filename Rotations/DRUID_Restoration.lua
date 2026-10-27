@@ -4,8 +4,7 @@ local ADDON_NAME, ns = ...
 -- to c.healTarget(): the mouseover if it is a living friend, else the target, else yourself, which
 -- is where a mouseover/target/self macro would send the spell.
 -- True when any other group member satisfies test(unit). Only party members who are really there
--- count (connected, and for the role check an assigned role, which the game only knows for groups
--- formed through the dungeon finder or given a role by the leader).
+-- count (they exist and are connected).
 local function AnyOtherMember(test)
     local raid = GetNumRaidMembers()
     local prefix, count = "party", GetNumPartyMembers()
@@ -17,13 +16,6 @@ local function AnyOtherMember(test)
         end
     end
     return false
-end
-
--- Innervate is for a healer running dry, so it is mana that is compared, not health.
-local function HealerLowOnMana(unit)
-    if UnitGroupRolesAssigned(unit) ~= "HEALER" then return false end
-    local max = UnitManaMax(unit)
-    return max > 0 and UnitMana(unit) / max < 0.5
 end
 
 ns.Rotation{
@@ -71,7 +63,7 @@ ns.Rotation{
 
     utility = {
         { spell = "Innervate", buff = "Innervate", recommend = function(c)
-            return c.ready("Innervate") and AnyOtherMember(HealerLowOnMana)
+            return c.mana < 50 and c.ready("Innervate")
         end },
         -- A combat resurrection is only worth pointing at when someone is actually down in a fight
         { spell = "Rebirth", recommend = function(c)
