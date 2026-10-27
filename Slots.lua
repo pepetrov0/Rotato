@@ -320,12 +320,14 @@ local function Collect(rotation, key, slotCount)
     -- More than fit: make room by dropping what says the least, one class of entry at a time, the
     -- last entries first. The order, from least to most worth keeping:
     --   1 an ability only showing its cooldown (10th value of Resolve)
-    --   2 an ability that is merely ready, no aura and no recommendation (11th)
-    --   3 something active and fine: a green border, or none (a healthy tracker)
-    --   4 a lockout counting down (blue), which at least says why a spell cannot be used
-    --   5 whatever is left needs action (red) or is recommended (white)
+    --   2 an ability that is discouraged right now (12th)
+    --   3 an ability that is merely ready, no aura and no recommendation (11th)
+    --   4 something active and fine: a green border, or none (a healthy tracker)
+    --   5 a lockout counting down (blue), which at least says why a spell cannot be used
+    --   6 whatever is left needs action (red) or is recommended (white)
     local DROP_ORDER = {
         function(result) return result[10] end,
+        function(result) return result[12] end,
         function(result) return result[11] end,
         function(result) return not result[7] or result[7] == GREEN end,
         function(result) return result[7] == BLUE end,
