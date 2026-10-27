@@ -30,10 +30,16 @@ local MAIN_HAND, OFF_HAND = 16, 17
 -- is empty and there is nothing there to poison).
 local function HasWeapon(slot) return GetInventoryItemLink("player", slot) ~= nil end
 
--- Whether each held weapon still needs poison. The client only reports that a weapon is
--- enchanted, not which poison is on it (see c.mainHandEnchant), which is all a reminder needs.
-local function MainMissing(c) return HasWeapon(MAIN_HAND) and not c.mainHandEnchant().up end
-local function OffMissing(c) return HasWeapon(OFF_HAND) and not c.offHandEnchant().up end
+-- Poison lasts an hour; under this many seconds left it is renewed before the pull rather than
+-- left to run out in the middle of a fight.
+local REFRESH_BELOW = 10 * 60
+
+-- Whether each held weapon still needs poison: none on it, or too little time left. The client
+-- only reports that a weapon is enchanted, not which poison is on it (see c.mainHandEnchant),
+-- which is all a reminder needs.
+local function NeedsPoison(enchant) return not enchant.up or enchant.remains < REFRESH_BELOW end
+local function MainMissing(c) return HasWeapon(MAIN_HAND) and NeedsPoison(c.mainHandEnchant()) end
+local function OffMissing(c) return HasWeapon(OFF_HAND) and NeedsPoison(c.offHandEnchant()) end
 local function MissingPoison(c) return MainMissing(c) or OffMissing(c) end
 
 -- The poison each hand should get: Instant on the main hand, Deadly on the off hand.
