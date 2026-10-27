@@ -104,7 +104,7 @@ end
 -- Works out what an entry should look like right now. Returns nothing when it should not be shown,
 -- otherwise these values, in this order (the caller indexes them):
 --   1 icon  2 sweepStart  3 sweepDuration  4 remaining  5 dimmed  6 fromAura  7 borderColor
---   8 flash  9 tip  10 coolingDown  11 idleReady
+--   8 flash  9 tip  10 coolingDown  11 idleReady  12 discouraged
 local function Resolve(entry, rowKey)
     entry = ResolveVariants(entry)
     local c = ns.c
@@ -167,13 +167,15 @@ local function Resolve(entry, rowKey)
     -- Only a bare aura is dimmed while missing: that is how a tracker says "not up". An ability
     -- slot is not dimmed just because its buff is down, it is simply ready.
     local dimmed = auraName and not entry.spell and not active
+    local discouraged = false
     if entry.discourage and not dimmed then
-        local ok, discouraged = pcall(entry.discourage, c)
+        local ok, result = pcall(entry.discourage, c)
         if ok then
-            dimmed = discouraged and true or false
+            discouraged = result and true or false
+            dimmed = discouraged
         elseif not entry.discourageErrored then
             entry.discourageErrored = true -- report once, this runs several times a second
-            ns.Print("discourage error in " .. tostring(entry.spell or auraName) .. ": " .. tostring(discouraged))
+            ns.Print("discourage error in " .. tostring(entry.spell or auraName) .. ": " .. tostring(result))
         end
     end
 
@@ -223,7 +225,7 @@ local function Resolve(entry, rowKey)
     local idleReady = entry.spell ~= nil and not active and not coolingDown and borderColor == nil
 
     return icon, start, duration, remaining, dimmed, fromAura, borderColor,
-        borderColor and expiring or false, tip, coolingDown, idleReady
+        borderColor and expiring or false, tip, coolingDown, idleReady, discouraged
 end
 
 -- Slots on screen ------------------------------------------------------------
@@ -260,7 +262,7 @@ end
 
 -- Applies a resolved entry to a slot. Everything is compared with what is already shown first,
 -- because restarting a sweep or resetting a texture every tick would make them flicker.
-local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, borderColor, flash, tip)
+local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, borderColor, flash, tip, discouraged)
     if slot.shownIcon ~= icon then
         slot.shownIcon = icon
         slot.icon:SetTexture(icon)
@@ -277,6 +279,7 @@ local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, b
     slot.icon:SetDesaturated(dimmed and true or false)
     local shade = dimmed and 0.5 or 1 -- desaturation alone can be unsupported on some setups
     slot.icon:SetVertexColor(shade, shade, shade)
+    slot:SetAlpha(discouraged and 0.5 or 1) -- a discouraged slot also fades, not only grays
 
     slot.time:SetText(remaining and FormatTime(remaining) or "")
     slot.flashing = flash
@@ -371,7 +374,7 @@ function ns.InitSlots()
             for i, slot in ipairs(row) do
                 local r = i <= limit and shown[i]
                 if r then
-                    Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9])
+                    Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[12])
                 else
                     slot:Hide()
                 end
