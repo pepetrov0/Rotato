@@ -493,7 +493,9 @@ function ns.InitSlots()
             for i, slot in ipairs(row) do
                 local r = i <= limit and shown[i]
                 if r then
-                    if r[12] then active = true end
+                    -- Only a green slot counts as "something running": it is an active aura that is
+                    -- good for the player. A red or blue one is a warning, not a timer to watch.
+                    if r[12] and r[7] == GREEN then active = true end
                     Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[11])
                 else
                     slot:Hide()

@@ -23,8 +23,8 @@ local function DangerReason()
     local _, _, _, _, source = (ns.EvaluateCached or ns.Evaluate)()
     if source == "reminders" then return "reminder" end
 
-    -- Something is already running in the side rows (an active buff, a tracker counting down), so
-    -- its timer is worth seeing even with no fight going on. Slots.lua sets this each update.
+    -- A green slot is running in the side rows (an active buff that helps the player), so its timer
+    -- is worth seeing even with no fight going on. Slots.lua sets this each update.
     if ns.anySlotActive then return "active slot" end
 
     if ns.unlocked then return "unlocked" end -- so it can be moved and configured while calm
