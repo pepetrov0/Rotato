@@ -29,7 +29,7 @@ ns.Rotation{
             -- Only while the bleed is missing; a running one is left alone until it expires, so the
             -- points in between go to Eviscerate.
             { "Rupture", when = function(c)
-                return c.comboPoints >= 5 and c.target.hostile and not c.debuff("Rupture").up
+                return c.comboPoints >= 5 and not c.debuff("Rupture").up
             end },
             { "Eviscerate", when = function(c) return c.comboPoints >= 5 end },
             { "Sinister Strike" },
