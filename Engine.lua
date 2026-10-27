@@ -392,7 +392,12 @@ function ns.InRotation(spell)
     local set = inRotation[rotation]
     if not set then
         set = {}
-        local lists = { rotation.reminders, rotation.preparation, rotation.highprio }
+        -- built with an explicit count: a rotation without one of these tiers would leave a nil
+        -- hole in a table constructor, and ipairs would stop there
+        local lists = {}
+        for _, tier in ipairs({ "reminders", "preparation", "highprio" }) do
+            if rotation[tier] then lists[#lists + 1] = rotation[tier] end
+        end
         for _, list in pairs(rotation.rotations or {}) do lists[#lists + 1] = list end
         for _, list in ipairs(lists) do
             for _, entry in ipairs(list) do
