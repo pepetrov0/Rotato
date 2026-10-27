@@ -4,6 +4,8 @@ local ADDON_NAME, ns = ...
 -- the number of points on the current target. The entry fields for the side slots are described in
 -- Slots.lua.
 
+local Rogue = ns.Rogue
+
 local SLICE_AND_DICE = "Slice and Dice"
 local REFRESH_BELOW = 5 -- seconds left at which a refresh is worth the points
 
@@ -17,6 +19,11 @@ end
 ns.Rotation{
     class = "ROGUE",
     spec = 2, -- Combat
+
+    -- Poison is an item, not a cast, so it is offered as one. Both out-of-combat tiers: with no
+    -- target it is a reminder, and with a hostile one it is part of preparing for the pull.
+    reminders = Rogue.PoisonReminders(),
+    preparation = Rogue.PoisonReminders(),
 
     highprio = {
         -- Upkeep ahead of any damage finisher, and it needs no target of its own: the combo points

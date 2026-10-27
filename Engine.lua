@@ -276,6 +276,19 @@ function c.mainHandEnchant()
     return aura
 end
 
+-- The same for a dual-wielded off hand (rogue poisons). A hand without a weapon reports no
+-- enchant, so callers that only care about weapons should check the slot first.
+function c.offHandEnchant()
+    local _, _, _, has, expiration = GetWeaponEnchantInfo()
+    if not has then return NO_AURA end
+    local aura = NextAura()
+    aura.name, aura.icon = nil, nil
+    aura.remains = expiration / 1000
+    aura.stacks, aura.mine, aura.duration = 0, true, 0
+    aura.expires = GetTime() + aura.remains
+    return aura
+end
+
 -- Who a heal would go to, the way a mouseover/target/self macro picks: the mouseover if it is a
 -- living friend, else the target if it is, else the player. Used so Weakened Soul and dispel
 -- checks look at the unit the next spell would actually land on.
