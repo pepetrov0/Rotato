@@ -110,10 +110,29 @@ local pet = setmetatable({}, {
 
 function pet.buff(name) return Aura(UnitBuff, "pet", name) end
 
+-- Ready runes by their current type: c.runes.blood, .unholy, .frost and .death. A rune converted
+-- to a death rune counts as death only, whichever slot it sits in.
+local RUNE_TYPES = { "blood", "unholy", "frost", "death" } -- the order GetRuneType numbers them in
+local runes = setmetatable({}, {
+    __index = function(_, key)
+        local wanted
+        for type, name in ipairs(RUNE_TYPES) do
+            if name == key then wanted = type end
+        end
+        if not wanted then return end
+        local count = 0
+        for rune = 1, 6 do
+            local _, _, ready = GetRuneCooldown(rune)
+            if ready and GetRuneType(rune) == wanted then count = count + 1 end
+        end
+        return count
+    end,
+})
+
 -- c.variant.judgement is the current option of the rotation's "judgement" variant (see Rotation.lua)
 local variant = setmetatable({}, { __index = function(_, name) return ns.GetVariant(name) end })
 
-local c = setmetatable({ target = target, pet = pet, variant = variant }, {
+local c = setmetatable({ target = target, pet = pet, variant = variant, runes = runes }, {
     __index = function(_, key)
         if key == "combat" then return UnitAffectingCombat("player") and true or false
         elseif key == "mana" then return Percent(UnitPower("player", 0), UnitPowerMax("player", 0))

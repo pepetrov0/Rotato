@@ -3,29 +3,6 @@ local ADDON_NAME, ns = ...
 -- Blood death knight tank. Conditions are functions of `c`, the condition API in Engine.lua. The
 -- entry fields for the side slots are described in Slots.lua.
 
--- The rune slots are fixed: 1-2 blood, 3-4 unholy, 5-6 frost. A slot holding a death rune still
--- counts as the slot it came from here, so Blood Tap changing a blood rune does not matter.
-local FIRST_UNHOLY, LAST_FROST = 3, 6
-
-local function UnholyAndFrostSpent()
-    for rune = FIRST_UNHOLY, LAST_FROST do
-        local _, _, ready = GetRuneCooldown(rune)
-        if ready then return false end
-    end
-    return true
-end
-
--- Blood runes only: a blood slot that Blood Tap or a death rune conversion has turned into a death
--- rune (rune type 4) is left for the abilities that can use either.
-local BLOOD_RUNE = 1
-local function BloodRuneReady()
-    for rune = 1, FIRST_UNHOLY - 1 do
-        local _, _, ready = GetRuneCooldown(rune)
-        if ready and GetRuneType(rune) == BLOOD_RUNE then return true end
-    end
-    return false
-end
-
 -- The rotation shared by single target and AoE: only the blood rune spender differs.
 local function Rotation(bloodSpender)
     return {
@@ -33,7 +10,7 @@ local function Rotation(bloodSpender)
             return not c.debuff("Frost Fever").up or c.buff("Killing Machine").up
         end },
         { "Plague Strike", when = function(c) return not c.debuff("Blood Plague").up end },
-        { bloodSpender, when = BloodRuneReady },
+        { bloodSpender, when = function(c) return c.runes.blood > 0 end },
         { "Death Strike" },
     }
 end
@@ -74,7 +51,7 @@ ns.Rotation{
     utility = {
         { spell = "Dark Command" },
         -- Worth it once there is no frost or unholy rune left to spend
-        { spell = "Empower Rune Weapon", recommend = UnholyAndFrostSpent },
+        { spell = "Empower Rune Weapon", recommend = function(c) return c.runes.frost == 0 and c.runes.unholy == 0 end },
         { spell = "Death Grip" },
     },
 
