@@ -67,6 +67,8 @@ local target = setmetatable({}, {
             return UnitExists("target") and UnitCanAttack("player", "target") and not UnitIsDeadOrGhost("target")
                 and true or false
         elseif key == "hp" then return Percent(UnitHealth("target"), UnitHealthMax("target"))
+        -- raw maximum health, unlike hp (a percentage); 0 when there is no target
+        elseif key == "maxhp" then return UnitHealthMax("target")
         elseif key == "boss" then return UnitClassification("target") == "worldboss" or UnitLevel("target") == -1
         elseif key == "casting" then return UnitCastingInfo("target") ~= nil
         elseif key == "creatureType" then return UnitCreatureType("target") -- localized, "Undead" on an English client

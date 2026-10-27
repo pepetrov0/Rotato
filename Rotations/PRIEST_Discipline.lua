@@ -21,8 +21,8 @@ ns.Rotation{
         { "Dispel Magic", when = function(c)
             return c.debuffOfType(c.healTarget(), "Magic").up
         end },
-        -- Abolish Disease keeps ticking on the unit for a while, so while it is up the disease is
-        -- already being handled and suggesting it again would just refresh it.
+        -- Abolish Disease keeps ticking on the heal target for a while, so while it is up the
+        -- disease is already being handled and suggesting it again would just refresh it.
         { "Abolish Disease", when = function(c)
             local unit = c.healTarget()
             return c.debuffOfType(unit, "Disease").up and not c.buffOnAny(unit, "Abolish Disease").up
@@ -53,6 +53,8 @@ ns.Rotation{
         { healTargetDebuff = "Weakened Soul", show = "active", lockout = true },
         -- something you can dispel (Dispel Magic / Abolish Disease) on that same unit
         { healTargetDebuffType = { "Disease", "Magic" } },
+        -- only shown while an Abolish Disease is ticking on that same unit, whoever cast it
+        { healTargetBuffAny = "Abolish Disease", show = "active" },
     },
 
     utility = {

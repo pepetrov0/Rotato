@@ -4,7 +4,6 @@ local ADDON_NAME, ns = ...
 -- a percentage. The entry fields for the side slots are described in Slots.lua.
 
 local Paladin = ns.Paladin
-local SEALS = Paladin.SEALS
 
 ns.Rotation{
     class = "PALADIN",
@@ -58,11 +57,11 @@ ns.Rotation{
         },
     },
 
-    trackers = {
-        { buff = SEALS },
-        { debuff = { variant = "judgement" }, any = true },
-        Paladin.CleanseTracker(),
-    },
+    -- Replenishment is a raid buff, not a spell of ours, so `always` keeps the slot visible while
+    -- it is missing
+    trackers = Paladin.CommonTrackers({
+        { buff = "Replenishment", always = true },
+    }),
 
     defensives = {
         { spell = "Hand of Sacrifice", buff = "Hand of Sacrifice" },

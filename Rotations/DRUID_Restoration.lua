@@ -11,6 +11,18 @@ ns.Rotation{
     highprio = {
         { "Tree of Life", when = function(c) return not c.buff("Tree of Life").up end },
 
+        -- Dispelling a friend outranks the hots below. The unit is the one a heal would land on
+        -- (mouseover, else target, else yourself).
+        { "Remove Curse", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Curse").up
+        end },
+        -- Abolish Poison keeps ticking on the heal target for a while, so while it is up the poison
+        -- is already being handled and suggesting it again would just refresh it.
+        { "Abolish Poison", when = function(c)
+            local unit = c.healTarget()
+            return c.debuffOfType(unit, "Poison").up and not c.buffOnAny(unit, "Abolish Poison").up
+        end },
+
         -- A Clearcasting proc makes the next spell free, and a free Lifebloom is the best use of it
         { "Lifebloom", when = function(c) return c.buff("Clearcasting").up end },
 
@@ -34,12 +46,15 @@ ns.Rotation{
         },
     },
 
-    -- Your own hots on the unit a heal would go to, so a missing one shows red before you cast it
+    -- Your own hots on the unit a heal would go to, so a missing one shows red before you cast it,
+    -- plus something Abolish Poison / Remove Curse can take off that same unit
     trackers = {
         { healTargetBuff = "Rejuvenation" },
         { healTargetBuff = "Regrowth" },
-        { healTargetBuff = "Lifebloom" },
         { healTargetBuff = "Wild Growth" },
+        { healTargetDebuffType = { "Poison", "Curse" } },
+        -- only shown while an Abolish Poison is ticking on that same unit, whoever cast it
+        { healTargetBuffAny = "Abolish Poison", show = "active" },
     },
 
     defensives = {

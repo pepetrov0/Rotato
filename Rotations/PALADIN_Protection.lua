@@ -4,7 +4,6 @@ local ADDON_NAME, ns = ...
 -- a percentage. The entry fields for the side slots are described in Slots.lua.
 
 local Paladin = ns.Paladin
-local SEALS = Paladin.SEALS
 
 -- Either blessing counts, and so does another paladin's: only one Sanctuary can be on a target, so
 -- covering it ourselves would just overwrite theirs. The single blessing is the one suggested
@@ -81,11 +80,10 @@ ns.Rotation{
     },
 
     -- Righteous Fury is left out: it is a reminder and a top priority, so a slot would only repeat it
-    trackers = {
-        { buff = SEALS },
-        { debuff = { variant = "judgement" }, any = true },
-        Paladin.CleanseTracker(),
-    },
+    trackers = Paladin.CommonTrackers({
+        { buff = "Sacred Shield" },
+        { buff = "Holy Shield" },
+    }),
 
     defensives = {
         { spell = "Hand of Sacrifice", buff = "Hand of Sacrifice" },

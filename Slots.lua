@@ -14,6 +14,7 @@ local ADDON_NAME, ns = ...
 --   targetBuff   = "Name"   a buff on the target
 --   targetBuffType         = { "Magic", "Enrage" }   any buff of those dispel types on the target
 --   healTargetBuff        = "Name"   your own buff (a hot) on whoever a heal would go to
+--   healTargetBuffAny     = "Name"   any caster's buff on whoever a heal would go to
 --   healTargetDebuff       = "Name"   a debuff on whoever a heal would go to (see c.healTarget)
 --   healTargetDebuffType   = { "Disease", "Magic" } any debuff of those types on that same unit
 --   Any of the aura fields can be { variant = "name" } to follow a rotation variant (Rotation.lua).
@@ -59,7 +60,8 @@ end
 
 -- Variants ---------------------------------------------------------------
 
-local VARIANT_FIELDS = { "spell", "buff", "debuff", "targetBuff", "playerDebuff", "healTargetBuff", "healTargetDebuff" }
+local VARIANT_FIELDS = { "spell", "buff", "debuff", "targetBuff", "playerDebuff", "healTargetBuff",
+    "healTargetBuffAny", "healTargetDebuff" }
 
 -- Fields written as { variant = "name" } are replaced by the current spell of that variant. This is
 -- done on a proxy that reads through to the real entry, instead of editing the entry, because the
@@ -92,6 +94,9 @@ local function ReadAura(entry, buffList)
     elseif entry.healTargetBuff then
         local unit = c.healTarget()
         return c.buffOn(unit, entry.healTargetBuff), unit
+    elseif entry.healTargetBuffAny then
+        local unit = c.healTarget()
+        return c.buffOnAny(unit, entry.healTargetBuffAny), unit
     elseif entry.healTargetDebuff then
         local unit = c.healTarget()
         return c.debuffOn(unit, entry.healTargetDebuff), unit
@@ -113,7 +118,7 @@ local function Resolve(entry, rowKey)
 
     local buffList = type(entry.buff) == "table" and entry.buff or nil
     local auraName = buffList and buffList[1] or entry.buff or entry.playerDebuff or entry.debuff
-        or entry.targetBuff or entry.healTargetBuff or entry.healTargetDebuff
+        or entry.targetBuff or entry.healTargetBuff or entry.healTargetBuffAny or entry.healTargetDebuff
 
     local aura, healUnit = ReadAura(entry, buffList)
     local active = aura and aura.up
@@ -123,7 +128,7 @@ local function Resolve(entry, rowKey)
     if (entry.debuff or entry.targetBuff or typeList) and not UnitExists("target") then return end
     -- the trackers only show auras: a bare cooldown there would just be noise next to the real trackers
     if rowKey == "trackers" and not (entry.buff or entry.debuff or typeList or healTypeList
-        or entry.healTargetBuff or entry.healTargetDebuff) then
+        or entry.healTargetBuff or entry.healTargetBuffAny or entry.healTargetDebuff) then
         return
     end
     -- the type lists are "tell me when one is present", so absent means nothing to show
@@ -214,6 +219,7 @@ local function Resolve(entry, rowKey)
         elseif entry.playerDebuff then tip.unit, tip.helpful = "player", false
         elseif entry.debuff then tip.unit, tip.helpful = "target", false
         elseif entry.healTargetBuff then tip.unit, tip.helpful = healUnit, true
+        elseif entry.healTargetBuffAny then tip.unit, tip.helpful = healUnit, true
         elseif entry.healTargetDebuff or healTypeList then tip.unit, tip.helpful = healUnit, false
         else tip.unit, tip.helpful = "target", true
         end

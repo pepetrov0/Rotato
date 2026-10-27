@@ -13,6 +13,14 @@ local ASPECTS = {
 -- Which one to suggest is the dpsAspect variant below.
 local DPS_ASPECTS = { "Aspect of the Dragonhawk", "Aspect of the Wild" }
 
+-- Serpent Sting and Hunter's Mark cost a global cooldown, so they are only worth it on something
+-- that will live long enough to pay it back: a boss, or a target with a large maximum health pool.
+-- It is maximum health, not current, so the choice does not change as the fight goes on.
+local BIG_TARGET_HP = 50000
+local function BigTarget(c)
+    return c.target.hostile and (c.target.boss or c.target.maxhp > BIG_TARGET_HP)
+end
+
 -- Misdirection needs someone to hand the threat to
 local function NoMisdirectionTarget(c) return c.inGroup and not UnitExists("focus") end
 
@@ -76,10 +84,18 @@ ns.Rotation{
             return c.mana > 80 and not c.anyBuff(DPS_ASPECTS).up
         end },
         { "Kill Shot", when = function(c) return c.target.hostile and c.target.hp < 20 end },
+
+        -- Last, because it is upkeep rather than damage: a mark on something worth marking
+        { "Hunter's Mark", when = function(c)
+            return BigTarget(c) and not c.debuff("Hunter's Mark", { any = true }).up
+        end },
     },
 
     rotations = {
         single = {
+            { "Serpent Sting", when = function(c)
+                return BigTarget(c) and not c.debuff("Serpent Sting").up
+            end },
             { "Aimed Shot" },
             { "Chimera Shot" },
             { "Steady Shot" },
@@ -88,6 +104,9 @@ ns.Rotation{
         -- Multi-Shot is also in the aoe list, so casting it alone selects this one (see Mode.lua);
         -- casting Volley, which only aoe has, selects aoe.
         multi = {
+            { "Serpent Sting", when = function(c)
+                return BigTarget(c) and not c.debuff("Serpent Sting").up
+            end },
             { "Multi-Shot" },
             { "Chimera Shot" },
             { "Steady Shot" },

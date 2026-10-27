@@ -67,6 +67,19 @@ function Paladin.CleanseTracker()
     return { healTargetDebuffType = { "Poison", "Disease", "Magic" } }
 end
 
+-- The trackers the paladin specs have in common: the seal in use, the current Judgement, and
+-- something to Cleanse. `extra` adds spec-specific entries ahead of the Cleanse one, so the dispel
+-- stays last. Fresh tables every call (see the file comment).
+function Paladin.CommonTrackers(extra)
+    local trackers = {
+        { buff = Paladin.SEALS },
+        { debuff = { variant = "judgement" }, any = true },
+    }
+    for _, entry in ipairs(extra or {}) do trackers[#trackers + 1] = entry end
+    trackers[#trackers + 1] = Paladin.CleanseTracker()
+    return trackers
+end
+
 function Paladin.HammerOfJustice()
     return { spell = "Hammer of Justice", recommend = function(c)
         return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")

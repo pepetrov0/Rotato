@@ -72,6 +72,7 @@ ns.Rotation{
         -- `always`: this is a talent passive, so its name is not in the spellbook and it would be
         -- hidden while missing
         { buff = "Tidal Waves", always = true },
+        { buff = "Water Shield" },
         { buff = "Wrath of Air Totem" },
         { healTargetDebuffType = { "Poison", "Disease", "Curse" } },
     },
