@@ -23,6 +23,18 @@ end
 -- Pestilence spreads the diseases, which is only worth doing now and then
 local PESTILENCE_INTERVAL = 15
 
+-- Damage buffs Hysteria does not stack with (patch 3.1). Only the ones a Hysteria target is likely
+-- to have are listed: a rogue's Tricks, a warrior's Death Wish, a paladin's Avenging Wrath.
+local HYSTERIA_CONFLICTS = { "Tricks of the Trade", "Death Wish", "Avenging Wrath" }
+
+local function HysteriaBlocked(c)
+    local unit = c.healTarget()
+    for _, name in ipairs(HYSTERIA_CONFLICTS) do
+        if c.buffOnAny(unit, name).up then return true end
+    end
+    return false
+end
+
 local function FrostPresence()
     return { "Frost Presence", when = function(c) return not c.buff("Frost Presence").up end }
 end
@@ -57,6 +69,10 @@ ns.Rotation{
         { debuff = "Blood Plague" },
         -- a talent proc, so its name is not in the spellbook
         { buff = "Blade Barrier", always = true },
+        -- on whoever Hysteria would go to, where they would waste it
+        { healTargetBuffAny = "Tricks of the Trade", blocking = true },
+        { healTargetBuffAny = "Death Wish", blocking = true },
+        { healTargetBuffAny = "Avenging Wrath", blocking = true },
     },
 
     utility = {
@@ -69,7 +85,7 @@ ns.Rotation{
     },
 
     offensives = {
-        { spell = "Hysteria", buff = "Hysteria" },
+        { spell = "Hysteria", buff = "Hysteria", discourage = HysteriaBlocked },
         { spell = "Army of the Dead" },
     },
 
