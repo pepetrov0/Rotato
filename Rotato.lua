@@ -16,6 +16,7 @@ local defaults = {
     dynamicWidth = true,  -- size each side to its longest row (slotsPerRow is then the maximum)
     symmetric = true,     -- with dynamicWidth, keep both sides as wide as the widest one
     backgroundTransparency = 50, -- percent; 0 is opaque, 100 is invisible
+    chatLog = true,       -- report automatic changes (showing, hiding, mode...) in chat, see ns.Log
 
 }
 
@@ -47,6 +48,12 @@ function ns.Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99Rotato|r: " .. tostring(msg))
 end
 
+-- For changes the addon makes on its own; these can be frequent, so the player can turn them off.
+-- Replies to commands and errors use ns.Print and are always shown.
+function ns.Log(msg)
+    if RotatoDB.chatLog then ns.Print(msg) end
+end
+
 -- Rotation mode ----------------------------------------------------------
 -- The order matters: when a cast belongs to several modes, the first one listed wins (Mode.lua).
 -- The mode is deliberately not saved. It follows what the player is doing right now, and a stale
@@ -60,7 +67,7 @@ local MODE_LABEL = { single = "Single", multi = "Multi-target", aoe = "AoE" }
 function ns.SetMode(mode, reason)
     if ns.mode == mode then return end -- stay quiet when nothing changes, this is called on every cast
     ns.mode = mode
-    ns.Print(MODE_LABEL[mode] .. " rotation" .. (reason and (" (" .. reason .. ")") or ""))
+    ns.Log(MODE_LABEL[mode] .. " rotation" .. (reason and (" (" .. reason .. ")") or ""))
 end
 
 -- Startup ----------------------------------------------------------------
@@ -106,11 +113,14 @@ SlashCmdList["ROTATO"] = function(msg)
         ns.DumpSpec()
     elseif msg == "debug" then
         ns.DebugEvaluate()
+    elseif msg == "log" then
+        RotatoDB.chatLog = not RotatoDB.chatLog
+        ns.Print("chat log " .. (RotatoDB.chatLog and "on." or "off."))
     elseif msg == "reset" then
         -- copy the table: assigning defaults.pos itself would let later drags edit the defaults
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Usage: /rotato unlock | lock | reset | spec | debug")
+        ns.Print("Usage: /rotato unlock | lock | reset | log | spec | debug")
     end
 end

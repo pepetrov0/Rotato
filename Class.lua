@@ -62,7 +62,7 @@ function Report(force)
     local color = RAID_CLASS_COLORS[classToken]
     local colored = color and format("|cff%02x%02x%02x%s|r", color.r * 255, color.g * 255, color.b * 255, className)
         or className
-    ns.Print(format("%s - %s (talent group %d)", colored, specName, group))
+    ns.Log(format("%s - %s (talent group %d)", colored, specName, group))
 end
 
 -- Prints the raw talent values, for when detection looks wrong (/rotato spec).

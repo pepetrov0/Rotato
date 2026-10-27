@@ -57,7 +57,7 @@ function ns.InitVisibility()
                     shown = false
                     UIFrameFadeRemoveFrame(f)
                     f:SetAlpha(0)
-                    ns.Print("hiding (" .. why .. ")")
+                    ns.Log("hiding (" .. why .. ")")
                 end
             end
             return
@@ -71,7 +71,7 @@ function ns.InitVisibility()
                 shown = true
                 UIFrameFadeRemoveFrame(f) -- a fade-out that is still running would fight the SetAlpha
                 f:SetAlpha(1)
-                ns.Print("showing (" .. reason .. ")")
+                ns.Log("showing (" .. reason .. ")")
             end
         elseif shown then
             -- A green slot running in the side rows (an active buff that helps the player) keeps the
@@ -87,7 +87,7 @@ function ns.InitVisibility()
             if calm >= HIDE_DELAY then
                 shown = false
                 UIFrameFadeOut(f, FADE_OUT_TIME, f:GetAlpha(), 0)
-                ns.Print("hiding (no danger)")
+                ns.Log("hiding (no danger)")
             end
         end
     end

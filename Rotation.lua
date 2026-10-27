@@ -69,7 +69,7 @@ function ns.SetVariant(name, option)
     local key = VariantKey()
     chosen[key] = chosen[key] or {}
     chosen[key][name] = option
-    ns.Print(format("%s: %s", name, option))
+    ns.Log(format("%s: %s", name, option))
 end
 
 -- The spell the current option stands for: the first one listed under it.

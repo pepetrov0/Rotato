@@ -276,6 +276,12 @@ function ns.OpenMenu()
             CloseDropDownMenus()
         end })
 
+    tinsert(menu, { text = "Log changes in chat", checked = RotatoDB.chatLog,
+        func = function()
+            RotatoDB.chatLog = not RotatoDB.chatLog
+            CloseDropDownMenus()
+        end })
+
     local transparencies = {}
     for percent = 0, 100, 10 do
         tinsert(transparencies, {
