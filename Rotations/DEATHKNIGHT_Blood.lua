@@ -70,9 +70,9 @@ ns.Rotation{
         -- a talent proc, so its name is not in the spellbook
         { buff = "Blade Barrier", always = true },
         -- on whoever Hysteria would go to, where they would waste it
-        { healTargetBuffAny = "Tricks of the Trade", blocking = true },
-        { healTargetBuffAny = "Death Wish", blocking = true },
-        { healTargetBuffAny = "Avenging Wrath", blocking = true },
+        { healTargetBuffAny = "Tricks of the Trade", show = "active", blocking = true },
+        { healTargetBuffAny = "Death Wish", show = "active", blocking = true },
+        { healTargetBuffAny = "Avenging Wrath", show = "active", blocking = true },
     },
 
     utility = {

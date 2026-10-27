@@ -50,9 +50,9 @@ ns.Rotation{
 
     trackers = {
         { buff = "Inner Fire" },
-        -- A lockout, not a problem: it ending means the Shield is available again, so it gets the
-        -- blue lockout border instead of the red one. It hides itself when absent.
-        { healTargetDebuff = "Weakened Soul", show = "active", lockout = true },
+        -- Blocking, not a problem: it ending means the Shield is available again, so it gets the
+        -- blue blocking border instead of the red one. It hides itself when absent.
+        { healTargetDebuff = "Weakened Soul", show = "active", blocking = true },
         -- something you can dispel (Dispel Magic / Abolish Disease) on that same unit
         { healTargetDebuffType = { "Disease", "Magic" } },
         -- only shown while an Abolish Disease is ticking on that same unit, whoever cast it

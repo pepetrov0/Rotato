@@ -30,17 +30,16 @@ local ADDON_NAME, ns = ...
 --   manaOnly   = true: only the mana cost decides if the spell is usable (spells cast on others)
 --   discourage = function(c)  true while using it is pointless right now: the icon is grayed out and drawn at 50% opacity
 --   recommend  = function(c)  true while using it is a good idea: flashing white border
---   lockout    = true: the aura is a restriction counting down (Weakened Soul): blue border
---   blocking   = true: the aura stands in the way of one of your abilities (a buff it does not
---                stack with): only shown while up, and red in the trackers while it is
+--   blocking   = true: the aura keeps one of your abilities from working while it counts down
+--                (Weakened Soul, a buff Hysteria does not stack with): blue border
 --
--- Borders:  red = you need to act,  flashing white = recommended,  green = active,  blue = lockout.
+-- Borders:  red = you need to act,  flashing white = recommended,  green = active,  blue = blocking.
 -- Any border also flashes while its aura has under FLASH_BELOW seconds left.
 -- Outside the trackers an active aura is green when good for you (a buff on you, your debuff on the
 -- target) and red when bad for you (a debuff on you, a buff on the target). Trackers differ, because
 -- they exist to catch what is missing: only aura entries are shown there, a missing buff or debuff
 -- is red, a healthy one has no border, and a dispellable aura (targetBuffType, healTargetDebuffType)
--- or a blocking one is red while present.
+-- is red while present.
 
 local TICK = 0.1 -- how often the slots are re-evaluated; sweeps animate on their own in between
 
@@ -192,8 +191,8 @@ local function Resolve(entry, rowKey)
         or entry.healTargetBuff or entry.healTargetBuffAny or entry.healTargetDebuff) then
         return
     end
-    -- the type lists and blocking auras are "tell me when one is present", so absent means nothing to show
-    if (entry.show == "active" or typeList or healTypeList or entry.blocking) and not active then return end
+    -- the type lists are "tell me when one is present", so absent means nothing to show
+    if (entry.show == "active" or typeList or healTypeList) and not active then return end
     if entry.when and not ns.Passes(entry, auraName or entry.spell) then return end
 
     -- Abilities the character does not know are hidden, unless their aura happens to be up
@@ -253,11 +252,11 @@ local function Resolve(entry, rowKey)
     local expiring = fromAura and remaining and remaining < FLASH_BELOW
     local borderColor
     if rowKey == "trackers" then
-        -- a tracker only draws attention when something is missing, wrong, a lockout, or about to run out
-        if entry.lockout and active then borderColor = BLUE
-        elseif typeList or healTypeList or entry.blocking or not active or expiring then borderColor = RED end
+        -- a tracker only draws attention when something is missing, wrong, blocking, or about to run out
+        if entry.blocking and active then borderColor = BLUE
+        elseif typeList or healTypeList or not active or expiring then borderColor = RED end
     elseif active then
-        borderColor = entry.lockout and BLUE
+        borderColor = entry.blocking and BLUE
             or ((entry.buff or entry.pet or entry.debuff or entry.healTargetBuff) and GREEN or RED)
     end
 
@@ -378,7 +377,7 @@ end
 
 -- What is drawn nearest the center icon, from most to least pressing:
 --   1 needs action (red) or is recommended (white), the soonest to run out first
---   2 a lockout counting down (blue), the soonest over first
+--   2 a blocking aura counting down (blue), the soonest over first
 --   3 active (an aura up, with a green border or none), the soonest to expire first
 --   4 ready, the shortest cooldown first (one with no cooldown at all goes last)
 --   5 ready but discouraged
