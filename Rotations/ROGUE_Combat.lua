@@ -43,6 +43,7 @@ ns.Rotation{
 
     defensives = {
         { spell = "Evasion", buff = "Evasion" },
+        { spell = "Feint", buff = "Feint" },
         { spell = "Vanish", buff = "Vanish" },
     },
 
