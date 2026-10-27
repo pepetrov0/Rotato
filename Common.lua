@@ -18,6 +18,7 @@ ns.common = {
         { buff = "Gift of the Naaru", show = "active" },
         { buff = "Divine Guardian", show = "active" },
         { buff = "Indestructible", show = "active" }, -- Indestructible Potion
+        { buff = "Aegis of Dalaran", show = "active" }, -- trinket proc
     },
 
     offensives = {
