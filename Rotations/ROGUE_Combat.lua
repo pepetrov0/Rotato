@@ -52,5 +52,6 @@ ns.Rotation{
         { spell = "Kick", recommend = function(c)
             return c.target.hostile and c.target.casting and c.ready("Kick")
         end },
+        { spell = "Dismantle" },
     },
 }
