@@ -411,6 +411,43 @@ local function AddSource(name, list)
     sourceNames[sourceCount], sourceLists[sourceCount] = name, list or EMPTY
 end
 
+-- Reminders and preparation only run out of combat, where nothing is urgent, and they can be long
+-- (one entry per poison rank), so they are scanned at most this often and the hit is reused in
+-- between. The cost is that a reminder can linger this long after it is done.
+local SLOW_SCAN = 0.5
+local slowScans = { reminders = { at = -math.huge }, preparation = { at = -math.huge } }
+
+-- The first entry of an out-of-combat list that should be shown, as name, state, start, duration.
+-- Unlike the combat lists these never offer a spell that is still cooling down.
+local function ScanSlowList(list)
+    for _, entry in ipairs(list) do
+        local name = EntryName(entry)
+        local start, duration
+        if name then start, duration = EntryCooldown(entry, name) end
+
+        if start and Passes(entry, name) then
+            local remaining = start > 0 and (start + duration - GetTime()) or 0
+            if duration <= GCD_MAX or remaining <= LOOKAHEAD then
+                if Usable(entry, name) then return name, "ready", start, duration end
+            elseif entry.wait then
+                return name, "cd", start, duration
+            end
+        end
+    end
+end
+
+-- ScanSlowList, reusing the last result while it is recent and for the same list (another rotation
+-- after a spec change has other lists).
+local function SlowScan(sourceName, list)
+    local scan = slowScans[sourceName]
+    local now = GetTime()
+    if scan.list ~= list or now - scan.at >= SLOW_SCAN then
+        scan.list, scan.at = list, now
+        scan.name, scan.state, scan.start, scan.duration = ScanSlowList(list)
+    end
+    return scan.name, scan.state, scan.start, scan.duration
+end
+
 function ns.Evaluate()
     local rotation = ns.GetRotation()
     if not rotation then return end
@@ -431,22 +468,26 @@ function ns.Evaluate()
 
     for i = 1, sourceCount do
         local sourceName = sourceNames[i]
-        local combatList = sourceName ~= "reminders" and sourceName ~= "preparation"
-        for _, entry in ipairs(sourceLists[i]) do
-            local name = EntryName(entry)
-            local start, duration
-            if name then start, duration = EntryCooldown(entry, name) end
+        if slowScans[sourceName] then
+            local name, state, start, duration = SlowScan(sourceName, sourceLists[i])
+            if name then return name, state, start, duration, sourceName end
+        else
+            for _, entry in ipairs(sourceLists[i]) do
+                local name = EntryName(entry)
+                local start, duration
+                if name then start, duration = EntryCooldown(entry, name) end
 
-            if start and Passes(entry, name) then
-                local remaining = start > 0 and (start + duration - GetTime()) or 0
-                if duration <= GCD_MAX or remaining <= LOOKAHEAD then
-                    if Usable(entry, name) then return name, "ready", start, duration, sourceName end
-                elseif entry.wait then
-                    -- `wait` means "hold here rather than fall through to lower priorities"
-                    return name, "cd", start, duration, sourceName
-                elseif combatList and (not soonestRemaining or remaining < soonestRemaining) then
-                    soonest, soonestRemaining, soonestStart, soonestDuration, soonestSource =
-                        name, remaining, start, duration, sourceName
+                if start and Passes(entry, name) then
+                    local remaining = start > 0 and (start + duration - GetTime()) or 0
+                    if duration <= GCD_MAX or remaining <= LOOKAHEAD then
+                        if Usable(entry, name) then return name, "ready", start, duration, sourceName end
+                    elseif entry.wait then
+                        -- `wait` means "hold here rather than fall through to lower priorities"
+                        return name, "cd", start, duration, sourceName
+                    elseif not soonestRemaining or remaining < soonestRemaining then
+                        soonest, soonestRemaining, soonestStart, soonestDuration, soonestSource =
+                            name, remaining, start, duration, sourceName
+                    end
                 end
             end
         end
