@@ -49,6 +49,10 @@ ns.Rotation{
             return not shield.up or shield.remains < SACRED_SHIELD_REFRESH
         end },
 
+        -- Same threshold as the utility recommendation; Plea cuts healing received, so it is only
+        -- worth its place once mana actually runs low.
+        { "Divine Plea", when = function(c) return c.mana < 50 end },
+
         { "Holy Shield", when = function(c)
             local shield = c.buff("Holy Shield")
             return not shield.up or shield.remains < HOLY_SHIELD_REFRESH
@@ -89,6 +93,7 @@ ns.Rotation{
         { spell = "Hand of Sacrifice", buff = "Hand of Sacrifice" },
         { spell = "Divine Protection", buff = "Divine Protection" },
         { spell = "Hand of Protection", buff = "Hand of Protection" },
+        { buff = "Deliverance", show = "active" },
         { spell = "Divine Sacrifice", buff = "Divine Sacrifice" },
     },
 
