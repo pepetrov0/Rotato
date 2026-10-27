@@ -33,6 +33,24 @@ ns.Rotation{
             return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
         end },
 
+        -- Beacon and Sacred Shield are single-target, so "missing" means missing on everyone in
+        -- the group, not on whoever happens to be targeted. Refreshed under 15 seconds so they
+        -- are replaced before they run out.
+        { "Beacon of Light", when = function(c)
+            local beacon = c.groupBuff("Beacon of Light")
+            return not beacon.up or beacon.remains < 15
+        end },
+        { "Sacred Shield", when = function(c)
+            local shield = c.groupBuff("Sacred Shield")
+            return not shield.up or shield.remains < 15
+        end },
+
+        -- Judgements of the Pure comes from judging, so the Judgement doubles as its upkeep.
+        { variant = "judgement", when = function(c)
+            local pure = c.buff("Judgements of the Pure")
+            return not pure.up or pure.remains < 30
+        end },
+
         -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops.
         { variant = "judgement", when = function(c)
@@ -47,24 +65,6 @@ ns.Rotation{
 
     rotations = {
         single = {
-            -- Beacon and Sacred Shield are single-target, so "missing" means missing on everyone in
-            -- the group, not on whoever happens to be targeted. Refreshed under 15 seconds so they
-            -- are replaced before they run out.
-            { "Beacon of Light", when = function(c)
-                local beacon = c.groupBuff("Beacon of Light")
-                return not beacon.up or beacon.remains < 15
-            end },
-            { "Sacred Shield", when = function(c)
-                local shield = c.groupBuff("Sacred Shield")
-                return not shield.up or shield.remains < 15
-            end },
-
-            -- Judgements of the Pure comes from judging, so the Judgement doubles as its upkeep.
-            { variant = "judgement", when = function(c)
-                local pure = c.buff("Judgements of the Pure")
-                return not pure.up or pure.remains < 30
-            end },
-
             { "Holy Light" },
         },
     },
