@@ -30,20 +30,30 @@ local MAIN_HAND, OFF_HAND = 16, 17
 -- is empty and there is nothing there to poison).
 local function HasWeapon(slot) return GetInventoryItemLink("player", slot) ~= nil end
 
--- True while a held weapon has no temporary enchant. The client only reports that a weapon is
+-- Whether each held weapon still needs poison. The client only reports that a weapon is
 -- enchanted, not which poison is on it (see c.mainHandEnchant), which is all a reminder needs.
-local function MissingPoison(c)
-    local main, off = HasWeapon(MAIN_HAND), HasWeapon(OFF_HAND)
-    return (main and not c.mainHandEnchant().up) or (off and not c.offHandEnchant().up) or false
-end
+local function MainMissing(c) return HasWeapon(MAIN_HAND) and not c.mainHandEnchant().up end
+local function OffMissing(c) return HasWeapon(OFF_HAND) and not c.offHandEnchant().up end
+local function MissingPoison(c) return MainMissing(c) or OffMissing(c) end
 
--- One entry per poison, so the one the player actually carries is the one shown; every entry shares
--- the condition above, and the evaluator skips an entry whose item is not in the bags. A fresh list
--- per call, because entries carry state of their own (see Rotations/PALADIN_Shared.lua).
+-- The poison each hand should get: Instant on the main hand, Deadly on the off hand.
+local MAIN_POISONS, OFF_POISONS = {}, {}
+Ranks(MAIN_POISONS, "Instant Poison", 9)
+Ranks(OFF_POISONS, "Deadly Poison", 9)
+
+-- The preferred poison for each bare hand, main hand first, so after poisoning the main hand the
+-- reminder moves on to Deadly instead of offering Instant again. Then any poison in POISONS, so a
+-- rogue who carries neither (or only one of them) is still reminded. One entry per rank, so the one
+-- the player actually carries is the one shown; the evaluator skips an entry whose item is not in
+-- the bags. A fresh list per call, because entries carry state of their own (see
+-- Rotations/PALADIN_Shared.lua).
 function Rogue.PoisonReminders()
     local reminders = {}
-    for i, poison in ipairs(Rogue.POISONS) do
-        reminders[i] = { item = poison, when = MissingPoison }
+    local function Add(poisons, when)
+        for _, poison in ipairs(poisons) do reminders[#reminders + 1] = { item = poison, when = when } end
     end
+    Add(MAIN_POISONS, MainMissing)
+    Add(OFF_POISONS, OffMissing)
+    Add(Rogue.POISONS, MissingPoison)
     return reminders
 end
