@@ -6,17 +6,23 @@ local Rogue = {}
 ns.Rogue = Rogue
 
 -- Poison is an item, used on a weapon, rather than an ability, so the reminder offers the item.
--- Only the highest rank of each kind is listed, which is what a level-80 rogue carries. An entry
--- whose item is not in the bags is skipped, so a poison the player does not use never shows.
--- Damage poisons lead because they are the usual kit; the others cover PvP.
-Rogue.POISONS = {
-    "Instant Poison IX",
-    "Deadly Poison IX",
-    "Wound Poison VII",
-    "Crippling Poison",
-    "Mind-numbing Poison",
-    "Anesthetic Poison II",
-}
+-- Every rank is listed, highest first, so a levelling rogue's poison counts too. An entry whose
+-- item is not in the bags is skipped, so a poison the player does not use never shows. Damage
+-- poisons lead because they are the usual kit; the others cover PvP.
+local NUMERALS = { "", " II", " III", " IV", " V", " VI", " VII", " VIII", " IX" }
+
+-- "Instant Poison IX" down to "Instant Poison" (rank 1 has no numeral).
+local function Ranks(list, name, top)
+    for rank = top, 1, -1 do list[#list + 1] = name .. NUMERALS[rank] end
+end
+
+Rogue.POISONS = {}
+Ranks(Rogue.POISONS, "Instant Poison", 9)
+Ranks(Rogue.POISONS, "Deadly Poison", 9)
+Ranks(Rogue.POISONS, "Wound Poison", 7)
+Ranks(Rogue.POISONS, "Crippling Poison", 1)
+Ranks(Rogue.POISONS, "Mind-numbing Poison", 1)
+Ranks(Rogue.POISONS, "Anesthetic Poison", 2)
 
 local MAIN_HAND, OFF_HAND = 16, 17
 
