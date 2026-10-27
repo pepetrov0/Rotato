@@ -78,13 +78,12 @@ ns.Rotation{
             local judgement = c.debuff(c.variantName("judgement"), { any = true })
             return not judgement.up or judgement.remains < 5
         end },
-
-        -- Only usable under 20% health, which the game enforces, so no explicit threshold here
-        { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
     },
 
     rotations = {
         single = {
+            -- Only usable under 20% health, which the game enforces, so no explicit threshold here
+            { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
             { "Hammer of the Righteous" },
             { "Shield of Righteousness" },
             { variant = "judgement" },
