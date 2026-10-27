@@ -45,16 +45,13 @@ ns.Rotation{
             return not shield.up or shield.remains < 15
         end },
 
-        -- Judgements of the Pure comes from judging, so the Judgement doubles as its upkeep.
-        { variant = "judgement", when = function(c)
-            local pure = c.buff("Judgements of the Pure")
-            return not pure.up or pure.remains < 30
-        end },
-
-        -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
-        -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops.
+        -- One Judgement keeps up two things. The debuff: any paladin's counts, so a friend's Judgement
+        -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops. And
+        -- Judgements of the Pure, which comes from judging, so it is renewed with a wider margin.
         { variant = "judgement", when = function(c)
             if not c.target.hostile then return false end
+            local pure = c.buff("Judgements of the Pure")
+            if not pure.up or pure.remains < 30 then return true end
             local judgement = c.debuff(c.variantName("judgement"), { any = true })
             return not judgement.up or judgement.remains < 5
         end },
