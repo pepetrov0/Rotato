@@ -67,6 +67,8 @@ ns.Rotation{
     trackers = {
         { debuff = "Frost Fever" },
         { debuff = "Blood Plague" },
+        -- a talent proc, so its name is not in the spellbook
+        { buff = "Blade Barrier", always = true },
     },
 
     utility = {
