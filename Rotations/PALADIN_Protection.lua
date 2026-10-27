@@ -78,10 +78,8 @@ ns.Rotation{
 
         -- Last, so it only comes up when nothing more urgent is waiting. The unit is the one a heal
         -- would land on (mouseover, else target, else yourself).
-        -- Cleanse only removes Magic with Holy's Sacred Cleansing talent, so suggesting it for a Magic
-        -- debuff here would never go away.
         { "Cleanse", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease").up
+            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
         end },
     },
 
