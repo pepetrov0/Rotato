@@ -42,6 +42,7 @@ local ADDON_NAME, ns = ...
 -- is red while present.
 
 local TICK = 0.1 -- how often the slots are re-evaluated; sweeps animate on their own in between
+local HOLD_BELOW = 30 -- seconds left under which an active slot keeps the panel up out of combat
 
 local GREEN = { 0, 1, 0 }
 local RED = { 1, 0, 0 }
@@ -494,8 +495,9 @@ function ns.InitSlots()
                 local r = i <= limit and shown[i]
                 if r then
                     -- Only a green slot counts as "something running": it is an active aura that is
-                    -- good for the player. A red or blue one is a warning, not a timer to watch.
-                    if r[12] and r[7] == GREEN then active = true end
+                    -- good for the player. A red or blue one is a warning, not a timer to watch, and a
+                    -- long one (Fear Ward) or one without a duration would hold the panel up for minutes.
+                    if r[12] and r[7] == GREEN and r[4] and r[4] < HOLD_BELOW then active = true end
                     Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[11])
                 else
                     slot:Hide()
