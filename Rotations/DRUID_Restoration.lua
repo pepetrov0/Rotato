@@ -56,6 +56,14 @@ ns.Rotation{
         },
     },
 
+    -- Your own hots on the unit a heal would go to, so a missing one shows red before you cast it
+    trackers = {
+        { healTargetBuff = "Rejuvenation" },
+        { healTargetBuff = "Regrowth" },
+        { healTargetBuff = "Lifebloom" },
+        { healTargetBuff = "Wild Growth" },
+    },
+
     defensives = {
         { spell = "Barkskin", buff = "Barkskin" },
         { spell = "Tranquility" },
