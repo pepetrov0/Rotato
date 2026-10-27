@@ -182,9 +182,10 @@ local function Resolve(entry, rowKey)
         borderColor = entry.lockout and BLUE or ((entry.buff or entry.debuff) and GREEN or RED)
     end
 
-    -- A recommendation outranks the aura border: it is the thing the player should act on, and it
-    -- flashes so it stands out from the steady green and red ones.
-    if entry.recommend and rowKey ~= "trackers" then
+    -- A recommendation outranks the other aura borders: it is the thing the player should act on, and
+    -- it flashes so it stands out from the steady red and blue ones. Green does not give way: the
+    -- buff is already up, so there is nothing left to recommend.
+    if entry.recommend and rowKey ~= "trackers" and borderColor ~= GREEN then
         local ok, recommended = pcall(entry.recommend, c)
         if not ok then
             if not entry.recommendErrored then

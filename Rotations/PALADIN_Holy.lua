@@ -83,7 +83,7 @@ ns.Rotation{
             return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
         end },
         -- Early, at 75%, because the offensive cooldowns below are recommended while it is up
-        { spell = "Divine Plea", recommend = function(c) return c.mana < 75 and c.ready("Divine Plea") end },
+        { spell = "Divine Plea", buff = "Divine Plea" },
         { spell = "Hand of Salvation", buff = "Hand of Salvation" },
         { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },

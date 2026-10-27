@@ -86,7 +86,7 @@ ns.Rotation{
         { spell = "Hammer of Justice", recommend = function(c)
             return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
         end },
-        { spell = "Divine Plea", recommend = function(c) return c.mana < 50 and c.ready("Divine Plea") end },
+        { spell = "Divine Plea", buff = "Divine Plea" },
         { spell = "Hand of Salvation", buff = "Hand of Salvation" },
         { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },
