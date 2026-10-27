@@ -21,6 +21,11 @@ ns.common = {
         { buff = "Aegis of Dalaran", show = "active" }, -- trinket proc
     },
 
+    utility = {
+        { buff = "Hand of Salvation", show = "active" },
+        { buff = "Hand of Freedom", show = "active" },
+    },
+
     offensives = {
         { buff = "Bloodlust", show = "active" },
         { buff = "Heroism", show = "active" },
