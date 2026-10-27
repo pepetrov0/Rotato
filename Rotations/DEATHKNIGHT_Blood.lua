@@ -62,7 +62,9 @@ ns.Rotation{
     utility = {
         { spell = "Dark Command" },
         -- Worth it once there is no frost or unholy rune left to spend
-        { spell = "Empower Rune Weapon", recommend = function(c) return c.runes.frost == 0 and c.runes.unholy == 0 end },
+        { spell = "Empower Rune Weapon", recommend = function(c)
+            return c.ready("Empower Rune Weapon") and c.runes.frost == 0 and c.runes.unholy == 0
+        end },
         { spell = "Death Grip" },
     },
 
