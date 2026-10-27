@@ -14,6 +14,9 @@ local POLL = 0.1           -- some changes (a target dying, the hide delay) have
 local function DangerReason()
     if UnitAffectingCombat("player") then return "in combat" end
 
+    -- dungeons, raids, battlegrounds and arenas: the next pull is never far off
+    if IsInInstance() then return "in an instance" end
+
     -- a living hostile target means a pull is likely about to start
     if UnitExists("target") and UnitCanAttack("player", "target") and not UnitIsDeadOrGhost("target") then
         return "hostile target"
