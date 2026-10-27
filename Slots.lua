@@ -146,7 +146,7 @@ end
 -- Works out what an entry should look like right now. Returns nothing when it should not be shown,
 -- otherwise these values, in this order (the caller indexes them):
 --   1 icon  2 sweepStart  3 sweepDuration  4 remaining  5 dimmed  6 fromAura  7 borderColor
---   8 flash  9 tip  10 coolingDown  11 idleReady  12 discouraged  13 active  14 knownCooldown
+--   8 flash  9 tip  10 coolingDown  11 discouraged  12 active  13 knownCooldown
 local function Resolve(entry, rowKey)
     entry = ResolveVariants(entry)
     local c = ns.c
@@ -266,14 +266,11 @@ local function Resolve(entry, rowKey)
         end
     end
 
-    -- Overflow hints: when a row has more entries than slots, these decide what goes first.
-    -- An ability that is only showing its cooldown carries the least information...
+    -- an ability only showing its cooldown, which decides where it is placed in the row
     local coolingDown = not active and duration > 0
-    -- ...then an ability that is simply ready with nothing to say about it (no aura, no recommendation).
-    local idleReady = entry.spell ~= nil and not active and not coolingDown and borderColor == nil
 
     return icon, start, duration, remaining, dimmed, fromAura, borderColor,
-        borderColor and expiring or false, tip, coolingDown, idleReady, discouraged,
+        borderColor and expiring or false, tip, coolingDown, discouraged,
         active and true or false, knownCooldown
 end
 
@@ -354,9 +351,9 @@ local function Group(result)
     local border = result[7]
     if border == RED or border == WHITE then return 1
     elseif border == BLUE then return 2
-    elseif result[13] then return 3
+    elseif result[12] then return 3
     elseif result[10] then return 6
-    elseif result[12] then return 5
+    elseif result[11] then return 5
     end
     return 4
 end
@@ -367,7 +364,7 @@ local function InnerFirst(a, b)
     if ga ~= gb then return ga < gb end
     local ka, kb
     if ga == 4 then
-        ka, kb = a[14] or math.huge, b[14] or math.huge
+        ka, kb = a[13] or math.huge, b[13] or math.huge
     elseif ga == 6 then
         ka, kb = a[4], b[4]
     end
@@ -398,35 +395,10 @@ local function Collect(rotation, key, slotCount)
         end
     end
 
-    -- More than fit: make room by dropping what says the least, one class of entry at a time, the
-    -- last entries first. The order, from least to most worth keeping:
-    --   1 an ability only showing its cooldown (10th value of Resolve)
-    --   2 an ability that is discouraged right now (12th)
-    --   3 an ability that is merely ready, no aura and no recommendation (11th)
-    --   4 something active and fine: a green border, or none (a healthy tracker)
-    --   5 a lockout counting down (blue), which at least says why a spell cannot be used
-    --   6 whatever is left needs action (red) or is recommended (white)
-    local DROP_ORDER = {
-        function(result) return result[10] end,
-        function(result) return result[12] end,
-        function(result) return result[11] end,
-        function(result) return not result[7] or result[7] == GREEN end,
-        function(result) return result[7] == BLUE end,
-        function(result) return true end,
-    }
-    local excess = #shown - slotCount
-    for _, droppable in ipairs(DROP_ORDER) do
-        for i = #shown, 1, -1 do
-            if excess <= 0 then break end
-            if droppable(shown[i]) then
-                table.remove(shown, i)
-                excess = excess - 1
-            end
-        end
-    end
-
     for i, result in ipairs(shown) do result.order = i end
     table.sort(shown, InnerFirst)
+    -- more than fit: the ones farthest from the center go
+    for i = #shown, slotCount + 1, -1 do shown[i] = nil end
     return shown
 end
 
@@ -463,7 +435,7 @@ function ns.InitSlots()
             for i, slot in ipairs(row) do
                 local r = i <= limit and shown[i]
                 if r then
-                    Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[12])
+                    Paint(slot, r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8], r[9], r[11])
                 else
                     slot:Hide()
                 end
