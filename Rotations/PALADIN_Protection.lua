@@ -9,6 +9,11 @@ local ADDON_NAME, ns = ...
 -- order and the first one that is known wins.
 local SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
 
+-- Either blessing counts, and so does another paladin's: only one Sanctuary can be on a target, so
+-- covering it ourselves would just overwrite theirs. The single blessing is the one suggested
+-- because the greater one needs a reagent.
+local SANCTUARY = { "Blessing of Sanctuary", "Greater Blessing of Sanctuary" }
+
 -- Sacred Shield lasts a minute, so it is renewed with a margin; Holy Shield lasts 10 seconds and
 -- is part of the rotation's threat and block, so it is renewed late enough not to waste charges.
 local SACRED_SHIELD_REFRESH = 15
@@ -31,6 +36,7 @@ ns.Rotation{
 
     reminders = {
         { "Righteous Fury", when = function(c) return not c.buff("Righteous Fury").up end },
+        { "Blessing of Sanctuary", when = function(c) return not c.anyBuff(SANCTUARY).up end },
         { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
         { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
         { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
@@ -39,6 +45,8 @@ ns.Rotation{
     highprio = {
         -- Without it the paladin generates no threat, so it outranks everything else
         { "Righteous Fury", when = function(c) return not c.buff("Righteous Fury").up end },
+
+        { "Blessing of Sanctuary", when = function(c) return not c.anyBuff(SANCTUARY).up end },
 
         { "Seal of Command", when = function(c) return not c.anyBuff(SEALS).up end },
         { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
