@@ -320,6 +320,18 @@ local function Collect(rotation, key, slotCount)
             end
         end
     end
+
+    -- A tracker without a border is healthy and asks nothing of the player, so when the row is still
+    -- over capacity it gives way to the ones that need action (red) or are a lockout (blue).
+    if key == "trackers" then
+        for i = #shown, 1, -1 do
+            if excess <= 0 then break end
+            if not shown[i][7] then
+                table.remove(shown, i)
+                excess = excess - 1
+            end
+        end
+    end
     return shown
 end
 
