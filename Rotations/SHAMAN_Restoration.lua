@@ -29,6 +29,7 @@ ns.Rotation{
 
     reminders = {
         EarthlivingWeapon(),
+        WaterShield(),
     },
 
     highprio = {
