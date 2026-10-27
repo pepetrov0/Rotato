@@ -110,7 +110,7 @@ end
 -- Works out what an entry should look like right now. Returns nothing when it should not be shown,
 -- otherwise these values, in this order (the caller indexes them):
 --   1 icon  2 sweepStart  3 sweepDuration  4 remaining  5 dimmed  6 fromAura  7 borderColor
---   8 flash  9 tip  10 coolingDown  11 idleReady  12 discouraged
+--   8 flash  9 tip  10 coolingDown  11 idleReady  12 discouraged  13 active  14 knownCooldown
 local function Resolve(entry, rowKey)
     entry = ResolveVariants(entry)
     local c = ns.c
@@ -169,6 +169,9 @@ local function Resolve(entry, rowKey)
     elseif cdDuration > ns.GCD_MAX and cdStart > 0 and cdStart + cdDuration > now then
         start, duration, remaining = cdStart, cdDuration, cdStart + cdDuration - now
     end
+    -- The client has no call for a spell's full cooldown, so it is learned the first time the spell
+    -- is seen cooling down. Used to order the ready abilities.
+    if cdDuration > ns.GCD_MAX and cdStart > 0 then entry.knownCooldown = cdDuration end
 
     -- Only a bare aura is dimmed while missing: that is how a tracker says "not up". An ability
     -- slot is not dimmed just because its buff is down, it is simply ready.
@@ -233,7 +236,8 @@ local function Resolve(entry, rowKey)
     local idleReady = entry.spell ~= nil and not active and not coolingDown and borderColor == nil
 
     return icon, start, duration, remaining, dimmed, fromAura, borderColor,
-        borderColor and expiring or false, tip, coolingDown, idleReady, discouraged
+        borderColor and expiring or false, tip, coolingDown, idleReady, discouraged,
+        active and true or false, entry.knownCooldown
 end
 
 -- Slots on screen ------------------------------------------------------------
@@ -302,7 +306,39 @@ local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, b
     slot:Show()
 end
 
--- Everything one row should show right now, already trimmed to the number of slots.
+-- What is drawn nearest the center icon, from most to least pressing:
+--   1 needs action (red) or is recommended (white)
+--   2 a lockout counting down (blue)
+--   3 active (an aura up, with a green border or none)
+--   4 ready, the shortest cooldown first (an ability not yet seen on cooldown goes last)
+--   5 ready but discouraged
+--   6 cooling down, the soonest back first
+local function Group(result)
+    local border = result[7]
+    if border == RED or border == WHITE then return 1
+    elseif border == BLUE then return 2
+    elseif result[13] then return 3
+    elseif result[10] then return 6
+    elseif result[12] then return 5
+    end
+    return 4
+end
+
+-- Ties keep the rotation's order, since table.sort is not stable.
+local function InnerFirst(a, b)
+    local ga, gb = Group(a), Group(b)
+    if ga ~= gb then return ga < gb end
+    local ka, kb
+    if ga == 4 then
+        ka, kb = a[14] or math.huge, b[14] or math.huge
+    elseif ga == 6 then
+        ka, kb = a[4], b[4]
+    end
+    if ka and kb and ka ~= kb then return ka < kb end
+    return a.order < b.order
+end
+
+-- Everything one row should show right now, already trimmed to the number of slots and sorted.
 local function Collect(rotation, key, slotCount)
     local own = rotation and rotation[key] or {}
 
@@ -351,6 +387,9 @@ local function Collect(rotation, key, slotCount)
             end
         end
     end
+
+    for i, result in ipairs(shown) do result.order = i end
+    table.sort(shown, InnerFirst)
     return shown
 end
 
