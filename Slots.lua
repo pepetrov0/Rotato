@@ -9,7 +9,8 @@ local ADDON_NAME, ns = ...
 --   spell        = "Name"   the cooldown of an ability
 --   buff         = "Name"   an aura on the player, or { "Name", "Other" } for interchangeable ones
 --                           (whichever is up is shown)
---   pet          = "Name"   a summoned guardian of that name is out (Shadowfiend)
+--   pet          = "Name"   a summon of that name holds the pet slot (Shadowfiend); guardians
+--                           that never become the pet unit (Feral Spirit) cannot be read
 --   playerDebuff = "Name"   a debuff on the player
 --   debuff       = "Name"   an aura on the target (yours only, unless any = true)
 --   targetBuff   = "Name"   a buff on the target
@@ -185,7 +186,7 @@ local function Resolve(entry, rowKey)
     -- An entry that reads the target has nothing to show without one (playerDebuff reads the player).
     if (entry.debuff or entry.targetBuff or typeList) and not UnitExists("target") then return end
     -- the trackers only show auras: a bare cooldown there would just be noise next to the real trackers
-    if rowKey == "trackers" and not (entry.buff or entry.debuff or typeList or healTypeList
+    if rowKey == "trackers" and not (entry.buff or entry.pet or entry.debuff or typeList or healTypeList
         or entry.healTargetBuff or entry.healTargetBuffAny or entry.healTargetDebuff) then
         return
     end
@@ -442,7 +443,6 @@ local function Collect(rotation, key, slotCount)
     for _, entry in ipairs(own) do
         if entry.spell then taken[entry.spell] = true end
         if type(entry.buff) == "string" then taken[entry.buff] = true end
-        if type(entry.pet) == "string" then taken[entry.pet] = true end
     end
 
     local count = 0
