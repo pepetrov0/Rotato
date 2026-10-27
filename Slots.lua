@@ -9,6 +9,7 @@ local ADDON_NAME, ns = ...
 --   spell        = "Name"   the cooldown of an ability
 --   buff         = "Name"   an aura on the player, or { "Name", "Other" } for interchangeable ones
 --                           (whichever is up is shown)
+--   pet          = "Name"   a summoned guardian of that name is out (Shadowfiend)
 --   playerDebuff = "Name"   a debuff on the player
 --   debuff       = "Name"   an aura on the target (yours only, unless any = true)
 --   targetBuff   = "Name"   a buff on the target
@@ -73,8 +74,8 @@ end
 
 -- Variants ---------------------------------------------------------------
 
-local VARIANT_FIELDS = { "spell", "buff", "debuff", "targetBuff", "playerDebuff", "healTargetBuff",
-    "healTargetBuffAny", "healTargetDebuff" }
+local VARIANT_FIELDS = { "spell", "buff", "pet", "debuff", "targetBuff", "playerDebuff",
+    "healTargetBuff", "healTargetBuffAny", "healTargetDebuff" }
 
 -- Fields written as { variant = "name" } are replaced by the current spell of that variant. This is
 -- done on a proxy that reads through to the real entry, instead of editing the entry, because the
@@ -142,6 +143,7 @@ local function ReadAura(entry, buffList)
     local c = ns.c
     if buffList then return c.anyBuff(buffList)
     elseif entry.buff then return c.buff(entry.buff)
+    elseif entry.pet then return c.pet.aura(entry.pet)
     elseif entry.playerDebuff then return c.selfDebuff(entry.playerDebuff)
     elseif entry.debuff then return entry.any and c.debuffAny(entry.debuff) or c.debuff(entry.debuff)
     elseif entry.targetBuff then return c.target.buff(entry.targetBuff)
@@ -172,8 +174,9 @@ local function Resolve(entry, rowKey)
     local healTypeList = entry.healTargetDebuffType
 
     local buffList = type(entry.buff) == "table" and entry.buff or nil
-    local auraName = buffList and buffList[1] or entry.buff or entry.playerDebuff or entry.debuff
-        or entry.targetBuff or entry.healTargetBuff or entry.healTargetBuffAny or entry.healTargetDebuff
+    local auraName = buffList and buffList[1] or entry.buff or entry.pet or entry.playerDebuff
+        or entry.debuff or entry.targetBuff or entry.healTargetBuff or entry.healTargetBuffAny
+        or entry.healTargetDebuff
 
     local aura, healUnit = ReadAura(entry, buffList)
     local active = aura and aura.up
@@ -251,7 +254,8 @@ local function Resolve(entry, rowKey)
         if entry.lockout and active then borderColor = BLUE
         elseif typeList or healTypeList or not active or expiring then borderColor = RED end
     elseif active then
-        borderColor = entry.lockout and BLUE or ((entry.buff or entry.debuff or entry.healTargetBuff) and GREEN or RED)
+        borderColor = entry.lockout and BLUE
+            or ((entry.buff or entry.pet or entry.debuff or entry.healTargetBuff) and GREEN or RED)
     end
 
     -- A recommendation outranks the other aura borders: it is the thing the player should act on, and
@@ -278,7 +282,8 @@ local function Resolve(entry, rowKey)
         entry.tip = tip
     end
     tip.spell, tip.aura, tip.unit, tip.helpful = entry.spell or auraName, nil, nil, nil
-    if active and aura.name then
+    -- A pet has no aura to show, so its tooltip stays the summon spell's.
+    if active and aura.name and not entry.pet then
         tip.aura = aura.name
         if entry.buff then tip.unit, tip.helpful = "player", true
         elseif entry.playerDebuff then tip.unit, tip.helpful = "player", false
@@ -437,6 +442,7 @@ local function Collect(rotation, key, slotCount)
     for _, entry in ipairs(own) do
         if entry.spell then taken[entry.spell] = true end
         if type(entry.buff) == "string" then taken[entry.buff] = true end
+        if type(entry.pet) == "string" then taken[entry.pet] = true end
     end
 
     local count = 0

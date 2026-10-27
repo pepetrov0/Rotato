@@ -135,6 +135,24 @@ local pet = setmetatable({}, {
 
 function pet.buff(name) return Aura(UnitBuff, "pet", name) end
 
+-- Is a living pet of this name out? A summoned guardian (the Shadowfiend) takes the pet slot while
+-- it lasts and carries the creature's name, which is the summon spell's. A hunter's or warlock's
+-- pet has a name of its own, so it cannot pass for one.
+function pet.named(name)
+    return UnitExists("pet") and not UnitIsDead("pet") and UnitName("pet") == name and true or false
+end
+
+-- That guardian shaped like an aura, so a side slot can read it like any other. Its time left is
+-- not known to the client, so it has no duration and gets no sweep.
+function pet.aura(name)
+    if not pet.named(name) then return NO_AURA end
+    local aura = NextAura()
+    aura.name, aura.icon = name, select(3, GetSpellInfo(name))
+    aura.duration, aura.expires, aura.remains = 0, 0, math.huge
+    aura.stacks, aura.mine = 1, true
+    return aura
+end
+
 -- Ready runes by their current type: c.runes.blood, .unholy, .frost and .death. A rune converted
 -- to a death rune counts as death only, whichever slot it sits in.
 local RUNE_TYPES = { "blood", "unholy", "frost", "death" } -- the order GetRuneType numbers them in
