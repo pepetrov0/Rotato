@@ -263,10 +263,9 @@ function c.anyOtherMember(test)
     return false
 end
 
--- The temporary enchant on the main hand (shaman weapon imbues), shaped like an aura so a rule reads
--- `.up` and `.remains`. The game only says that there is one, not which, so the name is not known.
-function c.mainHandEnchant()
-    local has, expiration = GetWeaponEnchantInfo()
+-- A weapon's temporary enchant, shaped like an aura so a rule reads `.up` and `.remains`. The game
+-- only says that there is one, not which, so the name is not known.
+local function WeaponEnchant(has, expiration)
     if not has then return NO_AURA end
     local aura = NextAura()
     aura.name, aura.icon = nil, nil
@@ -276,17 +275,17 @@ function c.mainHandEnchant()
     return aura
 end
 
+-- The temporary enchant on the main hand (shaman weapon imbues).
+function c.mainHandEnchant()
+    local has, expiration = GetWeaponEnchantInfo()
+    return WeaponEnchant(has, expiration)
+end
+
 -- The same for a dual-wielded off hand (rogue poisons). A hand without a weapon reports no
 -- enchant, so callers that only care about weapons should check the slot first.
 function c.offHandEnchant()
     local _, _, _, has, expiration = GetWeaponEnchantInfo()
-    if not has then return NO_AURA end
-    local aura = NextAura()
-    aura.name, aura.icon = nil, nil
-    aura.remains = expiration / 1000
-    aura.stacks, aura.mine, aura.duration = 0, true, 0
-    aura.expires = GetTime() + aura.remains
-    return aura
+    return WeaponEnchant(has, expiration)
 end
 
 -- Who a heal would go to, the way a mouseover/target/self macro picks: the mouseover if it is a
