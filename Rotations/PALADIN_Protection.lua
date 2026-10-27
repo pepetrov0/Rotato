@@ -83,6 +83,8 @@ ns.Rotation{
     trackers = Paladin.CommonTrackers({
         { buff = "Sacred Shield" },
         { buff = "Holy Shield" },
+        -- one of the main mana sources of a tank, so a gap in it is worth seeing
+        { buff = "Divine Plea" },
     }),
 
     defensives = {
