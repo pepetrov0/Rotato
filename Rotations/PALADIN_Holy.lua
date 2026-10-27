@@ -27,18 +27,18 @@ ns.Rotation{
     highprio = {
         { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
 
+        -- Dispelling a friend outranks keeping debuffs and shields up. The unit is the one a heal
+        -- would land on (mouseover, else target, else yourself).
+        { "Cleanse", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
+        end },
+
         -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops.
         { variant = "judgement", when = function(c)
             if not c.target.hostile then return false end
             local judgement = c.debuff(c.variantName("judgement"), { any = true })
             return not judgement.up or judgement.remains < 5
-        end },
-
-        -- Last, so it only comes up when nothing more urgent is waiting. The unit is the one a heal
-        -- would land on (mouseover, else target, else yourself).
-        { "Cleanse", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
         end },
     },
 

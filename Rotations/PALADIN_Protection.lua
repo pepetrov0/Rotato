@@ -52,6 +52,12 @@ ns.Rotation{
         { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
         { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
 
+        -- Dispelling a friend outranks keeping debuffs and shields up. The unit is the one a heal
+        -- would land on (mouseover, else target, else yourself).
+        { "Cleanse", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
+        end },
+
         { "Sacred Shield", when = function(c)
             local shield = c.buff("Sacred Shield")
             return not shield.up or shield.remains < SACRED_SHIELD_REFRESH
@@ -75,12 +81,6 @@ ns.Rotation{
 
         -- Only usable under 20% health, which the game enforces, so no explicit threshold here
         { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
-
-        -- Last, so it only comes up when nothing more urgent is waiting. The unit is the one a heal
-        -- would land on (mouseover, else target, else yourself).
-        { "Cleanse", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
-        end },
     },
 
     rotations = {

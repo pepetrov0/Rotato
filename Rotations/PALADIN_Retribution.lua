@@ -34,6 +34,12 @@ ns.Rotation{
         { "Seal of Vengeance", when = function(c) return not c.anyBuff(SEALS).up end },
         { "Seal of Corruption", when = function(c) return not c.anyBuff(SEALS).up end },
 
+        -- Dispelling a friend outranks keeping debuffs and shields up. The unit is the one a heal
+        -- would land on (mouseover, else target, else yourself).
+        { "Cleanse", when = function(c)
+            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
+        end },
+
         -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops.
         -- Every Judgement also grants the group Replenishment (Judgements of the Wise), so a missing or
@@ -48,12 +54,6 @@ ns.Rotation{
 
         -- Only usable under 20% health, which the game enforces, so no explicit threshold here
         { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
-
-        -- Last, so it only comes up when nothing more urgent is waiting. The unit is the one a heal
-        -- would land on (mouseover, else target, else yourself).
-        { "Cleanse", when = function(c)
-            return c.debuffOfType(c.healTarget(), "Poison", "Disease", "Magic").up
-        end },
     },
 
     rotations = {
