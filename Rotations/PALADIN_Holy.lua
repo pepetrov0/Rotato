@@ -49,9 +49,10 @@ ns.Rotation{
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops. And
         -- Judgements of the Pure, which comes from judging, so it is renewed with a wider margin.
         { variant = "judgement", when = function(c)
-            if not c.target.hostile then return false end
             local pure = c.buff("Judgements of the Pure")
             if not pure.up or pure.remains < 30 then return true end
+            -- without a target there is no debuff to read, and its absence would look like a missing one
+            if not c.target.hostile then return false end
             local judgement = c.debuff(c.variantName("judgement"), { any = true })
             return not judgement.up or judgement.remains < 5
         end },
