@@ -199,6 +199,15 @@ function c.anyOtherMember(test)
     return false
 end
 
+-- The temporary enchant on the main hand (shaman weapon imbues), shaped like an aura so a rule reads
+-- `.up` and `.remains`. The game only says that there is one, not which, so the name is not known.
+function c.mainHandEnchant()
+    local has, expiration = GetWeaponEnchantInfo()
+    if not has then return NO_AURA end
+    local remains = expiration / 1000
+    return { up = true, remains = remains, stacks = 0, mine = true, duration = 0, expires = GetTime() + remains }
+end
+
 -- Who a heal would go to, the way a mouseover/target/self macro picks: the mouseover if it is a
 -- living friend, else the target if it is, else the player. Used so Weakened Soul and dispel
 -- checks look at the unit the next spell would actually land on.

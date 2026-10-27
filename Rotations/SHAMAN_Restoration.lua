@@ -3,12 +3,12 @@ local ADDON_NAME, ns = ...
 -- Restoration shaman. Conditions are functions of `c`, the condition API in Engine.lua; c.mana is a
 -- percentage. The entry fields for the side slots are described in Slots.lua.
 
--- Earthliving Weapon is an enchant, not an aura, so the game only says that the main hand has one,
--- not which. It is renewed under 5 minutes so it never runs out in the middle of a fight.
+-- Earthliving Weapon is an enchant, not an aura, and the game does not say which enchant it is
+-- (see c.mainHandEnchant). It is renewed under 5 minutes so it never runs out in the middle of a fight.
 local function EarthlivingWeapon()
-    return { "Earthliving Weapon", when = function()
-        local hasMain, mainExpiration = GetWeaponEnchantInfo()
-        return not hasMain or mainExpiration < 5 * 60 * 1000
+    return { "Earthliving Weapon", when = function(c)
+        local enchant = c.mainHandEnchant()
+        return not enchant.up or enchant.remains < 5 * 60
     end }
 end
 
