@@ -57,9 +57,8 @@ ns.Rotation{
             return not shield.up or shield.remains < SACRED_SHIELD_REFRESH
         end },
 
-        -- Same threshold as the utility recommendation; Plea cuts healing received, so it is only
-        -- worth its place once mana actually runs low.
-        { "Divine Plea", when = function(c) return c.mana < 50 end },
+        -- Kept up whenever it is off cooldown; the buff only lasts 15 seconds of its 60 second cooldown
+        { "Divine Plea", when = function(c) return not c.buff("Divine Plea").up end },
 
         { "Holy Shield", when = function(c)
             local shield = c.buff("Holy Shield")
@@ -109,7 +108,7 @@ ns.Rotation{
         { spell = "Hammer of Justice", recommend = function(c)
             return c.target.hostile and c.target.casting and c.ready("Hammer of Justice")
         end },
-        { spell = "Divine Plea", recommend = function(c) return c.mana < 50 and c.ready("Divine Plea") end },
+        { spell = "Divine Plea", buff = "Divine Plea", recommend = function(c) return c.ready("Divine Plea") end },
         { spell = "Hand of Salvation", buff = "Hand of Salvation" },
         { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },
