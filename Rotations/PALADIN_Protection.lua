@@ -104,7 +104,7 @@ ns.Rotation{
         { spell = "Divine Protection", buff = "Divine Protection" },
         { spell = "Hand of Protection", buff = "Hand of Protection" },
         { buff = "Deliverance", show = "active" },
-        { spell = "Divine Sacrifice", buff = "Divine Sacrifice" },
+        { spell = "Divine Sacrifice", buff = "Divine Guardian" },
     },
 
     utility = {

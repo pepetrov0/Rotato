@@ -83,7 +83,7 @@ ns.Rotation{
         { spell = "Hand of Sacrifice", buff = "Hand of Sacrifice" },
         { spell = "Divine Shield", buff = "Divine Shield" },
         { spell = "Hand of Protection", buff = "Hand of Protection" },
-        { spell = "Divine Sacrifice", buff = "Divine Sacrifice" },
+        { spell = "Divine Sacrifice", buff = "Divine Guardian" },
     },
 
     utility = {
