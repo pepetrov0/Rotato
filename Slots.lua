@@ -168,7 +168,8 @@ local function Resolve(entry, rowKey)
     -- slot is not dimmed just because its buff is down, it is simply ready.
     local dimmed = auraName and not entry.spell and not active
     local discouraged = false
-    if entry.discourage and not dimmed then
+    -- an active aura is already in use, so discouraging it would only be confusing
+    if entry.discourage and not dimmed and not active then
         local ok, result = pcall(entry.discourage, c)
         if ok then
             discouraged = result and true or false
