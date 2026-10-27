@@ -15,19 +15,44 @@ local LOOKAHEAD = 0.25 -- a spell this close to ready counts as ready, so the ic
 -- conditions write `c.buff("X").up` without a nil check or an allocation on the miss path.
 local NO_AURA = { up = false, remains = 0, stacks = 0, mine = false, duration = 0, expires = 0 }
 
-local function MakeAura(name, icon, count, duration, expires, caster)
-    return {
-        up = true,
-        name = name,
-        icon = icon,
-        duration = duration or 0,
-        expires = expires or 0,
-        -- an expiry of 0 means the aura never runs out; huge keeps `remains < 30` style checks false
-        remains = (expires and expires > 0) and (expires - GetTime()) or math.huge,
-        stacks = (count and count > 0) and count or 1, -- the game reports 0 for "no stacks", which is 1 for us
-        mine = caster == "player",
-    }
+-- Auras are looked up hundreds of times a second, so the tables are taken in turn from a fixed ring
+-- instead of being created each time, which would leave all of them as garbage. The price is that
+-- an aura is only valid for a short while: read it right away, never keep it across updates. The
+-- ring is far larger than the number of auras any one check holds at once (a raid scan is 40).
+local RING_SIZE = 128
+local ring, ringNext = {}, 0
+for i = 1, RING_SIZE do ring[i] = { up = true } end
+
+local function NextAura()
+    ringNext = ringNext % RING_SIZE + 1
+    return ring[ringNext]
 end
+
+local function MakeAura(name, icon, count, duration, expires, caster)
+    local aura = NextAura()
+    aura.name = name
+    aura.icon = icon
+    aura.duration = duration or 0
+    aura.expires = expires or 0
+    -- an expiry of 0 means the aura never runs out; huge keeps `remains < 30` style checks false
+    aura.remains = (expires and expires > 0) and (expires - GetTime()) or math.huge
+    aura.stacks = (count and count > 0) and count or 1 -- the game reports 0 for "no stacks", which is 1 for us
+    aura.mine = caster == "player"
+    return aura
+end
+
+-- Unit names built once, so scanning the group does not concatenate strings every time.
+local RAID_UNITS, PARTY_UNITS = {}, {}
+for i = 1, 40 do RAID_UNITS[i] = "raid" .. i end
+for i = 1, 4 do PARTY_UNITS[i] = "party" .. i end
+
+local function GroupUnits()
+    local raid = GetNumRaidMembers()
+    if raid > 0 then return RAID_UNITS, raid end
+    return PARTY_UNITS, GetNumPartyMembers()
+end
+
+local EMPTY = {} -- stands in for a missing list; never written to
 
 -- fn is UnitBuff or UnitDebuff. A filter of "PLAYER" restricts it to auras cast by the player.
 local function Aura(fn, unit, name, filter)
@@ -177,6 +202,9 @@ function c.debuff(name, opts)
     return Aura(UnitDebuff, "target", name, not (opts and opts.any) and "PLAYER" or nil)
 end
 
+-- c.debuff(name, { any = true }) without building the options table on every check.
+function c.debuffAny(name) return Aura(UnitDebuff, "target", name) end
+
 -- A debuff on any unit from any caster, for restrictions like Weakened Soul that apply no matter
 -- which priest cast it.
 function c.debuffOn(unit, name) return Aura(UnitDebuff, unit, name) end
@@ -187,17 +215,10 @@ function c.debuffOfType(unit, ...) return AuraOfType(UnitDebuff, unit, ...) end
 -- the player's copies count, and the one with the most time left wins, because that is the one
 -- that decides when a refresh is due.
 function c.groupBuff(name)
-    local units = { "player" }
-    local raid = GetNumRaidMembers()
-    if raid > 0 then
-        for i = 1, raid do units[#units + 1] = "raid" .. i end
-    else
-        for i = 1, GetNumPartyMembers() do units[#units + 1] = "party" .. i end
-    end
-
-    local best = NO_AURA
-    for _, unit in ipairs(units) do
-        local aura = Aura(UnitBuff, unit, name, "PLAYER")
+    local best = Aura(UnitBuff, "player", name, "PLAYER")
+    local units, count = GroupUnits()
+    for i = 1, count do
+        local aura = Aura(UnitBuff, units[i], name, "PLAYER")
         if aura.up and (not best.up or aura.remains > best.remains) then best = aura end
     end
     return best
@@ -206,11 +227,9 @@ end
 -- True when any other group member satisfies test(unit). Only party members who are really there
 -- count (they exist and are connected).
 function c.anyOtherMember(test)
-    local raid = GetNumRaidMembers()
-    local prefix, count = "party", GetNumPartyMembers()
-    if raid > 0 then prefix, count = "raid", raid end
+    local units, count = GroupUnits()
     for i = 1, count do
-        local unit = prefix .. i
+        local unit = units[i]
         if not UnitIsUnit(unit, "player") and UnitExists(unit) and UnitIsConnected(unit) and test(unit) then
             return true
         end
@@ -223,15 +242,20 @@ end
 function c.mainHandEnchant()
     local has, expiration = GetWeaponEnchantInfo()
     if not has then return NO_AURA end
-    local remains = expiration / 1000
-    return { up = true, remains = remains, stacks = 0, mine = true, duration = 0, expires = GetTime() + remains }
+    local aura = NextAura()
+    aura.name, aura.icon = nil, nil
+    aura.remains = expiration / 1000
+    aura.stacks, aura.mine, aura.duration = 0, true, 0
+    aura.expires = GetTime() + aura.remains
+    return aura
 end
 
 -- Who a heal would go to, the way a mouseover/target/self macro picks: the mouseover if it is a
 -- living friend, else the target if it is, else the player. Used so Weakened Soul and dispel
 -- checks look at the unit the next spell would actually land on.
+local HEAL_CANDIDATES = { "mouseover", "target" }
 function c.healTarget()
-    for _, unit in ipairs({ "mouseover", "target" }) do
+    for _, unit in ipairs(HEAL_CANDIDATES) do
         if UnitExists(unit) and UnitIsFriend("player", unit) and not UnitIsDeadOrGhost(unit) then
             return unit
         end
@@ -323,8 +347,8 @@ local function Tier(rotation, key)
     if not cache then cache = {}; tiers[rotation] = cache end
     if not cache[key] then
         local list = {}
-        for _, entry in ipairs(rotation[key] or {}) do list[#list + 1] = entry end
-        for _, entry in ipairs(ns.common and ns.common[key] or {}) do list[#list + 1] = entry end
+        for _, entry in ipairs(rotation[key] or EMPTY) do list[#list + 1] = entry end
+        for _, entry in ipairs(ns.common and ns.common[key] or EMPTY) do list[#list + 1] = entry end
         cache[key] = list
     end
     return cache[key]
@@ -342,27 +366,35 @@ ns.Tier = Tier
 -- not applicable without one. What decides whether the frame is on screen is Visibility.lua.
 -- Reminders are skipped once a hostile target is up: a pull is about to happen, and a reminder
 -- that contradicts it (swap to Viper) would be wrong.
+-- The tiers to look at, as parallel arrays refilled on every call rather than built anew.
+local sourceNames, sourceLists, sourceCount = {}, {}, 0
+local function AddSource(name, list)
+    sourceCount = sourceCount + 1
+    sourceNames[sourceCount], sourceLists[sourceCount] = name, list or EMPTY
+end
+
 function ns.Evaluate()
     local rotation = ns.GetRotation()
     if not rotation then return end
 
     local combat = UnitAffectingCombat("player")
     local hostile = target.hostile
-    local lists = {}
-    if not combat and not hostile then lists[#lists + 1] = { "reminders", Tier(rotation, "reminders") } end
-    if not combat then lists[#lists + 1] = { "preparation", rotation.preparation } end
-    local rotations = rotation.rotations or {}
-    lists[#lists + 1] = { "highprio", Tier(rotation, "highprio") }
-    lists[#lists + 1] = { ns.mode, rotations[ns.mode] or rotations.single }
+    sourceCount = 0
+    if not combat and not hostile then AddSource("reminders", Tier(rotation, "reminders")) end
+    if not combat then AddSource("preparation", rotation.preparation) end
+    local rotations = rotation.rotations or EMPTY
+    AddSource("highprio", Tier(rotation, "highprio"))
+    AddSource(ns.mode, rotations[ns.mode] or rotations.single)
 
     -- If nothing is ready, show the combat spell that comes off cooldown first rather than an
     -- empty icon: it tells the player what to expect next. Reminders and preparation are excluded
     -- since a reminder you cannot act on yet is not useful.
     local soonest, soonestRemaining, soonestStart, soonestDuration, soonestSource
 
-    for _, source in ipairs(lists) do
-        local combatList = source[1] ~= "reminders" and source[1] ~= "preparation"
-        for _, entry in ipairs(source[2] or {}) do
+    for i = 1, sourceCount do
+        local sourceName = sourceNames[i]
+        local combatList = sourceName ~= "reminders" and sourceName ~= "preparation"
+        for _, entry in ipairs(sourceLists[i]) do
             local name = EntryName(entry)
             local start, duration
             if name then start, duration = EntryCooldown(entry, name) end
@@ -370,13 +402,13 @@ function ns.Evaluate()
             if start and Passes(entry, name) then
                 local remaining = start > 0 and (start + duration - GetTime()) or 0
                 if duration <= GCD_MAX or remaining <= LOOKAHEAD then
-                    if Usable(entry, name) then return name, "ready", start, duration, source[1] end
+                    if Usable(entry, name) then return name, "ready", start, duration, sourceName end
                 elseif entry.wait then
                     -- `wait` means "hold here rather than fall through to lower priorities"
-                    return name, "cd", start, duration, source[1]
+                    return name, "cd", start, duration, sourceName
                 elseif combatList and (not soonestRemaining or remaining < soonestRemaining) then
                     soonest, soonestRemaining, soonestStart, soonestDuration, soonestSource =
-                        name, remaining, start, duration, source[1]
+                        name, remaining, start, duration, sourceName
                 end
             end
         end
@@ -386,7 +418,7 @@ function ns.Evaluate()
 
     -- Resource gated spells (runes, mana) have no cooldown to count down, they are just unusable
     -- until the resource is back. The last entry of a rotation is its filler, so show it grayed out.
-    local list = lists[#lists][2] or {}
+    local list = sourceLists[sourceCount]
     local name = list[#list] and EntryName(list[#list])
     if name and EntryCooldown(list[#list], name) then return name, "unusable", 0, 0, ns.mode end
 end

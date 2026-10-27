@@ -3,6 +3,8 @@ local ADDON_NAME, ns = ...
 -- Discipline priest. Conditions are functions of `c`, the condition API in Engine.lua; c.mana is a
 -- percentage. The entry fields for the side slots are described in Slots.lua.
 
+local HASTE_EFFECTS = { "Bloodlust", "Heroism" }
+
 ns.Rotation{
     class = "PRIEST",
     spec = 1, -- Discipline
@@ -76,8 +78,8 @@ ns.Rotation{
         -- it: grayed out and not recommended then.
         { spell = "Power Infusion", buff = "Power Infusion",
           recommend = function(c)
-              return c.ready("Power Infusion") and not c.anyBuff({ "Bloodlust", "Heroism" }).up
+              return c.ready("Power Infusion") and not c.anyBuff(HASTE_EFFECTS).up
           end,
-          discourage = function(c) return c.anyBuff({ "Bloodlust", "Heroism" }).up end },
+          discourage = function(c) return c.anyBuff(HASTE_EFFECTS).up end },
     },
 }

@@ -51,7 +51,7 @@ ns.Rotation{
     -- reminder because without a target it cannot be cast at all.
     preparation = {
         { "Hunter's Mark", when = function(c)
-            return c.target.hostile and not c.debuff("Hunter's Mark", { any = true }).up
+            return c.target.hostile and not c.debuffAny("Hunter's Mark").up
         end },
     },
 
@@ -63,7 +63,7 @@ ns.Rotation{
         -- Upkeep rather than damage: a boss is the only target worth a mid-fight refresh;
         -- anything hostile is marked before a pull (see preparation).
         { "Hunter's Mark", when = function(c)
-            return c.target.boss and not c.debuff("Hunter's Mark", { any = true }).up
+            return c.target.boss and not c.debuffAny("Hunter's Mark").up
         end },
 
         -- Top priority: an enrage can kill a tank outright, so removing it beats any damage

@@ -58,7 +58,7 @@ end
 -- Needs a hostile target: without one the debuff cannot be read and would look missing.
 function Paladin.JudgementDue(c)
     if not c.target.hostile then return false end
-    local judgement = c.debuff(c.variantName("judgement"), { any = true })
+    local judgement = c.debuffAny(c.variantName("judgement"))
     return not judgement.up or judgement.remains < 5
 end
 

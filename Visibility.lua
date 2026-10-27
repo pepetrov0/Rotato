@@ -18,7 +18,8 @@ local function DangerReason()
     end
 
     -- a pending reminder (a missing buff, no pet...) must stay up until the player acts on it
-    local _, _, _, _, source = ns.Evaluate()
+    -- the display's recent result when it has one (it is set up after this file)
+    local _, _, _, _, source = (ns.EvaluateCached or ns.Evaluate)()
     if source == "reminders" then return "reminder" end
 
     if ns.unlocked then return "unlocked" end -- so it can be moved and configured while calm

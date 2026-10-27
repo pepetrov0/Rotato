@@ -49,7 +49,7 @@ function ns.InitTooltips()
         for _, slot in ipairs(ns[key]) do slots[#slots + 1] = slot end
     end
 
-    local current, currentKey
+    local current, currentAura, currentSpell
     CreateFrame("Frame"):SetScript("OnUpdate", function()
         local hovered
         -- A faded-out frame is invisible but still occupies its place; without the alpha check the
@@ -67,7 +67,7 @@ function ns.InitTooltips()
             if current then
                 -- only hide a tooltip that is still ours: another addon may have taken GameTooltip since
                 if GameTooltip:GetOwner() == current then GameTooltip:Hide() end
-                current, currentKey = nil, nil
+                current, currentAura, currentSpell = nil, nil, nil
             end
             return
         end
@@ -75,9 +75,8 @@ function ns.InitTooltips()
         -- Redraw only when the hovered slot changes or starts showing something else (the aura
         -- expired, the suggestion moved on). Re-setting the tooltip every frame would flicker it.
         local tip = hovered.tip
-        local key = (tip.aura or "") .. "|" .. (tip.spell or "")
-        if hovered ~= current or key ~= currentKey then
-            current, currentKey = hovered, key
+        if hovered ~= current or tip.aura ~= currentAura or tip.spell ~= currentSpell then
+            current, currentAura, currentSpell = hovered, tip.aura, tip.spell
             ShowTip(hovered)
         end
     end)

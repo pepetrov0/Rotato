@@ -35,6 +35,7 @@ function ns.InitDisplay()
 
     -- Evaluating the rotation is the expensive part and it does not need to run at frame rate, so
     -- the last result is reused between ticks.
+    -- Visibility.lua reads it too, so the rotation is not evaluated twice for the same moment.
     local evaluated, evaluatedAt = {}, 0
     local function Evaluate()
         local now = GetTime()
@@ -44,6 +45,7 @@ function ns.InitDisplay()
         end
         return evaluated[1], evaluated[2], evaluated[3], evaluated[4], evaluated[5]
     end
+    ns.EvaluateCached = Evaluate
 
     -- The spell last shown as "Next". It keeps the label after its cast ends, until the player
     -- starts casting something, so the hint does not vanish the moment it becomes the suggestion.

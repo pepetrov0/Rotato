@@ -51,6 +51,18 @@ local UNKNOWN_ICON = "Interface\\Icons\\INV_Misc_QuestionMark"
 local ROW_KEYS = { "defensives", "utility", "trackers", "offensives" }
 local SIDE = { defensives = "LEFT", utility = "LEFT", trackers = "RIGHT", offensives = "RIGHT" }
 
+local EMPTY = {} -- stands in for a missing list; never written to
+
+-- Identifies what FormatTime would print, so a slot only builds a new string when the text changes
+-- (each new string is garbage a moment later). The offsets keep the units apart.
+local function TimeKey(seconds)
+    if seconds >= 3600 then return 3e6 + math.floor(seconds / 3600)
+    elseif seconds >= 60 then return 2e6 + math.floor(seconds / 60)
+    elseif seconds >= 10 then return 1e6 + math.floor(seconds)
+    end
+    return math.floor(seconds * 10 + 0.5)
+end
+
 local function FormatTime(seconds)
     if seconds >= 3600 then return format("%dh", seconds / 3600)
     elseif seconds >= 60 then return format("%dm", seconds / 60)
@@ -68,12 +80,17 @@ local VARIANT_FIELDS = { "spell", "buff", "debuff", "targetBuff", "playerDebuff"
 -- done on a proxy that reads through to the real entry, instead of editing the entry, because the
 -- entry belongs to the rotation file and the option can change again on the next cast. The proxy
 -- forwards writes too, so per-entry flags (errored, lastIcon) still land on the real entry.
+-- Each entry keeps its one proxy; only the resolved values are refreshed.
+local proxies = setmetatable({}, { __mode = "k" })
 local function ResolveVariants(entry)
-    local proxy
+    local proxy = proxies[entry]
     for _, field in ipairs(VARIANT_FIELDS) do
         local value = rawget(entry, field)
         if type(value) == "table" and value.variant then
-            proxy = proxy or setmetatable({}, { __index = entry, __newindex = entry })
+            if not proxy then
+                proxy = setmetatable({}, { __index = entry, __newindex = entry })
+                proxies[entry] = proxy
+            end
             rawset(proxy, field, ns.VariantSpell(value.variant))
         end
     end
@@ -91,6 +108,7 @@ local COOLDOWN_PATTERNS = {
     { "^" .. SPELL_RECAST_TIME_MIN:gsub("%%%.3g", "([%%d%%.]+)") .. "$", 60 },
 }
 local tooltipCooldowns = {} -- spell name -> seconds, or false when the tooltip has none
+local TOOLTIP_SIDES = { "Right", "Left" }
 
 local function TooltipCooldown(spell)
     local cached = tooltipCooldowns[spell]
@@ -104,9 +122,9 @@ local function TooltipCooldown(spell)
 
     local seconds = false
     for i = 1, scanTip:NumLines() do
-        for _, side in ipairs({ "Right", "Left" }) do
+        for _, side in ipairs(TOOLTIP_SIDES) do
             local text = _G["RotatoScanTipText" .. side .. i]:GetText()
-            for _, pattern in ipairs(text and COOLDOWN_PATTERNS or {}) do
+            for _, pattern in ipairs(text and COOLDOWN_PATTERNS or EMPTY) do
                 local value = text:match(pattern[1])
                 if value and tonumber(value) then seconds = tonumber(value) * pattern[2] end
             end
@@ -125,7 +143,7 @@ local function ReadAura(entry, buffList)
     if buffList then return c.anyBuff(buffList)
     elseif entry.buff then return c.buff(entry.buff)
     elseif entry.playerDebuff then return c.selfDebuff(entry.playerDebuff)
-    elseif entry.debuff then return c.debuff(entry.debuff, { any = entry.any })
+    elseif entry.debuff then return entry.any and c.debuffAny(entry.debuff) or c.debuff(entry.debuff)
     elseif entry.targetBuff then return c.target.buff(entry.targetBuff)
     elseif entry.targetBuffType then return c.target.buffOfType(unpack(entry.targetBuffType))
     elseif entry.healTargetBuff then
@@ -253,7 +271,13 @@ local function Resolve(entry, rowKey)
 
     -- What the Alt tooltip should show: the aura while it is up (with its live timer), otherwise
     -- the ability. The unit says where to find the aura.
-    local tip = { spell = entry.spell or auraName }
+    -- the table is the entry's own and refilled every time, rather than a new one per update
+    local tip = entry.tip
+    if not tip then
+        tip = {}
+        entry.tip = tip
+    end
+    tip.spell, tip.aura, tip.unit, tip.helpful = entry.spell or auraName, nil, nil, nil
     if active and aura.name then
         tip.aura = aura.name
         if entry.buff then tip.unit, tip.helpful = "player", true
@@ -327,7 +351,11 @@ local function Paint(slot, icon, start, duration, remaining, dimmed, fromAura, b
     slot.icon:SetVertexColor(shade, shade, shade)
     slot:SetAlpha(discouraged and 0.5 or 1) -- a discouraged slot also fades, not only grays
 
-    slot.time:SetText(remaining and FormatTime(remaining) or "")
+    local timeKey = remaining and TimeKey(remaining)
+    if timeKey ~= slot.shownTimeKey then
+        slot.shownTimeKey = timeKey
+        slot.time:SetText(remaining and FormatTime(remaining) or "")
+    end
     slot.flashing = flash
     slot.tip = tip
 
@@ -373,30 +401,52 @@ local function InnerFirst(a, b)
     return a.order < b.order
 end
 
+-- Everything below is reused from one update to the next instead of being built anew: per row,
+-- the list of what is shown and a pool of result tables to fill.
+local taken = {}
+local shownByRow, poolByRow = {}, {}
+for _, key in ipairs(ROW_KEYS) do
+    shownByRow[key], poolByRow[key] = {}, {}
+end
+
+-- Resolves an entry into the next free result table of the row. Returns the count of results used.
+local function Add(key, entry, count)
+    local pool = poolByRow[key]
+    local result = pool[count + 1]
+    if not result then
+        result = {}
+        pool[count + 1] = result
+    end
+    result[1], result[2], result[3], result[4], result[5], result[6], result[7], result[8], result[9],
+        result[10], result[11], result[12], result[13] = Resolve(entry, key)
+    if not result[1] then return count end
+    result.order = count + 1
+    shownByRow[key][count + 1] = result
+    return count + 1
+end
+
 -- Everything one row should show right now, already trimmed to the number of slots and sorted.
+-- The list is only valid until the next call for the same row.
 local function Collect(rotation, key, slotCount)
-    local own = rotation and rotation[key] or {}
+    local own = rotation and rotation[key] or EMPTY
 
     -- A shared entry is skipped when the rotation already has one for the same ability or buff in
     -- this row, otherwise the same thing would show twice (an ability slot, plus the shared buff
     -- slot that appears when the buff lands on you).
-    local taken = {}
+    wipe(taken)
     for _, entry in ipairs(own) do
         if entry.spell then taken[entry.spell] = true end
         if type(entry.buff) == "string" then taken[entry.buff] = true end
     end
 
-    local shown = {}
-    for _, list in ipairs({ own, ns.common[key] or {} }) do
-        for _, entry in ipairs(list) do
-            if list == own or type(entry.buff) ~= "string" or not taken[entry.buff] then
-                local result = { Resolve(entry, key) }
-                if result[1] then shown[#shown + 1] = result end
-            end
-        end
+    local count = 0
+    for _, entry in ipairs(own) do count = Add(key, entry, count) end
+    for _, entry in ipairs(ns.common[key] or EMPTY) do
+        if type(entry.buff) ~= "string" or not taken[entry.buff] then count = Add(key, entry, count) end
     end
 
-    for i, result in ipairs(shown) do result.order = i end
+    local shown = shownByRow[key]
+    for i = #shown, count + 1, -1 do shown[i] = nil end
     table.sort(shown, InnerFirst)
     -- more than fit: the ones farthest from the center go
     for i = #shown, slotCount + 1, -1 do shown[i] = nil end
@@ -426,13 +476,12 @@ function ns.InitSlots()
         elapsedTotal = 0
 
         local rotation = ns.GetRotation()
-        local widest = {}
+        local left, right = 0, 0
         for _, key in ipairs(ROW_KEYS) do
             local row = ns[key]
             local limit = RotatoDB.slotsPerRow
             local shown = Collect(rotation, key, limit)
-            local side = SIDE[key]
-            widest[side] = math.max(widest[side] or 0, #shown)
+            if SIDE[key] == "LEFT" then left = math.max(left, #shown) else right = math.max(right, #shown) end
             for i, slot in ipairs(row) do
                 local r = i <= limit and shown[i]
                 if r then
@@ -444,8 +493,8 @@ function ns.InitSlots()
         end
 
         -- resizing only when a side's longest row changes, not every tick
-        if widest.LEFT ~= ns.shownLeft or widest.RIGHT ~= ns.shownRight then
-            ns.shownLeft, ns.shownRight = widest.LEFT, widest.RIGHT
+        if left ~= ns.shownLeft or right ~= ns.shownRight then
+            ns.shownLeft, ns.shownRight = left, right
             if RotatoDB.dynamicWidth then ns.ApplyWidth() end
         end
     end)
