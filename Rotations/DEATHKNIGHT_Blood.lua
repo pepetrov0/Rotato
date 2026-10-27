@@ -23,6 +23,9 @@ ns.Rotation{
     class = "DEATHKNIGHT",
     spec = 1, -- Blood
 
+    -- Rune spells have no cooldown to wait out, so without this the icon would vanish between runes
+    showLastWhenIdle = true,
+
     reminders = {
         FrostPresence(),
     },

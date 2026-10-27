@@ -52,7 +52,7 @@ function ns.InitDisplay()
     -- reverse: the sweep darkens the icon over time instead of revealing it.
     -- Everything is compared with what is already shown first: restarting a sweep or resetting a
     -- texture every frame would make them flicker.
-    local function Render(spell, start, duration, text, reverse)
+    local function Render(spell, start, duration, text, reverse, gray)
         -- nothing to press: hide the box with its border instead of showing an empty frame
         if spell and not center:IsShown() then center:Show() end
         if not spell and center:IsShown() then center:Hide() end
@@ -74,6 +74,7 @@ function ns.InitDisplay()
             CooldownFrame_SetTimer(cooldown, start, duration, duration > 0 and 1 or 0)
         end
 
+        center.icon:SetDesaturated(gray and true or false)
         label:SetText(text or "")
     end
 
@@ -113,10 +114,11 @@ function ns.InitDisplay()
         if spell then
             if source == "reminders" then text = "Reminder"
             elseif state == "cd" then text = "Cooldown"
+            elseif state == "unusable" then text = "Waiting"
             elseif spell == preview or gcdRunning then text = "Next"
             end
         end
-        Render(spell, start, duration, text)
+        Render(spell, start, duration, text, false, state == "unusable")
     end
 
     CreateFrame("Frame"):SetScript("OnUpdate", Update)

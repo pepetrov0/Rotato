@@ -370,6 +370,14 @@ function ns.Evaluate()
     end
 
     if soonest then return soonest, "cd", soonestStart, soonestDuration, soonestSource end
+
+    -- Rune and other resource gated spells have no cooldown to count down, they are just unusable
+    -- until the resource is back. A rotation can opt in to showing its last entry, grayed out, then.
+    if rotation.showLastWhenIdle then
+        local list = lists[#lists][2] or {}
+        local name = list[#list] and EntryName(list[#list])
+        if name and EntryCooldown(list[#list], name) then return name, "unusable", 0, 0, ns.mode end
+    end
 end
 
 -- Prints why the suggestion is what it is, entry by entry (/rotato debug).
