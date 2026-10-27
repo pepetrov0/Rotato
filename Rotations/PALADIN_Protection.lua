@@ -99,6 +99,8 @@ ns.Rotation{
         Paladin.HammerOfJustice(),
         { spell = "Hand of Reckoning" },
         { spell = "Righteous Defense" },
+        { spell = "Hand of Salvation", buff = "Hand of Salvation" },
+        { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },
 
     offensives = {
