@@ -260,8 +260,9 @@ function ns.OpenMenu()
             end,
         })
     end
-    tinsert(menu, { text = "Buffs shown per row", hasArrow = true, notCheckable = true, menuList = counts })
-    -- with a dynamic width the count above becomes the maximum
+    -- with a dynamic width the count is only the most a row can grow to
+    tinsert(menu, { text = RotatoDB.dynamicWidth and "Max buffs per row" or "Buffs shown per row",
+        hasArrow = true, notCheckable = true, menuList = counts })
     tinsert(menu, { text = "Fit width to shown icons", checked = RotatoDB.dynamicWidth,
         func = function()
             RotatoDB.dynamicWidth = not RotatoDB.dynamicWidth
