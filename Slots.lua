@@ -189,8 +189,9 @@ local function Resolve(entry, rowKey)
     -- An entry that reads the target has nothing to show without one (playerDebuff reads the player).
     if (entry.debuff or entry.targetBuff or typeList) and not UnitExists("target") then return end
     -- the trackers only show auras: a bare cooldown there would just be noise next to the real trackers
-    if rowKey == "trackers" and not (entry.buff or entry.pet or entry.debuff or typeList or healTypeList
-        or entry.healTargetBuff or entry.healTargetBuffAny or entry.healTargetDebuff) then
+    if rowKey == "trackers" and not (entry.buff or entry.pet or entry.playerDebuff or entry.debuff
+        or typeList or healTypeList or entry.healTargetBuff or entry.healTargetBuffAny
+        or entry.healTargetDebuff) then
         return
     end
     -- the type lists are "tell me when one is present", so absent means nothing to show

@@ -85,6 +85,10 @@ ns.Rotation{
         { buff = "Holy Shield" },
         -- one of the main mana sources of a tank, so a gap in it is worth seeing
         { buff = "Divine Plea" },
+        -- Ardent Defender is a passive: the only thing to track is the 2 minute lockout it leaves
+        -- after saving the paladin, while it cannot save them again. It is blocking, not something
+        -- to fix, so it hides itself when absent and gets the blue border while it counts down.
+        { playerDebuff = "Ardent Defender", show = "active", blocking = true },
     }),
 
     defensives = {
