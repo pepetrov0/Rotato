@@ -6,9 +6,12 @@ local ADDON_NAME, ns = ...
 --   * a channel (reversed sweep: the icon darkens as the channel runs out)
 -- Near the end of a cast or channel the icon switches to the next suggestion if it differs, so the
 -- player can see what to queue and does not miss a spell that became ready mid-cast.
+-- The last second of a channel also flashes a white border around the icon, to draw the eye when
+-- the channel is about to end.
 
 local TICK = 0.05       -- the rotation is re-evaluated at this rate; the animation itself runs every frame
 local NEXT_WINDOW = 0.5 -- seconds before a cast or channel ends at which the next spell is shown
+local CHANNEL_FLASH = 1 -- seconds of channel left at which the icon's border starts flashing
 
 function ns.InitDisplay()
     local center = ns.center
@@ -30,6 +33,26 @@ function ns.InitDisplay()
     local nameText = ns.frame:CreateFontString(nil, "OVERLAY")
     ns.RegisterText(nameText, "name")
     nameText:SetPoint("BOTTOM", ns.frame, "TOP", 0, 1)
+
+    -- Drawn over the skin's own border, as a frame of its own so the icon and the sweep stay under
+    -- it. Same look and level as the borders of the small slots (Slots.lua).
+    local border = CreateFrame("Frame", nil, center)
+    border:SetAllPoints()
+    border:SetFrameLevel(cooldown:GetFrameLevel() + 3)
+    border:SetBackdrop({ edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 2 })
+    border:SetBackdropBorderColor(1, 1, 1, 1)
+    border:Hide()
+
+    -- The pulse runs every frame: one updated at the rotation tick would visibly stutter. The
+    -- shown state is compared first, so a steady channel does not show and hide the frame constantly.
+    local borderShown = false
+    local function Flash(showing)
+        if showing ~= borderShown then
+            borderShown = showing
+            if showing then border:Show() else border:Hide() end
+        end
+        if showing then border:SetAlpha(0.3 + 0.7 * math.abs(math.sin(GetTime() * 4))) end
+    end
 
     local shown, shownStart, shownDuration, shownReverse
 
@@ -90,9 +113,15 @@ function ns.InitDisplay()
             text, channeling = "Channeling", true
         end
 
-        if name and ns.InRotation(name) then
-            local now = GetTime() * 1000 -- the cast times come in milliseconds
-            if (castEnd - now) / 1000 <= NEXT_WINDOW then
+        -- only a rotation channel takes the icon over, so only it can end in the icon's border; the
+        -- next suggestion is already in it during the last moments, and the border keeps flashing there
+        local now = GetTime() * 1000 -- the cast times come in milliseconds
+        local remaining = name and (castEnd - now) / 1000 or math.huge
+        local ours = name and ns.InRotation(name)
+        Flash(channeling and ours and remaining <= CHANNEL_FLASH)
+
+        if ours then
+            if remaining <= NEXT_WINDOW then
                 local nextSpell, _, start, duration = Evaluate()
                 if nextSpell and nextSpell ~= name then
                     preview = nextSpell
