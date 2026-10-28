@@ -46,10 +46,10 @@ ns.Rotation{
         -- Viper regenerates mana, which is what the downtime between fights is for; once the bar is
         -- back, the damage aspect so the next pull starts with it up
         { "Aspect of the Viper", when = function(c)
-            return c.mana <= 95 and not c.buff("Aspect of the Viper").up
+            return c.mana <= 90 and not c.buff("Aspect of the Viper").up
         end },
         { variant = "dpsAspect", when = function(c)
-            return c.mana > 95 and not c.anyBuff(DPS_ASPECTS).up
+            return c.mana > 90 and not c.anyBuff(DPS_ASPECTS).up
         end },
     },
 
