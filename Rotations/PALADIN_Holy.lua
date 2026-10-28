@@ -64,7 +64,6 @@ ns.Rotation{
         -- hidden while missing, which is exactly when it should be shown
         { buff = "Judgements of the Pure", always = true },
         { debuff = { variant = "judgement" }, any = true },
-        Paladin.ForbearanceTracker(),
         Paladin.CleanseTracker(),
     },
 

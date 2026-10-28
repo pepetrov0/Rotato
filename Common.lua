@@ -27,6 +27,13 @@ ns.common = {
         { buff = "Nitro Boosts", show = "active" }, -- engineering boots
     },
 
+    trackers = {
+        -- A paladin's own shields or a Hand of Protection put this on anyone, and while it runs
+        -- those spells cannot be used on them again. That is blocking, not something to fix, so
+        -- it shows only while present and gets the blue border while it counts down.
+        { playerDebuff = "Forbearance", show = "active", blocking = true },
+    },
+
     offensives = {
         { buff = "Bloodlust", show = "active" },
         { buff = "Heroism", show = "active" },

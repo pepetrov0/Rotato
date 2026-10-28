@@ -67,21 +67,13 @@ function Paladin.CleanseTracker()
     return { healTargetDebuffType = { "Poison", "Disease", "Magic" } }
 end
 
--- Every spec's shield spells put Forbearance on the paladin, and while it runs those abilities
--- cannot be used again. That is blocking, not something to fix, so it hides itself when absent
--- and gets the blue border while it counts down.
-function Paladin.ForbearanceTracker()
-    return { playerDebuff = "Forbearance", show = "active", blocking = true }
-end
-
--- The trackers the paladin specs have in common: the seal in use, the current Judgement, the
--- Forbearance lockout, and something to Cleanse. `extra` adds spec-specific entries ahead of the
--- Cleanse one, so the dispel stays last. Fresh tables every call (see the file comment).
+-- The trackers the paladin specs have in common: the seal in use, the current Judgement, and
+-- something to Cleanse. `extra` adds spec-specific entries ahead of the Cleanse one, so the dispel
+-- stays last. Fresh tables every call (see the file comment).
 function Paladin.CommonTrackers(extra)
     local trackers = {
         { buff = Paladin.SEALS },
         { debuff = { variant = "judgement" }, any = true },
-        Paladin.ForbearanceTracker(),
     }
     for _, entry in ipairs(extra or {}) do trackers[#trackers + 1] = entry end
     trackers[#trackers + 1] = Paladin.CleanseTracker()
