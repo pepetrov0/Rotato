@@ -99,8 +99,8 @@ ns.Rotation{
             { "Serpent Sting", when = function(c)
                 return c.target.hostile and not c.debuff("Serpent Sting").up
             end },
-            { "Aimed Shot" },
             { "Chimera Shot" },
+            { "Aimed Shot" },
             { "Steady Shot" },
         },
 
@@ -112,8 +112,8 @@ ns.Rotation{
             { "Serpent Sting", when = function(c)
                 return c.target.hostile and not c.debuff("Serpent Sting").up
             end },
-            { "Multi-Shot" },
             { "Chimera Shot" },
+            { "Multi-Shot" },
             { "Steady Shot" },
         },
 
