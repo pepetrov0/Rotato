@@ -43,8 +43,14 @@ ns.Rotation{
             return c.pet.exists and c.pet.hp < 100 and not c.pet.buff("Mend Pet").up
         end },
 
-        -- Viper regenerates mana, which is what the downtime between fights is for
-        { "Aspect of the Viper", when = function(c) return not c.buff("Aspect of the Viper").up end },
+        -- Viper regenerates mana, which is what the downtime between fights is for; once the bar is
+        -- back, the damage aspect so the next pull starts with it up
+        { "Aspect of the Viper", when = function(c)
+            return c.mana <= 95 and not c.buff("Aspect of the Viper").up
+        end },
+        { variant = "dpsAspect", when = function(c)
+            return c.mana > 95 and not c.anyBuff(DPS_ASPECTS).up
+        end },
     },
 
     -- Out of combat, only worth doing once there is something to pull. Hunter's Mark is not a
