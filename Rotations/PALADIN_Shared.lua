@@ -67,6 +67,18 @@ function Paladin.CleanseTracker()
     return { healTargetDebuffType = { "Poison", "Disease", "Magic" } }
 end
 
+-- Forbearance on the paladin refuses Divine Shield and Divine Protection, so their slots are
+-- grayed out instead of inviting a cast that cannot happen.
+function Paladin.ShieldsBlocked(c)
+    return c.selfDebuff("Forbearance").up
+end
+
+-- Hand of Protection goes to whoever a heal would go to, so that is whose Forbearance decides
+-- whether it can be used; the paladin's own counts when it would be cast on themselves.
+function Paladin.HandOfProtectionBlocked(c)
+    return c.debuffOn(c.healTarget(), "Forbearance").up
+end
+
 -- The trackers the paladin specs have in common: the seal in use, the current Judgement, and
 -- something to Cleanse. `extra` adds spec-specific entries ahead of the Cleanse one, so the dispel
 -- stays last. Fresh tables every call (see the file comment).
