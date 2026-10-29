@@ -1,8 +1,8 @@
 ## Interface: 30300
 ## Title: Rotato
 ## Notes: Tracks abilities, buffs and debuffs and suggests the next spell to cast.
-## Author: ppetrov
-## Version: 0.1.0
+## Author: Petar Petrov
+## Version: 0.1.1
 ## SavedVariables: RotatoDB
 ## OptionalDeps: ElvUI
 

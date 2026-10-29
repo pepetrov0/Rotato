@@ -45,7 +45,14 @@ function ns.RegisterText(fontString, kind)
 end
 
 function ns.Print(msg)
-    DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99Rotato|r: " .. tostring(msg))
+    DEFAULT_CHAT_FRAME:AddMessage("|cff33ff99Rotato|r " .. tostring(msg))
+end
+
+local ADDON_VERSION = GetAddOnMetadata(ADDON_NAME, "Version") or "?"
+
+-- The one line every load prints, so a bug report shows which version is running.
+function ns.LogLoad(hint)
+    ns.Print("v" .. ADDON_VERSION .. " loaded." .. (hint and (" " .. hint) or ""))
 end
 
 -- For changes the addon makes on its own; these can be frequent, so the player can turn them off.
@@ -92,7 +99,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         ns.InitDisplay()
         ns.InitSlots()
         ns.InitTooltips()
-        ns.Print("loaded. /rotato unlock to move or resize, /rotato lock when done.")
+        ns.LogLoad("/rotato unlock to move or resize, /rotato lock when done.")
     end
 end)
 
