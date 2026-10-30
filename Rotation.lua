@@ -30,7 +30,7 @@ end
 local function AtLevel(list, level)
     local best, bestLevel
     for _, def in ipairs(list) do
-        local min = def.minLevel or 1
+        local min = tonumber(def.minLevel) or 1
         if min <= level and (not bestLevel or min >= bestLevel) then best, bestLevel = def, min end
     end
     return best

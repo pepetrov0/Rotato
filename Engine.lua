@@ -357,7 +357,7 @@ function c.spell(spell)
     info.name, info.rank, info.icon = name, rank, icon
     info.cost, info.isFunnel, info.powerType = cost, isFunnel, powerType
     info.castTime, info.minRange, info.maxRange = castTime, minRange, maxRange
-    info.known = GetSpellCooldown(spell) ~= nil
+    info.known = GetSpellCooldown(name) ~= nil
     return info
 end
 

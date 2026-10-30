@@ -34,7 +34,7 @@ local function Talents()
     local info = {}
     for tab = 1, GetNumTalentTabs() do
         for i = 1, GetNumTalents(tab, false, false) do
-            local name, icon, tier, column, rank, maxRank = GetTalentInfo(tab, i, false, group)
+            local name, icon, tier, column, rank, maxRank = GetTalentInfo(tab, i, false, false, group)
             if name then
                 rank = rank or 0
                 info[name] = {
@@ -44,7 +44,8 @@ local function Talents()
             end
         end
     end
-    talentInfo, talentGroup = info, group
+    -- Empty means the talent data is not there yet (login, zoning): do not keep believing it.
+    if next(info) then talentInfo, talentGroup = info, group end
     return info
 end
 
