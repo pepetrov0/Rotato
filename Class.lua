@@ -21,34 +21,42 @@ local function DetectSpec()
     return nil, "No spec", group
 end
 
--- Talent ranks by name, for the active group. Looking a talent up by name means walking every tab
--- and every talent in it, which is far too slow for a condition the evaluator runs many times a
--- second, so the map is built once and dropped when the talents may have changed (Report runs on
+-- Talent metadata by name, for the active group. Looking a talent up by name means walking every
+-- tab and every talent in it, which is far too slow for a condition the evaluator runs many times
+-- a second, so the map is built once and dropped when the talents may have changed (Report runs on
 -- every talent event). The active group is checked too, in case a switch slips past the events.
-local talentRanks, talentGroup
+-- Every talent is kept, taken or not, so an untaken one reads as known = false rather than missing.
+local talentInfo, talentGroup
 
 local function Talents()
     local group = GetActiveTalentGroup() or 1
-    if talentRanks and talentGroup == group then return talentRanks end
-    local ranks = {}
+    if talentInfo and talentGroup == group then return talentInfo end
+    local info = {}
     for tab = 1, GetNumTalentTabs() do
         for i = 1, GetNumTalents(tab, false, false) do
-            local name, _, _, _, rank = GetTalentInfo(tab, i, false, group)
-            if name and rank and rank > 0 then ranks[name] = rank end
+            local name, icon, tier, column, rank, maxRank = GetTalentInfo(tab, i, false, group)
+            if name then
+                rank = rank or 0
+                info[name] = {
+                    name = name, icon = icon, tab = tab, tier = tier, column = column,
+                    rank = rank, maxRank = maxRank or 0, known = rank > 0,
+                }
+            end
         end
     end
-    talentRanks, talentGroup = ranks, group
-    return ranks
+    talentInfo, talentGroup = info, group
+    return info
 end
 
--- Points spent in the talent of this name, 0 when it is not learned (or is not a talent at all).
-function ns.TalentRank(name)
-    return Talents()[name] or 0
+-- Metadata for the talent of this name, nil when no talent has that name. The table is rebuilt only
+-- on a talent change, so it is stable: unlike an aura, it can be kept across updates.
+function ns.TalentInfo(name)
+    return Talents()[name]
 end
 
--- Drops the map; the next ns.TalentRank rebuilds it.
+-- Drops the map; the next ns.TalentInfo rebuilds it.
 function ns.InvalidateTalents()
-    talentRanks = nil
+    talentInfo = nil
 end
 
 local Report -- declared first because Recheck and Report call each other
@@ -74,7 +82,7 @@ end
 -- Publishes the detected spec and announces it, but only when something actually changed:
 -- talent events fire constantly (every point spent) and would spam the chat otherwise.
 function Report(force)
-    ns.InvalidateTalents() -- a talent event is why this is called, so the ranks are stale
+    ns.InvalidateTalents() -- a talent event is why this is called, so the map is stale
     local className, classToken = UnitClass("player")
     local index, specName, group = DetectSpec()
 

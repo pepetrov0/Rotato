@@ -333,14 +333,41 @@ end
 
 function c.usable(name) return (IsUsableSpell(name)) and true or false end
 
--- Whether the player has learned a spell or a talent of this name, for conditions that care about
--- knowledge rather than readiness. A talent's name is not in the spellbook, so a passive has to be
--- asked for as a talent. kind narrows the question to "spell" or "talent"; omitted, either counts.
--- A spell is known when GetSpellCooldown has an entry for it, the same test the evaluator uses.
-function c.learn(name, kind)
-    if kind ~= "talent" and GetSpellCooldown(name) then return true end
-    if kind ~= "spell" and ns.TalentRank(name) > 0 then return true end
-    return false
+-- Spell metadata is asked for in conditions as often as auras are, so it comes from a ring of its
+-- own for the same reason: no table per call. It has no expiring state, but it is still reused by
+-- the next call, so read it right away. The miss table is shared and must not be modified.
+local NO_SPELL = { known = false }
+local SPELL_RING = 32
+local spellRing, spellRingNext = {}, 0
+for i = 1, SPELL_RING do spellRing[i] = {} end
+
+local function NextSpellInfo()
+    spellRingNext = spellRingNext % SPELL_RING + 1
+    return spellRing[spellRingNext]
+end
+
+-- What the client knows about a spell, by name or ID, whether or not the player has learned it:
+-- name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange and known. `known` is
+-- whether it is in the player's spellbook, the same GetSpellCooldown test the evaluator uses. A
+-- spell the client has no data for at all reads as unknown and nothing else.
+function c.spell(spell)
+    local name, rank, icon, cost, isFunnel, powerType, castTime, minRange, maxRange = GetSpellInfo(spell)
+    if not name then return NO_SPELL end
+    local info = NextSpellInfo()
+    info.name, info.rank, info.icon = name, rank, icon
+    info.cost, info.isFunnel, info.powerType = cost, isFunnel, powerType
+    info.castTime, info.minRange, info.maxRange = castTime, minRange, maxRange
+    info.known = GetSpellCooldown(spell) ~= nil
+    return info
+end
+
+local NO_TALENT = { known = false, rank = 0 }
+
+-- What the talent of this name is: name, icon, tab, tier, column, rank, maxRank and known (points
+-- spent in it). A name that is no talent reads as an untaken one rather than nil, so a condition can
+-- read .known or .rank without a nil check. The table is stable until the talents change.
+function c.talent(name)
+    return ns.TalentInfo(name) or NO_TALENT
 end
 
 -- Evaluation ---------------------------------------------------------------
