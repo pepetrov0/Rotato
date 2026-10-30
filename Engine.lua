@@ -333,6 +333,16 @@ end
 
 function c.usable(name) return (IsUsableSpell(name)) and true or false end
 
+-- Whether the player has learned a spell or a talent of this name, for conditions that care about
+-- knowledge rather than readiness. A talent's name is not in the spellbook, so a passive has to be
+-- asked for as a talent. kind narrows the question to "spell" or "talent"; omitted, either counts.
+-- A spell is known when GetSpellCooldown has an entry for it, the same test the evaluator uses.
+function c.learn(name, kind)
+    if kind ~= "talent" and GetSpellCooldown(name) then return true end
+    if kind ~= "spell" and ns.TalentRank(name) > 0 then return true end
+    return false
+end
+
 -- Evaluation ---------------------------------------------------------------
 
 -- IsUsableSpell also looks at the current target, which is wrong for a spell cast on someone else
@@ -464,8 +474,9 @@ end
 -- Prints why the suggestion is what it is, entry by entry (/rotato debug).
 function ns.DebugEvaluate()
     local rotation = ns.GetRotation()
-    ns.Print(format("class=%s spec=%s rotation=%s mode=%s combat=%s hostile=%s", tostring(ns.class),
-        tostring(ns.specIndex), rotation and "found" or "NONE", ns.mode, tostring(c.combat), tostring(target.hostile)))
+    ns.Print(format("class=%s spec=%s level=%s rotation=%s mode=%s combat=%s hostile=%s", tostring(ns.class),
+        tostring(ns.specIndex), tostring(UnitLevel("player")), rotation and "found" or "NONE", ns.mode,
+        tostring(c.combat), tostring(target.hostile)))
     if not rotation then return end
 
     local rotations = rotation.rotations or {}

@@ -4,6 +4,7 @@ local ADDON_NAME, ns = ...
 --
 -- A rotation file calls ns.Rotation{ ... } with these fields (all optional but class):
 --   class, spec          which character it is for; no spec means every spec of the class
+--   minLevel             lowest character level it applies from (default 1), see ns.GetRotation
 --   reminders            out of combat with no hostile target; keeps the panel up until done
 --   preparation          out of combat setup
 --   highprio             checked before the rotations, with or without a target
@@ -13,15 +14,40 @@ local ADDON_NAME, ns = ...
 
 ns.rotations = {}
 
+-- A key can hold several rotations, each valid from its own level: a levelling rotation for the
+-- baseline kit, then the full one once the spec has its abilities. They are kept in registration
+-- order and both are tried, so the selection below can choose by level.
 function ns.Rotation(def)
-    ns.rotations[def.class .. ":" .. (def.spec or "*")] = def
+    local key = def.class .. ":" .. (def.spec or "*")
+    local list = ns.rotations[key]
+    if not list then list = {}; ns.rotations[key] = list end
+    list[#list + 1] = def
 end
 
--- The spec-specific rotation wins over a class-wide one. Returns nil until Class.lua has
--- detected the character, which callers rely on to do nothing early in the login.
+-- The rotation in a list that applies at this level: the one with the highest minLevel that is
+-- not above it. Two starting at the same level resolve to the later registered one, so a file
+-- loaded afterwards can replace an earlier default.
+local function AtLevel(list, level)
+    local best, bestLevel
+    for _, def in ipairs(list) do
+        local min = def.minLevel or 1
+        if min <= level and (not bestLevel or min >= bestLevel) then best, bestLevel = def, min end
+    end
+    return best
+end
+
+-- The spec-specific rotation wins over a class-wide one. A spec whose rotations all start above
+-- the player's level falls through to the class-wide one, which is how a levelling character gets
+-- a rotation instead of none. Returns nil until Class.lua has detected the character, which
+-- callers rely on to do nothing early in the login.
 function ns.GetRotation()
     if not ns.class then return end
-    return ns.rotations[ns.class .. ":" .. tostring(ns.specIndex)] or ns.rotations[ns.class .. ":*"]
+    local level = UnitLevel("player")
+    local spec = ns.rotations[ns.class .. ":" .. tostring(ns.specIndex)]
+    local rotation = spec and AtLevel(spec, level)
+    if rotation then return rotation end
+    local class = ns.rotations[ns.class .. ":*"]
+    return class and AtLevel(class, level)
 end
 
 -- Rotation files may use a spell ID instead of a name: names are locale-dependent, IDs are not.

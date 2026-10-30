@@ -21,6 +21,36 @@ local function DetectSpec()
     return nil, "No spec", group
 end
 
+-- Talent ranks by name, for the active group. Looking a talent up by name means walking every tab
+-- and every talent in it, which is far too slow for a condition the evaluator runs many times a
+-- second, so the map is built once and dropped when the talents may have changed (Report runs on
+-- every talent event). The active group is checked too, in case a switch slips past the events.
+local talentRanks, talentGroup
+
+local function Talents()
+    local group = GetActiveTalentGroup() or 1
+    if talentRanks and talentGroup == group then return talentRanks end
+    local ranks = {}
+    for tab = 1, GetNumTalentTabs() do
+        for i = 1, GetNumTalents(tab, false, false) do
+            local name, _, _, _, rank = GetTalentInfo(tab, i, false, group)
+            if name and rank and rank > 0 then ranks[name] = rank end
+        end
+    end
+    talentRanks, talentGroup = ranks, group
+    return ranks
+end
+
+-- Points spent in the talent of this name, 0 when it is not learned (or is not a talent at all).
+function ns.TalentRank(name)
+    return Talents()[name] or 0
+end
+
+-- Drops the map; the next ns.TalentRank rebuilds it.
+function ns.InvalidateTalents()
+    talentRanks = nil
+end
+
 local Report -- declared first because Recheck and Report call each other
 
 -- Talent data can read as empty for a moment (entering an instance, zoning). Believing that would
@@ -44,6 +74,7 @@ end
 -- Publishes the detected spec and announces it, but only when something actually changed:
 -- talent events fire constantly (every point spent) and would spam the chat otherwise.
 function Report(force)
+    ns.InvalidateTalents() -- a talent event is why this is called, so the ranks are stale
     local className, classToken = UnitClass("player")
     local index, specName, group = DetectSpec()
 
