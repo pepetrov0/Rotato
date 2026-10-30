@@ -20,9 +20,7 @@ Rotations\PALADIN_Protection.lua
 Rotations\PALADIN_Retribution.lua
 Rotations\PRIEST_Discipline.lua
 Rotations\ROGUE_Shared.lua
-Rotations\ROGUE_Assassination.lua
 Rotations\ROGUE_Combat.lua
-Rotations\ROGUE_Subtlety.lua
 Rotations\SHAMAN_Restoration.lua
 Mode.lua
 Engine.lua
