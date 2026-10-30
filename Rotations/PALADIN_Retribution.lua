@@ -8,6 +8,7 @@ local Paladin = ns.Paladin
 ns.Rotation{
     class = "PALADIN",
     spec = 3, -- Retribution
+    minLevel = 80,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     -- Retribution defaults to Wisdom: it is the one that returns mana.

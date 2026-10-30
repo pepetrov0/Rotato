@@ -42,6 +42,7 @@ end
 ns.Rotation{
     class = "DEATHKNIGHT",
     spec = 1, -- Blood
+    minLevel = 80,
 
     reminders = {
         FrostPresence(),

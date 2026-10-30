@@ -29,6 +29,7 @@ end
 ns.Rotation{
     class = "SHAMAN",
     spec = 3, -- Restoration
+    minLevel = 80,
 
     reminders = {
         EarthlivingWeapon(),
