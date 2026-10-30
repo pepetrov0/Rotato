@@ -501,9 +501,9 @@ end
 -- Prints why the suggestion is what it is, entry by entry (/rotato debug).
 function ns.DebugEvaluate()
     local rotation = ns.GetRotation()
-    ns.Print(format("class=%s spec=%s intent=%s level=%s rotation=%s mode=%s combat=%s hostile=%s",
-        tostring(ns.class), tostring(ns.specIndex), tostring(ns.GetIntention()), tostring(UnitLevel("player")),
-        rotation and "found" or "NONE", ns.mode, tostring(c.combat), tostring(target.hostile)))
+    ns.Print(format("class=%s spec=%s level=%s rotation=%s mode=%s combat=%s hostile=%s", tostring(ns.class),
+        tostring(ns.specIndex), tostring(UnitLevel("player")), rotation and "found" or "NONE", ns.mode,
+        tostring(c.combat), tostring(target.hostile)))
     if not rotation then return end
 
     local rotations = rotation.rotations or {}

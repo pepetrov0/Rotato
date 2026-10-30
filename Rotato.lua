@@ -17,6 +17,7 @@ local defaults = {
     symmetric = true,     -- with dynamicWidth, keep both sides as wide as the widest one
     backgroundTransparency = 50, -- percent; 0 is opaque, 100 is invisible
     chatLog = true,       -- report automatic changes (showing, hiding, mode...) in chat, see ns.Log
+
 }
 
 -- Text styling ---------------------------------------------------------
@@ -117,8 +118,6 @@ SlashCmdList["ROTATO"] = function(msg)
         ns.Print("locked.")
     elseif msg == "spec" then
         ns.DumpSpec()
-    elseif msg == "rotation" then
-        ns.OpenIntention()
     elseif msg == "debug" then
         ns.DebugEvaluate()
     elseif msg == "log" then
@@ -129,6 +128,6 @@ SlashCmdList["ROTATO"] = function(msg)
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Usage: /rotato unlock | lock | reset | log | spec | rotation | debug")
+        ns.Print("Usage: /rotato unlock | lock | reset | log | spec | debug")
     end
 end
