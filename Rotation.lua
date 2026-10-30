@@ -11,8 +11,13 @@ local ADDON_NAME, ns = ...
 --   rotations            { single = {...}, multi = {...}, aoe = {...} }, see Mode.lua
 --   defensives, utility, trackers, offensives    the side slots, see Slots.lua
 --   variants             named choices that follow what the player casts, see below
+--
+-- With no spec the rotation is class-wide: it applies to every spec of the class. While the talents
+-- cannot name a spec yet, the player picks the direction they are building toward (Intention.lua)
+-- and that spec's rotation is the one used.
 
 ns.rotations = {}
+local optionsDirty = true
 
 -- A key can hold several rotations, each valid from its own level: a levelling rotation for the
 -- baseline kit, then the full one once the spec has its abilities. They are kept in registration
@@ -22,6 +27,7 @@ function ns.Rotation(def)
     local list = ns.rotations[key]
     if not list then list = {}; ns.rotations[key] = list end
     list[#list + 1] = def
+    optionsDirty = true
 end
 
 -- The rotation in a list that applies at this level: the one with the highest minLevel that is
@@ -36,18 +42,106 @@ local function AtLevel(list, level)
     return best
 end
 
--- The spec-specific rotation wins over a class-wide one. A spec whose rotations all start above
--- the player's level falls through to the class-wide one, which is how a levelling character gets
--- a rotation instead of none. Returns nil until Class.lua has detected the character, which
--- callers rely on to do nothing early in the login.
+-- The rotation a spec starts with: the lowest minLevel, which is the levelling one when the spec
+-- has two. It is what a direction falls back to while its finished rotation is still locked; the
+-- spells that are not learned yet drop out of the evaluation by themselves.
+local function Base(list)
+    local best, bestLevel
+    for _, def in ipairs(list) do
+        local min = tonumber(def.minLevel) or 1
+        if not bestLevel or min < bestLevel then best, bestLevel = def, min end
+    end
+    return best
+end
+
+-- Intention --------------------------------------------------------------
+-- With no talent points spent there is no spec to detect, yet the player knows where the character
+-- is going. Intention.lua asks them, and the answer (a talent tree, not a rotation) is kept per
+-- character. It picks the spec whose rotation to show until the talents say otherwise.
+
+local characterKey
+local function CharacterKey()
+    if not characterKey then
+        characterKey = (UnitName("player") or "?") .. "-" .. (GetRealmName() or "?")
+    end
+    return characterKey
+end
+
+-- The spec the player picked while the talents cannot tell, or nil.
+function ns.GetIntention()
+    local intentions = RotatoDB and RotatoDB.intentions
+    return intentions and intentions[CharacterKey()]
+end
+
+function ns.SetIntention(spec)
+    if not RotatoDB or not spec then return end
+    RotatoDB.intentions = RotatoDB.intentions or {}
+    RotatoDB.intentions[CharacterKey()] = spec
+end
+
+-- The name of a talent tree, for the dialog; the client knows the tabs before any points are spent.
+function ns.SpecLabel(spec)
+    return (GetTalentTabInfo(spec)) or ("Spec " .. spec)
+end
+
+-- The directions this class has a rotation for, as { spec = 3, label = "Retribution" }, sorted by
+-- tree. Class-wide rotations are left out: they are the default, not a direction to pick.
+local optionsClass, optionsCache
+function ns.RotationOptions()
+    if optionsCache and optionsClass == ns.class and not optionsDirty then return optionsCache end
+    local options = {}
+    for key, list in pairs(ns.rotations) do
+        local class, spec = key:match("^(.-):(.*)$")
+        local index = tonumber(spec)
+        if class == ns.class and index and list[1] then
+            options[#options + 1] = { spec = index, label = ns.SpecLabel(index) }
+        end
+    end
+    table.sort(options, function(a, b) return a.spec < b.spec end)
+    optionsClass, optionsCache, optionsDirty = ns.class, options, false
+    return options
+end
+
+-- The only direction with a rotation, when the class has just one: there is nothing to ask then.
+function ns.SoleSpec()
+    if not ns.class then return end
+    local options = ns.RotationOptions()
+    if #options == 1 then return options[1].spec end
+end
+
+-- The rotation that applies, in order:
+--   1. the detected spec's, once its rotation is unlocked at the player's level;
+--   2. the direction the player picked, using its starting rotation while the finished one is still
+--      locked, because the pick is an explicit "this is where I am going";
+--   3. the class-wide rotation;
+--   4. the only direction there is, on a character with no spec yet.
+-- The starting rotation is the lowest minLevel, so a levelling character sees the spec they are
+-- going toward instead of nothing: spells that are not learned yet drop out by themselves.
+-- Returns nil until Class.lua has detected the character, which callers rely on to do nothing
+-- early in the login.
 function ns.GetRotation()
     if not ns.class then return end
     local level = UnitLevel("player")
-    local spec = ns.rotations[ns.class .. ":" .. tostring(ns.specIndex)]
-    local rotation = spec and AtLevel(spec, level)
+
+    if ns.specIndex then
+        local list = ns.rotations[ns.class .. ":" .. tostring(ns.specIndex)]
+        local rotation = list and AtLevel(list, level)
+        if rotation then return rotation end
+    end
+
+    local picked = ns.GetIntention()
+    local pickedList = picked and ns.rotations[ns.class .. ":" .. tostring(picked)]
+    local rotation = pickedList and (AtLevel(pickedList, level) or Base(pickedList))
     if rotation then return rotation end
+
     local class = ns.rotations[ns.class .. ":*"]
-    return class and AtLevel(class, level)
+    rotation = class and AtLevel(class, level)
+    if rotation then return rotation end
+
+    if ns.specIndex then return end -- the talents picked the direction, do not borrow another spec
+    local sole = ns.SoleSpec()
+    local soleList = sole and ns.rotations[ns.class .. ":" .. tostring(sole)]
+    return soleList and (AtLevel(soleList, level) or Base(soleList))
 end
 
 -- Rotation files may use a spell ID instead of a name: names are locale-dependent, IDs are not.
@@ -68,11 +162,16 @@ end
 -- { variant = "judgement" } instead of a spell name (and debuff = { variant = ... } in side slots),
 -- and everything that used the old option follows without being edited.
 
--- The current options, per "CLASS:spec". Kept in memory only, so each session starts from the
+-- The current options, per rotation. Kept in memory only, so each session starts from the
 -- defaults: the choice reflects what the player is doing now, not what they did last week.
 local chosen = {}
 
-local function VariantKey() return (ns.class or "") .. ":" .. tostring(ns.specIndex or 0) end
+-- Keyed by the active rotation's spec, so the choice follows the rotation (a class-wide one shares
+-- across specs) and not the detected spec when a picked direction is standing in for it.
+local function VariantKey()
+    local rotation = ns.GetRotation()
+    return (ns.class or "") .. ":" .. tostring(rotation and rotation.spec or 0)
+end
 
 local function VariantDefinition(name)
     local rotation = ns.GetRotation()

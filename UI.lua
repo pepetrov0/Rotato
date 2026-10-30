@@ -46,6 +46,7 @@ local function SkinPanel(f)
         f:SetBackdropBorderColor(0.6, 0.6, 0.6, 1)
     end
 end
+ns.SkinPanel = SkinPanel -- the intention dialog (Intention.lua) uses the same look
 
 local function SkinSlot(f)
     if E and f.SetTemplate then
