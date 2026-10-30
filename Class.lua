@@ -6,19 +6,36 @@ local ADDON_NAME, ns = ...
 
 -- The spec is the talent tree with the most points. There is no direct "current spec" API in
 -- 3.3.5, and the active talent group matters because a dual-spec character has two sets.
+-- Early on the count is unreliable (a point or two in a side tree), so while the leading tree has
+-- fewer than EARLY_POINTS and leads by less than 2, the player's chosen direction (Intention.lua)
+-- decides between the contenders. A tie nobody has settled reads as no spec, which asks the question.
+local EARLY_POINTS = 5
+
 local function DetectSpec()
     local group = GetActiveTalentGroup() or 1
-    local bestIndex, bestPoints
+    local bestIndex, bestPoints, secondPoints = nil, 0, 0
+    local points = {}
     for i = 1, GetNumTalentTabs() do
-        local _, _, points = GetTalentTabInfo(i, false, false, group)
-        if points and points > 0 and (not bestPoints or points > bestPoints) then
-            bestIndex, bestPoints = i, points
+        local _, _, p = GetTalentTabInfo(i, false, false, group)
+        p = p or 0
+        points[i] = p
+        if p > bestPoints then
+            bestIndex, secondPoints, bestPoints = i, bestPoints, p
+        elseif p > secondPoints then
+            secondPoints = p
         end
     end
-    if bestIndex then
-        return bestIndex, (GetTalentTabInfo(bestIndex, false, false, group)), group
+    if not bestIndex then return nil, "No spec", group end
+
+    if bestPoints < EARLY_POINTS and bestPoints - secondPoints < 2 then
+        local picked = ns.GetIntention and ns.GetIntention()
+        if picked and points[picked] and points[picked] >= bestPoints - 1 and points[picked] > 0 then
+            bestIndex = picked
+        elseif bestPoints == secondPoints then
+            return nil, "No spec", group
+        end
     end
-    return nil, "No spec", group
+    return bestIndex, (GetTalentTabInfo(bestIndex, false, false, group)), group
 end
 
 -- Talent metadata by name, for the active group. Looking a talent up by name means walking every
@@ -103,6 +120,14 @@ function Report(force)
     local colored = color and format("|cff%02x%02x%02x%s|r", color.r * 255, color.g * 255, color.b * 255, className)
         or className
     ns.Log(format("%s - %s (talent group %d)", colored, specName, group))
+
+    -- No spec yet: ask which direction the character is going (Intention.lua). Once the talents
+    -- name one, the question is over.
+    if index then
+        if ns.CloseIntention then ns.CloseIntention() end
+    elseif ns.PromptIntention then
+        ns.PromptIntention()
+    end
 end
 
 -- Prints the raw talent values, for when detection looks wrong (/rotato spec).
@@ -122,7 +147,11 @@ function ns.InitClass()
     f:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     f:SetScript("OnEvent", function() Report(false) end)
 
-    if DetectSpec() then
+    -- Below level 10 no talent points can be spent, so an empty detection is already the answer.
+    -- Waiting would only delay the rotation (and the direction question) for a new character.
+    local function NoPointsPossible() return UnitLevel("player") < 10 end
+
+    if DetectSpec() or NoPointsPossible() then
         Report(true)
         return
     end
@@ -132,7 +161,7 @@ function ns.InitClass()
     local waited = 0
     f:SetScript("OnUpdate", function(self, elapsed)
         waited = waited + elapsed
-        if DetectSpec() or waited >= 10 then
+        if DetectSpec() or NoPointsPossible() or waited >= 10 then
             self:SetScript("OnUpdate", nil)
             Report(true)
         end
