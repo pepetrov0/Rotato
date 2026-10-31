@@ -32,6 +32,11 @@ ns.Rotation{
         { debuff = { variant = "judgement" }, any = true },
     },
 
+    -- Forbearance refuses it, so it grays out while it runs
+    defensives = {
+        { spell = "Divine Protection", buff = "Divine Protection", discourage = Paladin.ShieldsBlocked },
+    },
+
     utility = {
         Paladin.HammerOfJustice(),
     },
