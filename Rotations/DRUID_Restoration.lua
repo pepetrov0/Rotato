@@ -10,7 +10,8 @@ ns.Rotation{
     class = "DRUID",
 
     highprio = {
-        { "Tree of Life", when = function(c) return not c.buff("Tree of Life").up end },
+        -- Another druid's form gives the group an aura of the same name, so only your own counts
+        { "Tree of Life", when = function(c) return not c.buffOn("player", "Tree of Life").up end },
 
         -- Dispelling a friend outranks the hots below. The unit is the one a heal would land on
         -- (mouseover, else target, else yourself).
