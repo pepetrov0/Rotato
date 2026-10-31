@@ -60,6 +60,13 @@ function ns.InvalidateTalents()
     talentInfo = nil
 end
 
+-- A reset gives every point back, so the unspent points are all the character has earned (one per
+-- level from 10). Empty talent data with that many unspent is a reset, not a loading glitch.
+local function AllPointsUnspent()
+    local level = UnitLevel("player")
+    return level >= 10 and (UnitCharacterPoints("player") or 0) >= level - 9
+end
+
 local Report -- declared first because Recheck and Report call each other
 
 -- Talent data can read as empty for a moment (entering an instance, zoning). Believing that would
@@ -89,7 +96,7 @@ function Report(force)
 
     -- the talent data arrives a moment after login, so an empty first read is not worth announcing
     if not index and not force and not ns.class then return end
-    if not index and not force and ns.specIndex then
+    if not index and not force and ns.specIndex and not AllPointsUnspent() then
         Recheck()
         return
     end
@@ -103,6 +110,7 @@ function Report(force)
     local colored = color and format("|cff%02x%02x%02x%s|r", color.r * 255, color.g * 255, color.b * 255, className)
         or className
     ns.Log(format("%s - %s (talent group %d)", colored, specName, group))
+    ns.RefreshRotation() -- a reset asks for the rotation now, not at the next tick
 end
 
 -- Prints the raw talent values, for when detection looks wrong (/rotato spec).

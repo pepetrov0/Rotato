@@ -99,6 +99,8 @@ local function Refresh()
     end
 end
 
+ns.RefreshRotation = Refresh
+
 -- /rotato rotation: the picker again, to change the choice.
 function ns.OpenPicker()
     if UnitLevel("player") < PICKER_LEVEL then
