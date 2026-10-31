@@ -20,9 +20,8 @@ function ns.Rotation(def)
 end
 
 -- Choosing --------------------------------------------------------------
--- The rotations of the player's class are its playstyles. With one it is used without asking (the
--- player can still open the picker to opt out); with
--- several the player picks (Picker.lua) and the pick is remembered per character and talent group
+-- The rotations of the player's class are its playstyles. The player picks (Picker.lua), even when
+-- there is only one, since "my own way" is always on offer; the pick is remembered per character and talent group
 -- (dual spec): switching groups uses that group's pick, or asks if it has none. The player is
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
 -- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
@@ -107,13 +106,12 @@ local function Refresh()
     for _, def in ipairs(list) do
         if def.name == state.pick then picked = def end
     end
-    if not own and not picked and #list == 1 then picked = list[1] end
     state.pick = own and OWN or picked and picked.name
     Use(UnitLevel("player") >= PICKER_LEVEL and picked or nil)
 
     -- Closing the picker does not bring it back every second: once per session and talent group, and after a reset.
     -- Not before PICKER_LEVEL, and then only out of combat: it is asked as soon as both hold.
-    if #list > 1 and not picked and not own and not asked[group]
+    if #list > 0 and not picked and not own and not asked[group]
         and UnitLevel("player") >= PICKER_LEVEL and not UnitAffectingCombat("player") then
         asked[group], shownGroup = true, group
         ns.ShowPicker(Choices(list), nil, Pick)
