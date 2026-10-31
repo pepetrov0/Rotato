@@ -112,12 +112,11 @@ function ns.OpenPicker()
     end
 end
 
--- /rotato rotation reset: forget the pick and the picker's dragged position, so the picker asks again. A character reset keeps its
+-- /rotato rotation reset: forget the pick, so the picker asks again. A character reset keeps its
 -- name, so its saved choice survives it.
 function ns.ResetRotationChoice()
     RotatoDB.rotation[UnitName("player") .. "-" .. GetRealmName()] = nil
     asked = false
-    RotatoDB.pickerPos = nil
     ns.Print("rotation choice cleared.")
     Refresh()
 end
