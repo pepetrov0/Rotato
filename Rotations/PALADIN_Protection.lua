@@ -26,7 +26,7 @@ end
 ns.Rotation{
     name = "Protection Paladin",
     icon = "Interface\\Icons\\Spell_Holy_DevotionAura",
-    filter = function(c) return c.class == "PALADIN" and c.spec == 2 and c.level >= 80 end,
+    class = "PALADIN",
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     -- Protection defaults to Light: the healing on the tank's own hits is worth more than the mana

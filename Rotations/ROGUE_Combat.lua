@@ -19,7 +19,7 @@ end
 ns.Rotation{
     name = "Combat Rogue",
     icon = "Interface\\Icons\\Ability_BackStab",
-    filter = function(c) return c.class == "ROGUE" and c.spec == 2 end,
+    class = "ROGUE",
 
     -- Poison is an item, not a cast, so it is offered as one. Both out-of-combat tiers: with no
     -- target it is a reminder, and with a hostile one it is part of preparing for the pull.

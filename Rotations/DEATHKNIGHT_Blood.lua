@@ -42,7 +42,7 @@ end
 ns.Rotation{
     name = "Blood Death Knight",
     icon = "Interface\\Icons\\Spell_Deathknight_BloodPresence",
-    filter = function(c) return c.class == "DEATHKNIGHT" and c.spec == 1 and c.level >= 80 end,
+    class = "DEATHKNIGHT",
 
     reminders = {
         FrostPresence(),

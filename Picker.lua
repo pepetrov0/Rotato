@@ -39,7 +39,7 @@ local function Build()
     frame.title:SetText("|cff33ff99Rotato|r")
     frame.subtitle = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     frame.subtitle:SetPoint("TOP", frame.title, "BOTTOM", 0, -4)
-    frame.subtitle:SetText("Choose the rotation to follow.")
+    frame.subtitle:SetText("How do you play?")
 
     frame.close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
     frame.close:SetPoint("TOPRIGHT", -2, -2)

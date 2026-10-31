@@ -19,7 +19,7 @@ local function NoMisdirectionTarget(c) return c.inGroup and not UnitExists("focu
 ns.Rotation{
     name = "Marksmanship Hunter",
     icon = "Interface\\Icons\\Ability_Marksmanship",
-    filter = function(c) return c.class == "HUNTER" and c.spec == 2 and c.level >= 80 end,
+    class = "HUNTER",
 
     -- Which damage aspect to go back to after Viper is whichever one was used last, which can only
     -- be known from what the player casts (see Rotation.lua). Casting Viper changes nothing here.

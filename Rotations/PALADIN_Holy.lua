@@ -18,7 +18,7 @@ end
 ns.Rotation{
     name = "Holy Paladin",
     icon = "Interface\\Icons\\Spell_Holy_HolyBolt",
-    filter = function(c) return c.class == "PALADIN" end,
+    class = "PALADIN",
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     variants = { judgement = Paladin.JudgementVariant("light") },

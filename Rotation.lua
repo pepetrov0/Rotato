@@ -4,8 +4,7 @@ local ADDON_NAME, ns = ...
 --
 -- A rotation file calls ns.Rotation{ ... } with these fields (all optional but name):
 --   name                 unique; what the player sees in the picker and what is remembered
---   filter               function(c) -> truthy when the rotation is offered (default: always); c has
---                        .class, .spec (talent tree index, nil with no points) and .level
+--   class                class token the rotation is offered to ("PALADIN"); a playstyle of that class
 --   reminders            out of combat with no hostile target; keeps the panel up until done
 --   preparation          out of combat setup
 --   highprio             checked before the rotations, with or without a target
@@ -21,11 +20,9 @@ function ns.Rotation(def)
 end
 
 -- Choosing --------------------------------------------------------------
--- The rotations whose filter passes are the ones on offer. With one it is used without asking;
--- with several the player picks (Picker.lua) and the pick is remembered per character. The offer
--- is re-read every second, which catches a level up, a learned spell or talent, a respec or
--- whatever else a filter looks at, without listing events. The player is asked again when the
--- offered list changes in any way, or when the one they picked is gone; until
+-- The rotations of the player's class are its playstyles. With one it is used without asking; with
+-- several the player picks (Picker.lua) and the pick is remembered per character. The player is
+-- asked again after a talent reset, which is seen as the points invested dropping to zero; until
 -- they answer, no rotation is used.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
@@ -41,7 +38,7 @@ end
 local function Available()
     local list = {}
     for _, def in ipairs(ns.rotations) do
-        if not def.filter or def.filter(ns.c) then list[#list + 1] = def end
+        if def.class == ns.class then list[#list + 1] = def end
     end
     return list
 end
@@ -62,29 +59,25 @@ local function Refresh()
     local list, state = Available(), CharacterState()
     offered = list
 
+    -- ns.specIndex is nil with no points spent. Having had points and now having none is a reset.
+    if ns.specIndex then
+        state.invested = true
+    elseif state.invested then
+        state.invested, state.pick, asked = nil, nil, false
+    end
+
     local picked
     for _, def in ipairs(list) do
         if def.name == state.pick then picked = def end
     end
-
-    -- any change to the offered list counts, even to a rotation the player has seen before
-    local names = {}
-    for _, def in ipairs(list) do names[#names + 1] = def.name end
-    local signature = table.concat(names, "\n")
-    local fresh = state.offer ~= signature
-    state.offer = signature
-
-    -- With several on offer and no valid pick, no rotation is used until the player answers. The
-    -- picker is shown once per session for that (closing it does not bring it back every second),
-    -- and again whenever the offered list changes. A lone rotation needs no pick.
-    local gone = not picked
-    if gone and #list == 1 then picked = list[1]; gone = false end
+    if not picked and #list == 1 then picked = list[1] end
     state.pick = picked and picked.name
     Use(picked)
 
-    if #list > 1 and (fresh or (gone and not asked)) then
+    -- Closing the picker does not bring it back every second: once per session, and after a reset.
+    if #list > 1 and not picked and not asked then
         asked = true
-        ns.ShowPicker(list, picked, Pick)
+        ns.ShowPicker(list, nil, Pick)
     elseif #list <= 1 then
         ns.HidePicker()
     end
@@ -99,10 +92,11 @@ function ns.OpenPicker()
     end
 end
 
--- /rotato rotation reset: forget the pick and what was offered, so the picker asks again. A
--- character reset keeps its name, so its saved choice survives it.
+-- /rotato rotation reset: forget the pick, so the picker asks again. A character reset keeps its
+-- name, so its saved choice survives it.
 function ns.ResetRotationChoice()
     RotatoDB.rotation[UnitName("player") .. "-" .. GetRealmName()] = nil
+    asked = false
     ns.Print("rotation choice cleared.")
     Refresh()
 end
