@@ -5,8 +5,6 @@ local ADDON_NAME, ns = ...
 
 local Paladin = ns.Paladin
 
-local WISE = "Judgements of the Wise"
-
 local function SealOfWisdom()
     return { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end }
 end
@@ -45,15 +43,9 @@ ns.Rotation{
         -- One Judgement keeps up two things. The debuff: any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops. And
         -- Judgements of the Pure, which comes from judging, so it is renewed with a wider margin.
-        -- With the talent Judgements of the Wise every Judgement also grants the group Replenishment,
-        -- so a missing or expiring Replenishment calls for one even while the debuff is healthy.
         { variant = "judgement", when = function(c)
             local pure = c.buff("Judgements of the Pure")
             if not pure.up or pure.remains < 30 then return true end
-            if c.talent(WISE).known then
-                local replenishment = c.buff("Replenishment")
-                if not replenishment.up or replenishment.remains < 5 then return true end
-            end
             -- the debuff needs a target to be read, the Pure upkeep above does not
             return Paladin.JudgementDue(c)
         end },
@@ -73,9 +65,6 @@ ns.Rotation{
         -- hidden while missing, which is exactly when it should be shown
         { buff = "Judgements of the Pure", always = true },
         { debuff = { variant = "judgement" }, any = true },
-        -- Replenishment is a raid buff, not a spell of ours, so `always` keeps the slot visible
-        -- while it is missing. Only the talent Judgements of the Wise makes it ours to keep up.
-        { buff = "Replenishment", always = true, when = function(c) return c.talent(WISE).known end },
         Paladin.CleanseTracker(),
     },
 
