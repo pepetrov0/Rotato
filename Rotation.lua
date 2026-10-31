@@ -24,9 +24,10 @@ end
 -- player can still open the picker to opt out); with
 -- several the player picks (Picker.lua) and the pick is remembered per character. The player is
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
--- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
+-- they answer, no rotation is used. It is not asked below level 10, nor in combat. "I'm playing my own way" is a pick too: it uses no rotation.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
+local PICKER_LEVEL = 10
 local current, offered, asked
 
 local function CharacterState()
@@ -87,7 +88,9 @@ local function Refresh()
     Use(picked)
 
     -- Closing the picker does not bring it back every second: once per session, and after a reset.
-    if #list > 1 and not picked and not own and not asked then
+    -- Not before PICKER_LEVEL, and then only out of combat: it is asked as soon as both hold.
+    if #list > 1 and not picked and not own and not asked
+        and UnitLevel("player") >= PICKER_LEVEL and not UnitAffectingCombat("player") then
         asked = true
         ns.ShowPicker(Choices(list), nil, Pick)
     elseif #list == 0 then
@@ -97,7 +100,9 @@ end
 
 -- /rotato rotation: the picker again, to change the choice.
 function ns.OpenPicker()
-    if offered and #offered > 0 then
+    if UnitLevel("player") < PICKER_LEVEL then
+        ns.Print("the rotation picker is available from level " .. PICKER_LEVEL .. ".")
+    elseif offered and #offered > 0 then
         ns.ShowPicker(Choices(offered), current, Pick)
     else
         ns.Print("no rotation is available for this class.")
