@@ -5,8 +5,14 @@ local ADDON_NAME, ns = ...
 
 local Paladin = ns.Paladin
 
+-- Righteousness stands in until Wisdom is learned, and only while no seal at all is up.
 local function SealOfWisdom()
-    return { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end }
+    return {
+        { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
+        { "Seal of Righteousness", when = function(c)
+            return not c.spell("Seal of Wisdom").known and not c.buff("Seal of Righteousness").up
+        end },
+    }
 end
 
 ns.Rotation{
@@ -18,12 +24,12 @@ ns.Rotation{
     variants = { judgement = Paladin.JudgementVariant("light") },
 
     -- Seal of Wisdom is the only seal that matters for a healer, so unlike Retribution there is
-    -- no list of alternatives to choose from.
-    reminders = {
+    -- no list of alternatives to choose from, apart from Righteousness before Wisdom is learned.
+    reminders = Paladin.List{
         SealOfWisdom(),
     },
 
-    highprio = {
+    highprio = Paladin.List{
         SealOfWisdom(),
 
         Paladin.Cleanse(),
