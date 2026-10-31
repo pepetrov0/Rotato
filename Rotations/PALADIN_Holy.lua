@@ -68,9 +68,13 @@ ns.Rotation{
     },
 
     trackers = {
+        -- the seal in use: Righteousness only while Wisdom is not learned, exactly one can show
+        { buff = "Seal of Wisdom", when = function(c) return c.spell("Seal of Wisdom").known end },
+        { buff = "Seal of Righteousness", when = function(c) return not c.spell("Seal of Wisdom").known end },
         -- `always`: this is a talent passive, so its name is not in the spellbook and it would be
         -- hidden while missing, which is exactly when it should be shown
-        { buff = "Judgements of the Pure", always = true },
+        { buff = "Judgements of the Pure", always = true,
+          when = function(c) return c.talent("Judgements of the Pure").known end },
         { debuff = { variant = "judgement" }, any = true },
         Paladin.CleanseTracker(),
     },
