@@ -25,7 +25,6 @@ end
 
 ns.Rotation{
     name = "Protection Paladin",
-    priority = 1,
     filter = function(c) return c.class == "PALADIN" and c.spec == 2 and c.level >= 80 end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).

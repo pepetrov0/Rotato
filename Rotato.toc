@@ -11,6 +11,7 @@ UI.lua
 Visibility.lua
 Class.lua
 Rotation.lua
+Picker.lua
 Rotations\DEATHKNIGHT_Blood.lua
 Rotations\DRUID_Restoration.lua
 Rotations\HUNTER_Marksmanship.lua

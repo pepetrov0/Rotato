@@ -18,7 +18,6 @@ end
 
 ns.Rotation{
     name = "Combat Rogue",
-    priority = 1,
     filter = function(c) return c.class == "ROGUE" and c.spec == 2 end,
 
     -- Poison is an item, not a cast, so it is offered as one. Both out-of-combat tiers: with no

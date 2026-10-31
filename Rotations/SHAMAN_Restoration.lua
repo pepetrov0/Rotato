@@ -28,7 +28,6 @@ end
 
 ns.Rotation{
     name = "Restoration Shaman",
-    priority = 1,
     filter = function(c) return c.class == "SHAMAN" and c.spec == 3 and c.level >= 80 end,
 
     reminders = {

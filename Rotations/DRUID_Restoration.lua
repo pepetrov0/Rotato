@@ -6,7 +6,6 @@ local ADDON_NAME, ns = ...
 
 ns.Rotation{
     name = "Restoration Druid",
-    priority = 1,
     filter = function(c) return c.class == "DRUID" and c.spec == 3 and c.level >= 80 end,
 
     highprio = {

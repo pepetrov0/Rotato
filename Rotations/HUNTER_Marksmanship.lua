@@ -18,7 +18,6 @@ local function NoMisdirectionTarget(c) return c.inGroup and not UnitExists("focu
 
 ns.Rotation{
     name = "Marksmanship Hunter",
-    priority = 1,
     filter = function(c) return c.class == "HUNTER" and c.spec == 2 and c.level >= 80 end,
 
     -- Which damage aspect to go back to after Viper is whichever one was used last, which can only

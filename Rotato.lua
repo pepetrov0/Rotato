@@ -95,6 +95,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         -- The order below matters too, each step uses the frames of the ones before it.
         ns.CreateUI()
         ns.InitClass()
+        ns.InitRotation()
         ns.InitMode()
         ns.InitDisplay()
         ns.InitSlots()
@@ -118,6 +119,8 @@ SlashCmdList["ROTATO"] = function(msg)
         ns.Print("locked.")
     elseif msg == "spec" then
         ns.DumpSpec()
+    elseif msg == "rotation" then
+        ns.OpenPicker()
     elseif msg == "debug" then
         ns.DebugEvaluate()
     elseif msg == "log" then
@@ -128,6 +131,6 @@ SlashCmdList["ROTATO"] = function(msg)
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Usage: /rotato unlock | lock | reset | log | spec | debug")
+        ns.Print("Usage: /rotato unlock | lock | reset | log | rotation | spec | debug")
     end
 end
