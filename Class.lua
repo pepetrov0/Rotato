@@ -114,17 +114,6 @@ function Report(force)
     ns.RefreshRotation() -- a reset asks for the rotation now, not at the next tick
 end
 
--- Prints the raw talent values, for when detection looks wrong (/rotato spec).
-function ns.DumpSpec()
-    local group = GetActiveTalentGroup()
-    ns.Print(format("tabs=%s activeGroup=%s groups=%s", tostring(GetNumTalentTabs()),
-        tostring(group), tostring(GetNumTalentGroups())))
-    for i = 1, GetNumTalentTabs() do
-        local name, _, points = GetTalentTabInfo(i, false, false, group)
-        ns.Print(format("  tab %d: %s, %s points", i, tostring(name), tostring(points)))
-    end
-end
-
 function ns.InitClass()
     local f = CreateFrame("Frame")
     f:RegisterEvent("PLAYER_TALENT_UPDATE")

@@ -8,7 +8,17 @@ Place this folder in `Interface/AddOns/Rotato`, then enable it at the character 
 
 ## Usage
 
-`/rotato`
+`/rotato` (or `/rota`) on its own lists the commands:
+
+| Command | What it does |
+|---|---|
+| `/rotato unlock` | Move the frame (left-drag) and open its options (right-click) |
+| `/rotato lock` | Make the frame click-through again |
+| `/rotato reset` | Move the frame back to its default position |
+| `/rotato log` | Turn the chat log of automatic changes on or off |
+| `/rotato rotation` | Choose the rotation |
+| `/rotato rotation reset` | Forget this talent group's choice, so the picker asks again |
+| `/rotato debug` | Print why the current suggestion is what it is |
 
 ## Todo
 

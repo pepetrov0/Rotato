@@ -109,6 +109,23 @@ end)
 SLASH_ROTATO1 = "/rotato"
 SLASH_ROTATO2 = "/rota"
 
+local HELP = {
+    { "unlock", "move the frame (left-drag) and open its options (right-click)" },
+    { "lock", "make the frame click-through again" },
+    { "reset", "move the frame back to its default position" },
+    { "log", "turn the chat log of automatic changes on or off" },
+    { "rotation", "choose the rotation" },
+    { "rotation reset", "forget this talent group's choice, so the picker asks again" },
+    { "debug", "print why the current suggestion is what it is" },
+}
+
+local function PrintHelp()
+    ns.Print("commands (/rotato or /rota):")
+    for _, line in ipairs(HELP) do
+        DEFAULT_CHAT_FRAME:AddMessage("  |cffffd200" .. line[1] .. "|r - " .. line[2])
+    end
+end
+
 SlashCmdList["ROTATO"] = function(msg)
     msg = strlower(strtrim(msg or ""))
     if msg == "unlock" then
@@ -117,8 +134,6 @@ SlashCmdList["ROTATO"] = function(msg)
     elseif msg == "lock" then
         ns.SetLocked(true)
         ns.Print("locked.")
-    elseif msg == "spec" then
-        ns.DumpSpec()
     elseif msg == "rotation" then
         ns.OpenPicker()
     elseif msg == "rotation reset" then
@@ -132,7 +147,8 @@ SlashCmdList["ROTATO"] = function(msg)
         -- copy the table: assigning defaults.pos itself would let later drags edit the defaults
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
+        ns.Print("position reset.")
     else
-        ns.Print("Usage: /rotato unlock | lock | reset | log | rotation | rotation reset | spec | debug")
+        PrintHelp()
     end
 end
