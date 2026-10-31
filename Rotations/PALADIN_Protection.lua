@@ -36,7 +36,7 @@ ns.Rotation{
     reminders = Paladin.List{
         RighteousFury(),
         Sanctuary(),
-        Paladin.SealUpkeep(),
+        Paladin.SealUpkeep(true),
     },
 
     highprio = Paladin.List{

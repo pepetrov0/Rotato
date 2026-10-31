@@ -26,8 +26,9 @@ local function BetterSealKnown(c)
 end
 
 -- One entry per seal. Put it in a list wrapped by Paladin.List, which flattens it in. With `anySeal`
--- (for highprio) the entries only ask while no seal at all is up, so a paladin who chose another
--- seal on purpose is not blocked by it; the reminders still point out the better seal.
+-- the entries only ask while no seal at all is up, so a paladin who chose another seal on purpose
+-- is not blocked by it, nor has the frame held up between pulls by a reminder; the red seal tracker
+-- (Paladin.SealTrackers) still points out the better seal.
 function Paladin.SealUpkeep(anySeal)
     local entries = {}
     for i, seal in ipairs(BETTER_SEALS) do

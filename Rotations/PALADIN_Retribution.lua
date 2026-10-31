@@ -17,7 +17,7 @@ ns.Rotation{
     variants = { judgement = Paladin.JudgementVariant("wisdom") },
 
     reminders = Paladin.List{
-        Paladin.SealUpkeep(),
+        Paladin.SealUpkeep(true),
     },
 
     highprio = Paladin.List{
