@@ -57,7 +57,13 @@ function ns.InitMode()
     f:RegisterEvent("UNIT_SPELLCAST_START")         -- cast-time spells, the moment the cast begins
     f:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START") -- channels
     f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")     -- instants never fire START
+    f:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
     f:RegisterEvent("PLAYER_REGEN_ENABLED")
+
+    -- The spell whose START was just handled. Its SUCCEEDED must not decide again: by then the cast
+    -- may have changed what highprio asks for (Chain Heal granting Tidal Waves), and that would
+    -- read as a choice of rotation.
+    local started
 
     f:SetScript("OnEvent", function(_, event, unit, spell)
         if event == "PLAYER_REGEN_ENABLED" then
@@ -69,8 +75,20 @@ function ns.InitMode()
         local rotation = ns.GetRotation()
         if not rotation then return end
 
-        -- variants switch on SUCCEEDED only, so a cast that gets interrupted does not flip them
-        if event == "UNIT_SPELLCAST_SUCCEEDED" then ns.CheckVariants(rotation, spell) end
+        if event == "UNIT_SPELLCAST_INTERRUPTED" then
+            if spell == started then started = nil end
+            return
+        end
+        if event == "UNIT_SPELLCAST_SUCCEEDED" then
+            -- variants switch on SUCCEEDED only, so a cast that gets interrupted does not flip them
+            ns.CheckVariants(rotation, spell)
+            if spell == started then
+                started = nil
+                return
+            end
+        else
+            started = spell
+        end
 
         local sets = ModeSpells(rotation)
         if AskedForByHighprio(rotation, spell) then return end
