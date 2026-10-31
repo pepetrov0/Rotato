@@ -11,7 +11,7 @@ end
 
 ns.Rotation{
     name = "Holy Paladin",
-    filter = function(c) return c.class == "PALADIN" and c.level >= 80 end,
+    filter = function(c) return c.class == "PALADIN" end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     variants = { judgement = Paladin.JudgementVariant("light") },
