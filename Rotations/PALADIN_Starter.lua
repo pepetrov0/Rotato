@@ -43,6 +43,7 @@ ns.Rotation{
 
     -- Forbearance refuses these, so they gray out while it runs
     defensives = {
+        { spell = "Hand of Sacrifice", buff = "Hand of Sacrifice" },
         { spell = "Divine Protection", buff = "Divine Protection", discourage = Paladin.ShieldsBlocked },
         { spell = "Hand of Protection", buff = "Hand of Protection",
           discourage = Paladin.HandOfProtectionBlocked },
@@ -50,5 +51,7 @@ ns.Rotation{
 
     utility = {
         Paladin.HammerOfJustice(),
+        { spell = "Hand of Salvation", buff = "Hand of Salvation" },
+        { spell = "Hand of Freedom", buff = "Hand of Freedom" },
     },
 }
