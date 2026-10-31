@@ -8,16 +8,29 @@ local Paladin = {}
 ns.Paladin = Paladin
 
 -- Any seal will do for upkeep. Vengeance is the Alliance seal and Corruption the Horde one, and
--- Command is a talent and Righteousness is the one a low level character has, so each character only knows some of them; the entries below are tried in
--- order and the first one that is known wins.
+-- Command is a talent, so each character only knows some of them; the entries below are tried in
+-- order and the first one that is known wins. Righteousness is the one a low level character has;
+-- it is only suggested while none of those three is known, though one already up counts as a seal.
+local UPKEEP_SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
 Paladin.SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption", "Seal of Righteousness" }
 
--- One entry per seal in SEALS. Put it in a list wrapped by Paladin.List, which flattens it in.
+local function NoSealUp(c) return not c.anyBuff(Paladin.SEALS).up end
+
+local function BetterSealKnown(c)
+    for _, seal in ipairs(UPKEEP_SEALS) do
+        if c.spell(seal).known then return true end
+    end
+    return false
+end
+
+-- One entry per seal. Put it in a list wrapped by Paladin.List, which flattens it in.
 function Paladin.SealUpkeep()
     local entries = {}
-    for i, seal in ipairs(Paladin.SEALS) do
-        entries[i] = { seal, when = function(c) return not c.anyBuff(Paladin.SEALS).up end }
+    for i, seal in ipairs(UPKEEP_SEALS) do
+        entries[i] = { seal, when = NoSealUp }
     end
+    entries[#entries + 1] = { "Seal of Righteousness",
+        when = function(c) return NoSealUp(c) and not BetterSealKnown(c) end }
     return entries
 end
 
