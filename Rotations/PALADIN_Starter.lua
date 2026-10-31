@@ -31,7 +31,13 @@ ns.Rotation{
     rotations = {
         single = {
             { "Holy Light", when = function(c) return c.hpOn(c.healTarget()) < 80 end },
-            { variant = "judgement" }
+            { variant = "judgement" },
+            -- no Art of War proc at this level, but it always crits undead and demons
+            { "Exorcism", when = function(c)
+                local creatureType = c.target.creatureType
+                return creatureType == "Demon" or creatureType == "Undead"
+            end },
+            { "Consecration" },
         },
     },
 
