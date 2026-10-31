@@ -50,12 +50,13 @@ ns.Rotation{
         -- One Judgement keeps up two things. The debuff: any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops. And
         -- Judgements of the Pure, which comes from judging, so it is renewed with a wider margin.
+        -- Either way the Judgement itself needs a hostile target to be cast on.
         { variant = "judgement", when = function(c)
+            if not c.target.hostile then return false end
             if c.talent("Judgements of the Pure").known then
                 local pure = c.buff("Judgements of the Pure")
                 if not pure.up or pure.remains < 30 then return true end
             end
-            -- the debuff needs a target to be read, the Pure upkeep above does not
             return Paladin.JudgementDue(c)
         end },
 
