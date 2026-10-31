@@ -24,7 +24,8 @@ end
 -- player can still open the picker to opt out); with
 -- several the player picks (Picker.lua) and the pick is remembered per character. The player is
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
--- they answer, no rotation is used. It is not asked below level 10, nor in combat. "I'm playing my own way" is a pick too: it uses no rotation.
+-- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
+-- Below level 10 there is no rotation and no picker; at 10 the player is asked once out of combat.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
 local PICKER_LEVEL = 10
@@ -85,7 +86,7 @@ local function Refresh()
     end
     if not own and not picked and #list == 1 then picked = list[1] end
     state.pick = own and OWN or picked and picked.name
-    Use(picked)
+    Use(UnitLevel("player") >= PICKER_LEVEL and picked or nil)
 
     -- Closing the picker does not bring it back every second: once per session, and after a reset.
     -- Not before PICKER_LEVEL, and then only out of combat: it is asked as soon as both hold.
