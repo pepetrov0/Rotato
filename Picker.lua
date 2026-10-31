@@ -59,11 +59,6 @@ local function BuildCell()
     cell.icon:SetSize(ICON, ICON)
     cell.icon:SetPoint("TOP", 0, -10)
     cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    -- a gold square behind the icon, 2px larger on each side, shows as a frame around it
-    cell.border = cell:CreateTexture(nil, "ARTWORK")
-    cell.border:SetTexture(1, 0.82, 0)
-    cell.border:SetPoint("TOPLEFT", cell.icon, "TOPLEFT", -2, 2)
-    cell.border:SetPoint("BOTTOMRIGHT", cell.icon, "BOTTOMRIGHT", 2, -2)
     cell.label = cell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     cell.label:SetPoint("TOP", cell.icon, "BOTTOM", 0, -8)
     cell.label:SetWidth(CELL_W - 10)
@@ -76,7 +71,7 @@ local function BuildCell()
     return cell
 end
 
--- selected is the rotation in use, framed in gold; onPick(def) runs for whichever is chosen.
+-- selected is the rotation in use; it is not marked. onPick(def) runs for whichever is chosen.
 function ns.ShowPicker(list, selected, onPick)
     if not frame then Build() end
     local columns = math.min(#list, COLUMNS)
@@ -90,7 +85,6 @@ function ns.ShowPicker(list, selected, onPick)
         cell:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING + col * (CELL_W + GAP), -(HEADER_H + row * (CELL_H + GAP)))
         cell.icon:SetTexture(def.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
         cell.label:SetText(def.name)
-        if def == selected then cell.border:Show() else cell.border:Hide() end
         cell:SetScript("OnClick", function()
             onPick(def)
             frame:Hide()
