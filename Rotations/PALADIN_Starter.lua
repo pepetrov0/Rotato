@@ -19,13 +19,6 @@ local function Purify()
     end }
 end
 
--- Whoever a heal would go to (mouseover, else target, else yourself) is hurt enough to heal
-local function NeedsHeal(c)
-    local unit = c.healTarget()
-    local max = UnitHealthMax(unit)
-    return max > 0 and UnitHealth(unit) / max < 0.8
-end
-
 ns.Rotation{
     class = "PALADIN",
 
@@ -37,7 +30,7 @@ ns.Rotation{
 
     rotations = {
         single = {
-            { "Holy Light", when = NeedsHeal },
+            { "Holy Light", when = function(c) return c.hpOn(c.healTarget()) < 80 end },
             { variant = "judgement" }
         },
     },

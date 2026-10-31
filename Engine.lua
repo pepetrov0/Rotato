@@ -301,6 +301,9 @@ function c.healTarget()
     return "player"
 end
 
+-- Health of any unit, 0-100, like c.target.hp; 0 for a unit that does not exist
+function c.hpOn(unit) return Percent(UnitHealth(unit), UnitHealthMax(unit)) end
+
 -- Spells -------------------------------------------------------------------
 
 -- Remaining cooldown ignoring the global cooldown: GetSpellCooldown reports the GCD for any spell
