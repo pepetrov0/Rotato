@@ -121,6 +121,8 @@ SlashCmdList["ROTATO"] = function(msg)
         ns.DumpSpec()
     elseif msg == "rotation" then
         ns.OpenPicker()
+    elseif msg == "rotation reset" then
+        ns.ResetRotationChoice()
     elseif msg == "debug" then
         ns.DebugEvaluate()
     elseif msg == "log" then
@@ -131,6 +133,6 @@ SlashCmdList["ROTATO"] = function(msg)
         RotatoDB.pos = { x = defaults.pos.x, y = defaults.pos.y }
         ns.ApplyPosition()
     else
-        ns.Print("Usage: /rotato unlock | lock | reset | log | rotation | spec | debug")
+        ns.Print("Usage: /rotato unlock | lock | reset | log | rotation | rotation reset | spec | debug")
     end
 end

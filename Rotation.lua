@@ -94,6 +94,14 @@ function ns.OpenPicker()
     end
 end
 
+-- /rotato rotation reset: forget the pick and what was offered, so the picker asks again. A
+-- character reset keeps its name, so its saved choice survives it.
+function ns.ResetRotationChoice()
+    RotatoDB.rotation[UnitName("player") .. "-" .. GetRealmName()] = nil
+    ns.Print("rotation choice cleared.")
+    Refresh()
+end
+
 function ns.InitRotation()
     local elapsed = 0
     CreateFrame("Frame"):SetScript("OnUpdate", function(_, dt)
