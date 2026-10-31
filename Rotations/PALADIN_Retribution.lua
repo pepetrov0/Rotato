@@ -21,7 +21,7 @@ ns.Rotation{
     },
 
     highprio = Paladin.List{
-        Paladin.SealUpkeep(true),
+        Paladin.SealUpkeep(),
 
         Paladin.Cleanse(),
         Paladin.Purify(), -- until Cleanse is learned

@@ -5,15 +5,8 @@ local ADDON_NAME, ns = ...
 
 local Paladin = ns.Paladin
 
--- Righteousness stands in until Wisdom is learned, and only while no seal at all is up.
-local function SealOfWisdom()
-    return {
-        { "Seal of Wisdom", when = function(c) return not c.buff("Seal of Wisdom").up end },
-        { "Seal of Righteousness", when = function(c)
-            return not c.spell("Seal of Wisdom").known and not c.buff("Seal of Righteousness").up
-        end },
-    }
-end
+-- Wisdom is the healer's seal; Righteousness stands in until it is learned (see SealUpkeep)
+local HEALING_SEALS = { "Seal of Wisdom" }
 
 ns.Rotation{
     name = "Holy Paladin",
@@ -23,14 +16,12 @@ ns.Rotation{
     -- The current Judgement follows what the player casts (see Rotation.lua).
     variants = { judgement = Paladin.JudgementVariant("light") },
 
-    -- Seal of Wisdom is the only seal that matters for a healer, so unlike Retribution there is
-    -- no list of alternatives to choose from, apart from Righteousness before Wisdom is learned.
     reminders = Paladin.List{
-        SealOfWisdom(),
+        Paladin.SealUpkeep(HEALING_SEALS),
     },
 
     highprio = Paladin.List{
-        SealOfWisdom(),
+        Paladin.SealUpkeep(HEALING_SEALS),
 
         Paladin.Cleanse(),
         Paladin.Purify(), -- until Cleanse is learned
@@ -71,9 +62,7 @@ ns.Rotation{
     },
 
     trackers = {
-        -- the seal in use: Righteousness only while Wisdom is not learned, exactly one can show
-        { buff = "Seal of Wisdom", when = function(c) return c.spell("Seal of Wisdom").known end },
-        { buff = "Seal of Righteousness", when = function(c) return not c.spell("Seal of Wisdom").known end },
+        Paladin.SealTracker(HEALING_SEALS),
         -- `always`: this is a talent passive, so its name is not in the spellbook and it would be
         -- hidden while missing, which is exactly when it should be shown
         { buff = "Judgements of the Pure", always = true,
