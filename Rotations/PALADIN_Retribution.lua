@@ -51,7 +51,11 @@ ns.Rotation{
             -- Wisdom is what returns mana.
             { variant = "judgement", when = function(c) return c.mana < 50 end },
             { "Crusader Strike" },
-            { "Exorcism", when = function(c) return c.buff("The Art of War").up end }, -- the proc makes it instant
+            -- With the talent only the proc is worth it, it makes Exorcism instant. Without it there is
+            -- no proc to wait for, so it is always recommended.
+            { "Exorcism", when = function(c)
+                return not c.talent("The Art of War").known or c.buff("The Art of War").up
+            end },
             { variant = "judgement" },
             { "Holy Wrath", when = function(c)
                 -- it only hits these two types, anything else would be a wasted cooldown
