@@ -16,7 +16,6 @@ Rotations\DEATHKNIGHT_Blood.lua
 Rotations\DRUID_Restoration.lua
 Rotations\HUNTER_Marksmanship.lua
 Rotations\PALADIN_Shared.lua
-Rotations\PALADIN_Starter.lua
 Rotations\PALADIN_Holy.lua
 Rotations\PALADIN_Protection.lua
 Rotations\PALADIN_Retribution.lua
