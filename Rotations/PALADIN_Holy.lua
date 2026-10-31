@@ -51,8 +51,10 @@ ns.Rotation{
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops. And
         -- Judgements of the Pure, which comes from judging, so it is renewed with a wider margin.
         { variant = "judgement", when = function(c)
-            local pure = c.buff("Judgements of the Pure")
-            if not pure.up or pure.remains < 30 then return true end
+            if c.talent("Judgements of the Pure").known then
+                local pure = c.buff("Judgements of the Pure")
+                if not pure.up or pure.remains < 30 then return true end
+            end
             -- the debuff needs a target to be read, the Pure upkeep above does not
             return Paladin.JudgementDue(c)
         end },
