@@ -2,7 +2,7 @@
 ## Title: Rotato
 ## Notes: Tracks abilities, buffs and debuffs and suggests the next spell to cast.
 ## Author: Petar Petrov
-## Version: 0.1.1
+## Version: 0.1.2
 ## SavedVariables: RotatoDB
 ## OptionalDeps: ElvUI
 

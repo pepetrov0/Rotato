@@ -22,20 +22,37 @@ end
 -- Choosing --------------------------------------------------------------
 -- The rotations of the player's class are its playstyles. With one it is used without asking (the
 -- player can still open the picker to opt out); with
--- several the player picks (Picker.lua) and the pick is remembered per character. The player is
+-- several the player picks (Picker.lua) and the pick is remembered per character and talent group
+-- (dual spec): switching groups uses that group's pick, or asks if it has none. The player is
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
 -- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
 -- Below level 10 there is no rotation and no picker; at 10 the player is asked once out of combat.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
 local PICKER_LEVEL = 10
-local current, offered, asked
+local current, offered, shownGroup
+local asked = {} -- per talent group: the picker was offered this session
 
+local function CharacterKey() return UnitName("player") .. "-" .. GetRealmName() end
+
+-- Follows ns.specGroup, published together with ns.specIndex, so the reset check below compares
+-- the spec and the pick of the same group.
+local function Group() return ns.specGroup or GetActiveTalentGroup() or 1 end
+
+-- { pick, invested } for the active talent group, in RotatoDB.rotation[character].groups[group].
 local function CharacterState()
     RotatoDB.rotation = RotatoDB.rotation or {}
-    local key = UnitName("player") .. "-" .. GetRealmName()
-    RotatoDB.rotation[key] = RotatoDB.rotation[key] or {}
-    return RotatoDB.rotation[key]
+    local key = CharacterKey()
+    local char = RotatoDB.rotation[key] or {}
+    RotatoDB.rotation[key] = char
+    if not char.groups then
+        -- before 0.1.2 one pick was kept per character: it goes to the group active now
+        char.groups = { [Group()] = { pick = char.pick, invested = char.invested } }
+        char.pick, char.invested = nil, nil
+    end
+    local group = Group()
+    char.groups[group] = char.groups[group] or {}
+    return char.groups[group]
 end
 
 local function Available()
@@ -69,14 +86,20 @@ end
 
 local function Refresh()
     if not ns.class then return end
-    local list, state = Available(), CharacterState()
+    local list, state, group = Available(), CharacterState(), Group()
     offered = list
+
+    -- a picker left open from the other talent group would save its answer to this one
+    if shownGroup and shownGroup ~= group then
+        ns.HidePicker()
+        shownGroup = nil
+    end
 
     -- ns.specIndex is nil with no points spent. Having had points and now having none is a reset.
     if ns.specIndex then
         state.invested = true
     elseif state.invested then
-        state.invested, state.pick, asked = nil, nil, false
+        state.invested, state.pick, asked[group] = nil, nil, false
     end
 
     local picked
@@ -88,11 +111,11 @@ local function Refresh()
     state.pick = own and OWN or picked and picked.name
     Use(UnitLevel("player") >= PICKER_LEVEL and picked or nil)
 
-    -- Closing the picker does not bring it back every second: once per session, and after a reset.
+    -- Closing the picker does not bring it back every second: once per session and talent group, and after a reset.
     -- Not before PICKER_LEVEL, and then only out of combat: it is asked as soon as both hold.
-    if #list > 1 and not picked and not own and not asked
+    if #list > 1 and not picked and not own and not asked[group]
         and UnitLevel("player") >= PICKER_LEVEL and not UnitAffectingCombat("player") then
-        asked = true
+        asked[group], shownGroup = true, group
         ns.ShowPicker(Choices(list), nil, Pick)
     elseif #list == 0 then
         ns.HidePicker()
@@ -106,17 +129,19 @@ function ns.OpenPicker()
     if UnitLevel("player") < PICKER_LEVEL then
         ns.Print("the rotation picker is available from level " .. PICKER_LEVEL .. ".")
     elseif offered and #offered > 0 then
+        shownGroup = Group()
         ns.ShowPicker(Choices(offered), current, Pick)
     else
         ns.Print("no rotation is available for this class.")
     end
 end
 
--- /rotato rotation reset: forget the pick, so the picker asks again. A character reset keeps its
--- name, so its saved choice survives it.
+-- /rotato rotation reset: forget the active talent group's pick, so the picker asks again. A
+-- character reset keeps its name, so its saved choice survives it.
 function ns.ResetRotationChoice()
-    RotatoDB.rotation[UnitName("player") .. "-" .. GetRealmName()] = nil
-    asked = false
+    local state = CharacterState()
+    state.pick, state.invested = nil, nil
+    asked[Group()] = false
     ns.Print("rotation choice cleared.")
     Refresh()
 end
