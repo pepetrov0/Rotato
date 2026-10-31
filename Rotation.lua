@@ -61,7 +61,7 @@ function ns.GetRotation()
     local rotation = Select()
     if rotation ~= current then
         current = rotation
-        ns.Log("rotation in use: " .. (rotation and Describe(rotation) or "none"))
+        ns.Print("rotation in use: " .. (rotation and Describe(rotation) or "none"))
     end
     return rotation
 end
