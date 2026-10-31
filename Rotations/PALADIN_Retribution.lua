@@ -5,6 +5,8 @@ local ADDON_NAME, ns = ...
 
 local Paladin = ns.Paladin
 
+local WISE = "Judgements of the Wise"
+
 ns.Rotation{
     name = "Retribution Paladin",
     filter = function(c) return c.class == "PALADIN" end,
@@ -25,12 +27,14 @@ ns.Rotation{
 
         -- Keeps the current Judgement on the target. Any paladin's counts, so a friend's Judgement
         -- is not overwritten, and it is refreshed under 5 seconds so it never actually drops.
-        -- Every Judgement also grants the group Replenishment (Judgements of the Wise), so a missing or
-        -- expiring Replenishment calls for one even while the debuff is healthy.
+        -- With the talent Judgements of the Wise every Judgement also grants the group Replenishment,
+        -- so a missing or expiring Replenishment calls for one even while the debuff is healthy.
         { variant = "judgement", when = function(c)
             if not c.target.hostile then return false end
-            local replenishment = c.buff("Replenishment")
-            if not replenishment.up or replenishment.remains < 5 then return true end
+            if c.talent(WISE).known then
+                local replenishment = c.buff("Replenishment")
+                if not replenishment.up or replenishment.remains < 5 then return true end
+            end
             return Paladin.JudgementDue(c)
         end },
 
@@ -59,9 +63,9 @@ ns.Rotation{
     },
 
     -- Replenishment is a raid buff, not a spell of ours, so `always` keeps the slot visible while
-    -- it is missing
+    -- it is missing. Only the talent Judgements of the Wise makes it ours to keep up.
     trackers = Paladin.CommonTrackers({
-        { buff = "Replenishment", always = true },
+        { buff = "Replenishment", always = true, when = function(c) return c.talent(WISE).known end },
     }),
 
     defensives = {
