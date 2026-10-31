@@ -40,14 +40,30 @@ end
 -- the player's level falls through to the class-wide one, which is how a levelling character gets
 -- a rotation instead of none. Returns nil until Class.lua has detected the character, which
 -- callers rely on to do nothing early in the login.
-function ns.GetRotation()
-    if not ns.class then return end
+local current
+
+local function Describe(def)
+    return format("%s %s (level %d+)", def.class, def.spec and ("spec " .. def.spec) or "class-wide",
+        tonumber(def.minLevel) or 1)
+end
+
+local function Select()
     local level = UnitLevel("player")
     local spec = ns.rotations[ns.class .. ":" .. tostring(ns.specIndex)]
     local rotation = spec and AtLevel(spec, level)
     if rotation then return rotation end
     local class = ns.rotations[ns.class .. ":*"]
     return class and AtLevel(class, level)
+end
+
+function ns.GetRotation()
+    if not ns.class then return end
+    local rotation = Select()
+    if rotation ~= current then
+        current = rotation
+        ns.Log("rotation in use: " .. (rotation and Describe(rotation) or "none"))
+    end
+    return rotation
 end
 
 -- Rotation files may use a spell ID instead of a name: names are locale-dependent, IDs are not.
