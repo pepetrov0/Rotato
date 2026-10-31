@@ -6,6 +6,8 @@ local ADDON_NAME, ns = ...
 -- The rotation shared by single target and AoE: `bloodSpenders` are the blood rune abilities.
 local function Rotation(bloodSpenders)
     local list = {
+        -- usable only after a dodge or parry, and the best use of runic power a tank has
+        { "Rune Strike" },
         { "Icy Touch", when = function(c)
             return not c.debuff("Frost Fever").up or c.buff("Killing Machine").up
         end },
@@ -16,8 +18,11 @@ local function Rotation(bloodSpenders)
     return list
 end
 
+-- A death rune can stand in for a blood rune, so both count
 local function BloodRune(name, extra)
-    return { name, when = function(c) return c.runes.blood > 0 and (not extra or extra(c)) end }
+    return { name, when = function(c)
+        return c.runes.blood + c.runes.death > 0 and (not extra or extra(c))
+    end }
 end
 
 -- Pestilence spreads the diseases, which is only worth doing now and then
@@ -54,7 +59,9 @@ ns.Rotation{
     },
 
     rotations = {
-        single = Rotation({ BloodRune("Blood Strike") }),
+        -- Heart Strike is the tank's blood rune spender; an unknown spell is skipped, so Blood
+        -- Strike takes over until the talent is taken
+        single = Rotation({ BloodRune("Heart Strike"), BloodRune("Blood Strike") }),
         aoe = (function()
             local list = Rotation({
                 BloodRune("Pestilence", function(c) return c.sinceCast("Pestilence") >= PESTILENCE_INTERVAL end),
