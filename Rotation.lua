@@ -26,14 +26,12 @@ end
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
 -- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
 -- Below level 10 there is no rotation and no picker; from 10 the player is asked until they answer:
--- the picker never shows in combat (it hides when combat starts and comes back after it), and closed
--- without a choice it comes back after REASK seconds.
+-- the picker cannot be closed without a choice, and it is hidden in combat and comes back after it.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
 local PICKER_LEVEL = 10
-local REASK = 60
-local current, offered, shownGroup
-local nextAsk = {} -- per talent group: GetTime() from which the picker may show again
+local current, offered
+local asking -- the talent group the picker is asking for until it is answered, or nil
 
 local function CharacterKey() return UnitName("player") .. "-" .. GetRealmName() end
 
@@ -82,6 +80,7 @@ local function Use(rotation)
 end
 
 local function Pick(def)
+    asking = nil
     CharacterState().pick = def.own and OWN or def.name
     Use(not def.own and def or nil)
 end
@@ -92,16 +91,13 @@ local function Refresh()
     offered = list
 
     -- a picker left open from the other talent group would save its answer to this one
-    if shownGroup and shownGroup ~= group then
-        ns.HidePicker()
-        shownGroup = nil
-    end
+    if asking and asking ~= group then asking = nil end
 
     -- Having had points and now having none is a reset.
     if ns.hasTalents then
         state.invested = true
     elseif state.invested then
-        state.invested, state.pick, nextAsk[group] = nil, nil, nil
+        state.invested, state.pick = nil, nil
     end
 
     local picked
@@ -112,13 +108,15 @@ local function Refresh()
     state.pick = own and OWN or picked and picked.name
     Use(UnitLevel("player") >= PICKER_LEVEL and picked or nil)
 
-    local inCombat = UnitAffectingCombat("player")
-    if #list == 0 or inCombat then
+    if #list == 0 or UnitLevel("player") < PICKER_LEVEL then
+        asking = nil
+    elseif not picked and not own then
+        asking = group
+    end
+    if not asking or UnitAffectingCombat("player") then
         ns.HidePicker()
-    elseif not picked and not own and not ns.PickerShown() and UnitLevel("player") >= PICKER_LEVEL
-        and GetTime() >= (nextAsk[group] or 0) then
-        shownGroup = group
-        ns.ShowPicker(Choices(list), nil, Pick, function() nextAsk[group] = GetTime() + REASK end)
+    elseif not ns.PickerShown() then
+        ns.ShowPicker(Choices(list), current, Pick)
     end
 end
 
@@ -128,11 +126,10 @@ ns.RefreshRotation = Refresh
 function ns.OpenPicker()
     if UnitLevel("player") < PICKER_LEVEL then
         ns.Print("the rotation picker is available from level " .. PICKER_LEVEL .. ".")
-    elseif UnitAffectingCombat("player") then
-        ns.Print("the rotation picker is not available in combat.")
     elseif offered and #offered > 0 then
-        shownGroup = Group()
-        ns.ShowPicker(Choices(offered), current, Pick)
+        asking = Group()
+        if UnitAffectingCombat("player") then ns.Print("the rotation picker will open after combat.") end
+        Refresh()
     else
         ns.Print("no rotation is available for this class.")
     end
@@ -143,7 +140,6 @@ end
 function ns.ResetRotationChoice()
     local state = CharacterState()
     state.pick, state.invested = nil, nil
-    nextAsk[Group()] = nil
     ns.Print("rotation choice cleared.")
     Refresh()
 end

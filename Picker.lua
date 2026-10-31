@@ -1,7 +1,7 @@
 local ADDON_NAME, ns = ...
 
 -- The window that asks which rotation to use when several are on offer, see Rotation.lua.
--- Escape and the close button close it without a choice; onClose then runs (Rotation.lua asks again later).
+-- It has no close button and Escape leaves it up: only a choice closes it (Rotation.lua hides it in combat).
 
 local CELL_W, CELL_H, ICON, GAP, PADDING, COLUMNS = 100, 100, 40, 10, 14, 3
 local HEADER_H = 78
@@ -41,19 +41,8 @@ local function Build()
     frame.subtitle:SetPoint("TOP", frame.title, "BOTTOM", 0, -4)
     frame.subtitle:SetText("Choose your playstyle and I will guide your rotation, or go your own way.")
 
-    frame.close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
-    frame.close:SetPoint("TOPRIGHT", -2, -2)
-    if skins and skins.HandleCloseButton then skins:HandleCloseButton(frame.close) end
-
     frame.buttons = {}
-    tinsert(UISpecialFrames, "RotatoPicker")
     frame:Hide()
-    -- closed by the player, not by a pick or ns.HidePicker, which clear onClose first
-    frame:SetScript("OnHide", function()
-        local onClose = frame.onClose
-        frame.onClose = nil
-        if onClose then onClose() end
-    end)
 end
 
 -- One card per rotation: a button with the spec icon and the name under it.
@@ -75,9 +64,8 @@ local function BuildCell()
     return cell
 end
 
--- selected is the rotation in use; it is not marked. onPick(def) runs for whichever is chosen,
--- onClose() if the player closes the window without choosing.
-function ns.ShowPicker(list, selected, onPick, onClose)
+-- selected is the rotation in use; it is not marked. onPick(def) runs for whichever is chosen.
+function ns.ShowPicker(list, selected, onPick)
     if not frame then Build() end
     local columns = math.min(#list, COLUMNS)
     local rows = math.ceil(#list / columns)
@@ -95,7 +83,6 @@ function ns.ShowPicker(list, selected, onPick, onClose)
         cell.icon:ClearAllPoints()
         cell.icon:SetPoint("TOP", cell, "TOP", 0, -(CELL_H - block) / 2)
         cell:SetScript("OnClick", function()
-            frame.onClose = nil
             onPick(def)
             frame:Hide()
         end)
@@ -114,15 +101,11 @@ function ns.ShowPicker(list, selected, onPick, onClose)
             cell:SetPoint("TOPLEFT", frame, "TOPLEFT", x + shift, y)
         end
     end
-    frame.onClose = onClose
     frame:Show()
 end
 
 function ns.HidePicker()
-    if frame then
-        frame.onClose = nil
-        frame:Hide()
-    end
+    if frame then frame:Hide() end
 end
 
 function ns.PickerShown()
