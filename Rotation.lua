@@ -3,7 +3,8 @@ local ADDON_NAME, ns = ...
 -- Registry of rotation definitions, and the "variants" a rotation can declare.
 --
 -- A rotation file calls ns.Rotation{ ... } with these fields (all optional but class):
---   class, spec          which character it is for; no spec means every spec of the class
+--   class, spec          which character it is for; no spec (nil) means a character below level 10,
+--                        which has no talents yet
 --   minLevel             lowest character level it applies from (default 1), see ns.GetRotation
 --   reminders            out of combat with no hostile target; keeps the panel up until done
 --   preparation          out of combat setup
@@ -36,24 +37,26 @@ local function AtLevel(list, level)
     return best
 end
 
--- The spec-specific rotation wins over a class-wide one. A spec whose rotations all start above
--- the player's level falls through to the class-wide one, which is how a levelling character gets
--- a rotation instead of none. Returns nil until Class.lua has detected the character, which
+-- A spec's rotation is used from level 10 on, when talents exist; a rotation without a spec is only
+-- considered below it, which is how a new character gets a rotation instead of none. Returns nil until Class.lua has detected the character, which
 -- callers rely on to do nothing early in the login.
 local current
 
 local function Describe(def)
-    return format("%s %s (level %d+)", def.class, def.spec and ("spec " .. def.spec) or "class-wide",
+    return format("%s %s (level %d+)", def.class, def.spec and ("spec " .. def.spec) or "no spec",
         tonumber(def.minLevel) or 1)
 end
 
+local NO_SPEC_BELOW = 10
+
 local function Select()
     local level = UnitLevel("player")
-    local spec = ns.rotations[ns.class .. ":" .. tostring(ns.specIndex)]
-    local rotation = spec and AtLevel(spec, level)
-    if rotation then return rotation end
-    local class = ns.rotations[ns.class .. ":*"]
-    return class and AtLevel(class, level)
+    if level < NO_SPEC_BELOW then
+        local list = ns.rotations[ns.class .. ":*"]
+        return list and AtLevel(list, level)
+    end
+    local list = ns.rotations[ns.class .. ":" .. tostring(ns.specIndex)]
+    return list and AtLevel(list, level)
 end
 
 function ns.GetRotation()
