@@ -14,6 +14,9 @@ ns.Paladin = Paladin
 -- no longer counts, so a leftover Righteousness is corrected to the better seal.
 local BETTER_SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
 local ALL_SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption", "Seal of Righteousness" }
+-- Every seal there is, including the ones a damage dealer would not pick but may use on purpose
+local EVERY_SEAL = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption", "Seal of Righteousness",
+    "Seal of Wisdom", "Seal of Light", "Seal of Justice", "Seal of Blood", "Seal of the Martyr" }
 
 local function BetterSealKnown(c)
     for _, seal in ipairs(BETTER_SEALS) do
@@ -22,14 +25,18 @@ local function BetterSealKnown(c)
     return false
 end
 
--- One entry per seal. Put it in a list wrapped by Paladin.List, which flattens it in.
-function Paladin.SealUpkeep()
+-- One entry per seal. Put it in a list wrapped by Paladin.List, which flattens it in. With `anySeal`
+-- (for highprio) the entries only ask while no seal at all is up, so a paladin who chose another
+-- seal on purpose is not blocked by it; the reminders still point out the better seal.
+function Paladin.SealUpkeep(anySeal)
     local entries = {}
     for i, seal in ipairs(BETTER_SEALS) do
-        entries[i] = { seal, when = function(c) return not c.anyBuff(BETTER_SEALS).up end }
+        entries[i] = { seal, when = function(c)
+            return not c.anyBuff(anySeal and EVERY_SEAL or BETTER_SEALS).up
+        end }
     end
     entries[#entries + 1] = { "Seal of Righteousness", when = function(c)
-        return not BetterSealKnown(c) and not c.anyBuff(ALL_SEALS).up
+        return not BetterSealKnown(c) and not c.anyBuff(anySeal and EVERY_SEAL or ALL_SEALS).up
     end }
     return entries
 end

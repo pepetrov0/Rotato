@@ -45,7 +45,7 @@ ns.Rotation{
 
         Sanctuary(),
 
-        Paladin.SealUpkeep(),
+        Paladin.SealUpkeep(true),
 
         Paladin.Cleanse(),
 
