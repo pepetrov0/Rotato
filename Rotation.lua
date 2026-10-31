@@ -48,7 +48,7 @@ end
 
 -- The last card of the picker: no rotation at all. Remembered as the pick like any rotation name.
 local OWN = "own way"
-local ownWay = { name = "I'm playing my own way", icon = "Interface\\Icons\\INV_Misc_Gear_01", own = true }
+local ownWay = { name = "I'm playing my own way", icon = "Interface\\Icons\\INV_Misc_Map_01", own = true }
 
 local function Choices(list)
     local choices = { unpack(list) }
