@@ -62,7 +62,7 @@ local function BuildCell()
     return cell
 end
 
--- selected is the rotation in use, marked with a gold ring; onPick(def) runs when another is chosen.
+-- selected is the rotation in use, marked with a gold ring; onPick(def) runs for whichever is chosen.
 function ns.ShowPicker(list, selected, onPick)
     if not frame then Build() end
     local columns = math.min(#list, COLUMNS)
@@ -77,7 +77,7 @@ function ns.ShowPicker(list, selected, onPick)
         cell.label:SetText(def.name)
         if def == selected then cell.border:Show() else cell.border:Hide() end
         cell:SetScript("OnClick", function()
-            if def ~= selected then onPick(def) end
+            onPick(def)
             frame:Hide()
         end)
         cell:Show()
