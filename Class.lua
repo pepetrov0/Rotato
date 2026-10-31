@@ -79,10 +79,11 @@ local function Recheck()
     retry = CreateFrame("Frame")
     retry:SetScript("OnUpdate", function(self, elapsed)
         waited = waited + elapsed
-        if DetectSpec() or waited >= 5 then
+        local reset = not DetectSpec() and AllPointsUnspent()
+        if DetectSpec() or reset or waited >= 5 then
             self:SetScript("OnUpdate", nil)
             retry = nil
-            Report(waited >= 5 and not DetectSpec())
+            Report(reset or (waited >= 5 and not DetectSpec()))
         end
     end)
 end
