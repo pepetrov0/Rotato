@@ -38,6 +38,7 @@ local function HiddenReason()
     if UnitIsDeadOrGhost("player") then return "dead" end
     if UnitInVehicle("player") then return "in a vehicle" end
     if IsMounted() then return "mounted" end
+    if not ns.GetRotation() then return "no rotation" end
 end
 
 function ns.InitVisibility()
