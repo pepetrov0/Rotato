@@ -19,6 +19,13 @@ local function Purify()
     end }
 end
 
+-- Whoever a heal would go to (mouseover, else target, else yourself) is hurt enough to heal
+local function NeedsHeal(c)
+    local unit = c.healTarget()
+    local max = UnitHealthMax(unit)
+    return max > 0 and UnitHealth(unit) / max < 0.8
+end
+
 ns.Rotation{
     class = "PALADIN",
 
@@ -30,6 +37,7 @@ ns.Rotation{
 
     rotations = {
         single = {
+            { "Holy Light", when = NeedsHeal },
             { variant = "judgement" }
         },
     },
@@ -40,9 +48,11 @@ ns.Rotation{
         { healTargetDebuffType = { "Poison", "Disease" } },
     },
 
-    -- Forbearance refuses it, so it grays out while it runs
+    -- Forbearance refuses these, so they gray out while it runs
     defensives = {
         { spell = "Divine Protection", buff = "Divine Protection", discourage = Paladin.ShieldsBlocked },
+        { spell = "Hand of Protection", buff = "Hand of Protection",
+          discourage = Paladin.HandOfProtectionBlocked },
     },
 
     utility = {
