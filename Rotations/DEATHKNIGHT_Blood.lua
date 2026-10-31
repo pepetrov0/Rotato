@@ -6,8 +6,6 @@ local ADDON_NAME, ns = ...
 -- The rotation shared by single target and AoE: `bloodSpenders` are the blood rune abilities.
 local function Rotation(bloodSpenders)
     local list = {
-        -- usable only after a dodge or parry, and the best use of runic power a tank has
-        { "Rune Strike" },
         { "Icy Touch", when = function(c)
             return not c.debuff("Frost Fever").up or c.buff("Killing Machine").up
         end },
@@ -84,6 +82,12 @@ ns.Rotation{
     },
 
     utility = {
+        -- usable only after a dodge or parry, and the best use of runic power a tank has. It is off
+        -- the global cooldown and waits for the next swing, so it sits here instead of the rotation,
+        -- where it would cover the next ability until the swing lands.
+        { spell = "Rune Strike", recommend = function(c)
+            return c.usable("Rune Strike") and not IsCurrentSpell("Rune Strike")
+        end },
         { spell = "Dark Command" },
         -- Worth it once there is no frost or unholy rune left to spend
         { spell = "Empower Rune Weapon", recommend = function(c)
