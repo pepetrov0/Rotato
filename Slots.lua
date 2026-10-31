@@ -182,6 +182,14 @@ local function Resolve(entry, rowKey)
         or entry.debuff or entry.targetBuff or entry.healTargetBuff or entry.healTargetBuffAny
         or entry.healTargetDebuff
 
+    -- of interchangeable buffs, the first one that exists stands for the list (a low level
+    -- character has Righteousness but not the seals listed before it)
+    if buffList then
+        for _, name in ipairs(buffList) do
+            if GetSpellInfo(name) then auraName = name break end
+        end
+    end
+
     local aura, healUnit = ReadAura(entry, buffList)
     local active = aura and aura.up
 
