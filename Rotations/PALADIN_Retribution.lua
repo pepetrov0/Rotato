@@ -108,6 +108,7 @@ ns.Rotation(SideSlots{
 
     rotations = {
         single = {
+            { "Hammer of Wrath" }, -- the game only lets it be cast under 20% health
             { variant = "judgement" },
             { "Exorcism" },
             { "Consecration" },
