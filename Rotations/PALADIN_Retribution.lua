@@ -111,6 +111,11 @@ ns.Rotation(SideSlots{
             { "Hammer of Wrath" }, -- the game only lets it be cast under 20% health
             { variant = "judgement" },
             { "Exorcism" },
+            { "Holy Wrath", when = function(c)
+                -- it only hits these two types, anything else would be a wasted cooldown
+                local creatureType = c.target.creatureType
+                return creatureType == "Demon" or creatureType == "Undead"
+            end },
             { "Consecration" },
         },
     },
