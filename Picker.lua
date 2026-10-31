@@ -106,6 +106,13 @@ function ns.ShowPicker(list, selected, onPick)
             cell:SetPoint("TOPLEFT", frame, "TOPLEFT", x + shift, y)
         end
     end
+    -- Sage's picker opens at the same spot; sit below it instead of on top of it
+    frame:ClearAllPoints()
+    if SageChoice and SageChoice:IsShown() then
+        frame:SetPoint("TOP", SageChoice, "BOTTOM", 0, -10)
+    else
+        frame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+    end
     frame:Show()
 end
 
