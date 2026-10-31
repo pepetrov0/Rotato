@@ -108,11 +108,6 @@ ns.Rotation(SideSlots{
 
     rotations = {
         single = {
-            { "Hammer of Wrath" }, -- the game only lets it be cast under 20% health
-            { "Divine Storm" },
-            -- Judgement of Wisdom returns mana, so it jumps ahead of Crusader Strike when mana runs low
-            { variant = "judgement", when = function(c) return c.mana < 50 end },
-            { "Crusader Strike" },
             { variant = "judgement" },
             { "Exorcism" },
             { "Consecration" },
