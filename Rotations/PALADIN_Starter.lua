@@ -33,7 +33,7 @@ ns.Rotation{
             { "Holy Light", when = function(c) return c.hpOn(c.healTarget()) < 80 end },
             { variant = "judgement" },
             { "Exorcism" },
-            { "Consecration", when = function(c) return c.mana > 50 end },
+            { "Consecration" },
         },
     },
 
