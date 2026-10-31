@@ -193,7 +193,6 @@ local c = setmetatable({ target = target, pet = pet, variant = variant, runes = 
         elseif key == "mode" then return ns.mode
         elseif key == "level" then return UnitLevel("player")
         elseif key == "class" then return ns.class
-        elseif key == "spec" then return ns.specIndex
         end
     end,
 })
@@ -507,8 +506,8 @@ end
 -- Prints why the suggestion is what it is, entry by entry (/rotato debug).
 function ns.DebugEvaluate()
     local rotation = ns.GetRotation()
-    ns.Print(format("class=%s spec=%s level=%s rotation=%s mode=%s combat=%s hostile=%s", tostring(ns.class),
-        tostring(ns.specIndex), tostring(UnitLevel("player")), rotation and "found" or "NONE", ns.mode,
+    ns.Print(format("class=%s talents=%s group=%s level=%s rotation=%s mode=%s combat=%s hostile=%s", tostring(ns.class),
+        tostring(ns.hasTalents), tostring(ns.talentGroup), tostring(UnitLevel("player")), rotation and "found" or "NONE", ns.mode,
         tostring(c.combat), tostring(target.hostile)))
     if not rotation then return end
 

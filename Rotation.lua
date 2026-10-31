@@ -35,9 +35,9 @@ local asked = {} -- per talent group: the picker was offered this session
 
 local function CharacterKey() return UnitName("player") .. "-" .. GetRealmName() end
 
--- Follows ns.specGroup, published together with ns.specIndex, so the reset check below compares
--- the spec and the pick of the same group.
-local function Group() return ns.specGroup or GetActiveTalentGroup() or 1 end
+-- Follows ns.talentGroup, published together with ns.hasTalents, so the reset check below compares
+-- the talents and the pick of the same group.
+local function Group() return ns.talentGroup or GetActiveTalentGroup() or 1 end
 
 -- { pick, invested } for the active talent group, in RotatoDB.rotation[character].groups[group].
 local function CharacterState()
@@ -95,8 +95,8 @@ local function Refresh()
         shownGroup = nil
     end
 
-    -- ns.specIndex is nil with no points spent. Having had points and now having none is a reset.
-    if ns.specIndex then
+    -- Having had points and now having none is a reset.
+    if ns.hasTalents then
         state.invested = true
     elseif state.invested then
         state.invested, state.pick, asked[group] = nil, nil, false
@@ -178,11 +178,14 @@ end
 -- { variant = "judgement" } instead of a spell name (and debuff = { variant = ... } in side slots),
 -- and everything that used the old option follows without being edited.
 
--- The current options, per "CLASS:spec". Kept in memory only, so each session starts from the
+-- The current options, per rotation. Kept in memory only, so each session starts from the
 -- defaults: the choice reflects what the player is doing now, not what they did last week.
 local chosen = {}
 
-local function VariantKey() return (ns.class or "") .. ":" .. tostring(ns.specIndex or 0) end
+local function VariantKey()
+    local rotation = ns.GetRotation()
+    return rotation and rotation.name or ""
+end
 
 local function VariantDefinition(name)
     local rotation = ns.GetRotation()

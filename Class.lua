@@ -1,24 +1,19 @@
 local ADDON_NAME, ns = ...
 
--- Detects the player's class and talent spec and publishes it as ns.class (the class token),
--- ns.specIndex (1-3, nil when no points are spent), ns.specName and ns.specGroup (dual spec).
--- Rotations are offered by ns.class, and Rotation.lua watches ns.specIndex for a talent reset.
+-- Detects the player's class and talents and publishes them as ns.class (the class token),
+-- ns.hasTalents (any point spent in the active group) and ns.talentGroup (dual spec).
+-- Rotations are offered by ns.class and picked by the player; Rotation.lua keeps one pick per
+-- talent group and watches ns.hasTalents for a talent reset. Which tree has the most points does
+-- not matter to anything, so it is not detected.
 
--- The spec is the talent tree with the most points. There is no direct "current spec" API in
--- 3.3.5, and the active talent group matters because a dual-spec character has two sets.
-local function DetectSpec()
+-- Whether any point is spent in the active group, and that group.
+local function DetectTalents()
     local group = GetActiveTalentGroup() or 1
-    local bestIndex, bestPoints
     for i = 1, GetNumTalentTabs() do
         local _, _, points = GetTalentTabInfo(i, false, false, group)
-        if points and points > 0 and (not bestPoints or points > bestPoints) then
-            bestIndex, bestPoints = i, points
-        end
+        if points and points > 0 then return true, group end
     end
-    if bestIndex then
-        return bestIndex, (GetTalentTabInfo(bestIndex, false, false, group)), group
-    end
-    return nil, "No spec", group
+    return false, group
 end
 
 -- Talent metadata by name, for the active group. Looking a talent up by name means walking every
@@ -70,7 +65,7 @@ end
 local Report -- declared first because Recheck and Report call each other
 
 -- Talent data can read as empty for a moment (entering an instance, zoning). Believing that would
--- drop the rotation until the next talent event, so while we already know the spec we keep it and
+-- count as a talent reset and drop the pick, so while we already know there are talents we keep that and
 -- look again for a few seconds. Only a persistent empty read is treated as real, e.g. a talent reset.
 local retry
 local function Recheck()
@@ -79,38 +74,39 @@ local function Recheck()
     retry = CreateFrame("Frame")
     retry:SetScript("OnUpdate", function(self, elapsed)
         waited = waited + elapsed
-        local reset = not DetectSpec() and AllPointsUnspent()
-        if DetectSpec() or reset or waited >= 5 then
+        local found = DetectTalents()
+        local reset = not found and AllPointsUnspent()
+        if found or reset or waited >= 5 then
             self:SetScript("OnUpdate", nil)
             retry = nil
-            Report(reset or (waited >= 5 and not DetectSpec()))
+            Report(reset or (waited >= 5 and not found))
         end
     end)
 end
 
--- Publishes the detected spec and announces it, but only when something actually changed:
+-- Publishes the class and talents and announces them, but only when something actually changed:
 -- talent events fire constantly (every point spent) and would spam the chat otherwise.
 function Report(force)
     ns.InvalidateTalents() -- a talent event is why this is called, so the map is stale
     local className, classToken = UnitClass("player")
-    local index, specName, group = DetectSpec()
+    local hasTalents, group = DetectTalents()
 
     -- the talent data arrives a moment after login, so an empty first read is not worth announcing
-    if not index and not force and not ns.class then return end
-    if not index and not force and ns.specIndex and not AllPointsUnspent() then
+    if not hasTalents and not force and not ns.class then return end
+    if not hasTalents and not force and ns.hasTalents and not AllPointsUnspent() then
         Recheck()
         return
     end
-    if not force and ns.class == classToken and ns.specIndex == index and ns.specGroup == group then
+    if not force and ns.class == classToken and ns.hasTalents == hasTalents and ns.talentGroup == group then
         return
     end
 
-    ns.class, ns.specIndex, ns.specName, ns.specGroup = classToken, index, specName, group
+    ns.class, ns.hasTalents, ns.talentGroup = classToken, hasTalents, group
 
     local color = RAID_CLASS_COLORS[classToken]
     local colored = color and format("|cff%02x%02x%02x%s|r", color.r * 255, color.g * 255, color.b * 255, className)
         or className
-    ns.Log(format("%s - %s (talent group %d)", colored, specName, group))
+    ns.Log(format("%s - talent group %d%s", colored, group, hasTalents and "" or ", no talents"))
     ns.RefreshRotation() -- a reset asks for the rotation now, not at the next tick
 end
 
@@ -120,17 +116,17 @@ function ns.InitClass()
     f:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
     f:SetScript("OnEvent", function() Report(false) end)
 
-    if DetectSpec() then
+    if DetectTalents() then
         Report(true)
         return
     end
 
-    -- At login the talent data may not be loaded yet. Wait for it instead of announcing "No spec",
+    -- At login the talent data may not be loaded yet. Wait for it instead of announcing no talents,
     -- but give up after a while so a character with no talents still gets reported.
     local waited = 0
     f:SetScript("OnUpdate", function(self, elapsed)
         waited = waited + elapsed
-        if DetectSpec() or waited >= 10 then
+        if DetectTalents() or waited >= 10 then
             self:SetScript("OnUpdate", nil)
             Report(true)
         end
