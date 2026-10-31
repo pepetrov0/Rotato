@@ -75,6 +75,11 @@ ns.Rotation{
             { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
             { "Hammer of the Righteous" },
             { "Shield of Righteousness" },
+            -- Fills the gap while the character is still missing Shield of Righteousness or Hammer
+            -- of Justice; once both are known it is no longer worth the global cooldown.
+            { "Exorcism", when = function(c)
+                return not c.spell("Shield of Righteousness").known or not c.spell("Hammer of Justice").known
+            end },
             { variant = "judgement" },
             { "Consecration" },
         },
