@@ -80,7 +80,7 @@ ns.Rotation{
         -- the pet is included so the slot shows the Shadowfiend as active (green) while it is out,
         -- and the summon's cooldown the rest of the time
         { spell = "Shadowfiend", pet = "Shadowfiend",
-          recommend = function(c) return c.mana < 20 and c.ready("Shadowfiend") end },
+          recommend = function(c) return c.target.hostile and c.mana < 20 and c.ready("Shadowfiend") end },
         { spell = "Hymn of Hope" },
         { spell = "Divine Hymn" },
         -- the buff is included so the slot shows the aura (green, with its remaining time) while the
