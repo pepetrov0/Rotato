@@ -23,7 +23,7 @@ end
 -- The rotations of the player's class are its playstyles. With one it is used without asking; with
 -- several the player picks (Picker.lua) and the pick is remembered per character. The player is
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
--- they answer, no rotation is used.
+-- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
 local current, offered, asked
@@ -43,6 +43,16 @@ local function Available()
     return list
 end
 
+-- The last card of the picker: no rotation at all. Remembered as the pick like any rotation name.
+local OWN = "own way"
+local ownWay = { name = "I'm playing my own way", icon = "Interface\\Icons\\INV_Misc_Gear_01", own = true }
+
+local function Choices(list)
+    local choices = { unpack(list) }
+    choices[#choices + 1] = ownWay
+    return choices
+end
+
 local function Use(rotation)
     if rotation == current then return end
     current = rotation
@@ -50,8 +60,8 @@ local function Use(rotation)
 end
 
 local function Pick(def)
-    CharacterState().pick = def.name
-    Use(def)
+    CharacterState().pick = def.own and OWN or def.name
+    Use(not def.own and def or nil)
 end
 
 local function Refresh()
@@ -67,17 +77,18 @@ local function Refresh()
     end
 
     local picked
+    local own = state.pick == OWN
     for _, def in ipairs(list) do
         if def.name == state.pick then picked = def end
     end
-    if not picked and #list == 1 then picked = list[1] end
-    state.pick = picked and picked.name
+    if not own and not picked and #list == 1 then picked = list[1] end
+    state.pick = own and OWN or picked and picked.name
     Use(picked)
 
     -- Closing the picker does not bring it back every second: once per session, and after a reset.
-    if #list > 1 and not picked and not asked then
+    if #list > 1 and not picked and not own and not asked then
         asked = true
-        ns.ShowPicker(list, nil, Pick)
+        ns.ShowPicker(Choices(list), nil, Pick)
     elseif #list <= 1 then
         ns.HidePicker()
     end
@@ -86,7 +97,7 @@ end
 -- /rotato rotation: the picker again, to change the choice.
 function ns.OpenPicker()
     if offered and #offered > 1 then
-        ns.ShowPicker(offered, current, Pick)
+        ns.ShowPicker(Choices(offered), current, Pick)
     else
         ns.Print("only one rotation is available" .. (current and (": " .. current.name) or "."))
     end
