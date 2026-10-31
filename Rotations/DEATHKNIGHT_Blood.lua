@@ -16,11 +16,8 @@ local function Rotation(bloodSpenders)
     return list
 end
 
--- A death rune can stand in for a blood rune, so both count
 local function BloodRune(name, extra)
-    return { name, when = function(c)
-        return c.runes.blood + c.runes.death > 0 and (not extra or extra(c))
-    end }
+    return { name, when = function(c) return c.runes.blood > 0 and (not extra or extra(c)) end }
 end
 
 -- Pestilence spreads the diseases, which is only worth doing now and then
@@ -82,12 +79,6 @@ ns.Rotation{
     },
 
     utility = {
-        -- usable only after a dodge or parry, and the best use of runic power a tank has. It is off
-        -- the global cooldown and waits for the next swing, so it sits here instead of the rotation,
-        -- where it would cover the next ability until the swing lands.
-        { spell = "Rune Strike", recommend = function(c)
-            return c.usable("Rune Strike") and not IsCurrentSpell("Rune Strike")
-        end },
         { spell = "Dark Command" },
         -- Worth it once there is no frost or unholy rune left to spend
         { spell = "Empower Rune Weapon", recommend = function(c)
