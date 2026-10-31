@@ -8,9 +8,9 @@ local Paladin = {}
 ns.Paladin = Paladin
 
 -- Any seal will do for upkeep. Vengeance is the Alliance seal and Corruption the Horde one, and
--- Command is a talent, so each character only knows some of them; the entries below are tried in
+-- Command is a talent and Righteousness is the one a low level character has, so each character only knows some of them; the entries below are tried in
 -- order and the first one that is known wins.
-Paladin.SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
+Paladin.SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption", "Seal of Righteousness" }
 
 -- One entry per seal in SEALS. Put it in a list wrapped by Paladin.List, which flattens it in.
 function Paladin.SealUpkeep()

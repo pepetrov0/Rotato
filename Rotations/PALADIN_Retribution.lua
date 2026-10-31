@@ -5,7 +5,28 @@ local ADDON_NAME, ns = ...
 
 local Paladin = ns.Paladin
 
-ns.Rotation{
+-- The side slots both Retribution rotations share. Entries carry state, so each call builds fresh ones.
+local function SideSlots(def)
+    def.defensives = {
+        { spell = "Hand of Sacrifice", buff = "Hand of Sacrifice" },
+        -- Forbearance refuses these two, so they gray out while it runs
+        { spell = "Divine Shield", buff = "Divine Shield", discourage = Paladin.ShieldsBlocked },
+        { spell = "Hand of Protection", buff = "Hand of Protection",
+          discourage = Paladin.HandOfProtectionBlocked },
+    }
+    def.utility = {
+        Paladin.HammerOfJustice(),
+        { spell = "Hand of Salvation", buff = "Hand of Salvation" },
+        { spell = "Hand of Freedom", buff = "Hand of Freedom" },
+    }
+    def.offensives = {
+        -- worth using on cooldown
+        { spell = "Avenging Wrath", buff = "Avenging Wrath", recommend = function(c) return c.ready("Avenging Wrath") end },
+    }
+    return def
+end
+
+ns.Rotation(SideSlots{
     name = "Retribution Paladin",
     filter = function(c) return c.class == "PALADIN" and c.spec == 3 and c.level >= 80 end,
 
@@ -62,23 +83,35 @@ ns.Rotation{
     trackers = Paladin.CommonTrackers({
         { buff = "Replenishment", always = true },
     }),
+})
 
-    defensives = {
-        { spell = "Hand of Sacrifice", buff = "Hand of Sacrifice" },
-        -- Forbearance refuses these two, so they gray out while it runs
-        { spell = "Divine Shield", buff = "Divine Shield", discourage = Paladin.ShieldsBlocked },
-        { spell = "Hand of Protection", buff = "Hand of Protection",
-          discourage = Paladin.HandOfProtectionBlocked },
+-- For every paladin from level 1: what a melee paladin has before the level 80 kit. Each entry is
+-- skipped until its spell is known, so it grows by itself as the character learns spells.
+ns.Rotation(SideSlots{
+    name = "Retribution Paladin (1+)",
+    filter = function(c) return c.class == "PALADIN" end,
+
+    variants = { judgement = Paladin.JudgementVariant("light") },
+
+    reminders = Paladin.List{
+        Paladin.SealUpkeep(),
     },
 
-    utility = {
-        Paladin.HammerOfJustice(),
-        { spell = "Hand of Salvation", buff = "Hand of Salvation" },
-        { spell = "Hand of Freedom", buff = "Hand of Freedom" },
+    highprio = Paladin.List{
+        Paladin.SealUpkeep(),
+        Paladin.Cleanse(),
     },
 
-    offensives = {
-        -- worth using on cooldown
-        { spell = "Avenging Wrath", buff = "Avenging Wrath", recommend = function(c) return c.ready("Avenging Wrath") end },
+    rotations = {
+        single = {
+            { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
+            { variant = "judgement" },
+            { "Crusader Strike" },
+            { "Divine Storm" },
+            { "Exorcism" },
+            { "Consecration" },
+        },
     },
-}
+
+    trackers = Paladin.CommonTrackers(),
+})
