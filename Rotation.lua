@@ -25,10 +25,11 @@ end
 -- with several the player picks (Picker.lua) and the pick is remembered per character. The offer
 -- is re-read every second, which catches a level up, a learned spell or talent, a respec or
 -- whatever else a filter looks at, without listing events. The player is asked again when a
--- rotation they were never offered before turns up, or when the one they picked is gone.
+-- rotation they were never offered before turns up, or when the one they picked is gone; until
+-- they answer, no rotation is used.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
-local current, offered
+local current, offered, asked
 
 local function CharacterState()
     RotatoDB.rotation = RotatoDB.rotation or {}
@@ -71,14 +72,16 @@ local function Refresh()
         if not state.known[def.name] then fresh = true; state.known[def.name] = true end
     end
 
-    -- Until the player answers, a gone pick falls back to the last registered, the most specific.
-    -- It is saved at once, so closing the picker without choosing does not ask again every second.
+    -- With several on offer and no valid pick, no rotation is used until the player answers. The
+    -- picker is shown once per session for that (closing it does not bring it back every second),
+    -- and again whenever a rotation turns up that was never offered. A lone rotation needs no pick.
     local gone = not picked
-    if gone then picked = list[#list] end
+    if gone and #list == 1 then picked = list[1]; gone = false end
     state.pick = picked and picked.name
     Use(picked)
 
-    if #list > 1 and (fresh or gone) then
+    if #list > 1 and (fresh or (gone and not asked)) then
+        asked = true
         ns.ShowPicker(list, picked, Pick)
     elseif #list <= 1 then
         ns.HidePicker()
