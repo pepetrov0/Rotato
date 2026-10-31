@@ -23,9 +23,7 @@ ns.Rotation{
 
     rotations = {
         single = {
-            { variant = "judgement" },
-            -- Judgement comes at level 4; until then the auto attack is all there is to do
-            { "Attack", when = function(c) return not c.spell(c.variantName("judgement")).known end },
+            { variant = "judgement" }
         },
     },
 
