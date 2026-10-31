@@ -53,6 +53,14 @@ function Paladin.Cleanse()
     end }
 end
 
+-- Before Cleanse is learned, Purify is the dispel: poison and disease only. Cleanse replaces it in
+-- the spellbook, so after that this entry is skipped. Put it right after Paladin.Cleanse().
+function Paladin.Purify()
+    return { "Purify", when = function(c)
+        return c.debuffOfType(c.healTarget(), "Poison", "Disease").up
+    end }
+end
+
 -- Whether the current Judgement debuff is missing or about to run out. Any paladin's counts, so a
 -- friend's Judgement is not overwritten, and it is refreshed under 5 seconds so it never drops.
 -- Needs a hostile target: without one the debuff cannot be read and would look missing.

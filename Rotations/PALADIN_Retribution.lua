@@ -100,14 +100,20 @@ ns.Rotation(SideSlots{
     highprio = Paladin.List{
         Paladin.SealUpkeep(),
         Paladin.Cleanse(),
+        Paladin.Purify(),
+
+        -- Keeps the current Judgement on the target, as in the max level rotation
+        { variant = "judgement", when = Paladin.JudgementDue },
     },
 
     rotations = {
         single = {
-            { "Hammer of Wrath", when = function(c) return c.target.hostile and c.target.hp < 20 end },
-            { variant = "judgement" },
-            { "Crusader Strike" },
+            { "Hammer of Wrath" }, -- the game only lets it be cast under 20% health
             { "Divine Storm" },
+            -- Judgement of Wisdom returns mana, so it jumps ahead of Crusader Strike when mana runs low
+            { variant = "judgement", when = function(c) return c.mana < 50 end },
+            { "Crusader Strike" },
+            { variant = "judgement" },
             { "Exorcism" },
             { "Consecration" },
         },
