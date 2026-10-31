@@ -58,6 +58,7 @@ function ns.InitMode()
     f:RegisterEvent("UNIT_SPELLCAST_CHANNEL_START") -- channels
     f:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")     -- instants never fire START
     f:RegisterEvent("UNIT_SPELLCAST_INTERRUPTED")
+    f:RegisterEvent("UNIT_SPELLCAST_FAILED")        -- a cast failing at its end clears `started`
     f:RegisterEvent("PLAYER_REGEN_ENABLED")
 
     -- The spell whose START was just handled. Its SUCCEEDED must not decide again: by then the cast
@@ -79,6 +80,14 @@ function ns.InitMode()
             if spell == started then started = nil end
             return
         end
+        if event == "UNIT_SPELLCAST_FAILED" then
+            -- FAILED also fires mid-cast for a press that was refused ("another action is in
+            -- progress"), so it only ends the started cast once nothing is being cast any more
+            if spell == started and not UnitCastingInfo("player") and not UnitChannelInfo("player") then
+                started = nil
+            end
+            return
+        end
         if event == "UNIT_SPELLCAST_SUCCEEDED" then
             -- variants switch on SUCCEEDED only, so a cast that gets interrupted does not flip them
             ns.CheckVariants(rotation, spell)
@@ -86,6 +95,8 @@ function ns.InitMode()
                 started = nil
                 return
             end
+            -- a channel was decided at its CHANNEL_START, whichever of the two events came first
+            if UnitChannelInfo("player") == spell then return end
         else
             started = spell
         end
