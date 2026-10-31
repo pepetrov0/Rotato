@@ -69,6 +69,25 @@ local function BuildCell()
     return cell
 end
 
+-- The lowest dialog-level frame overlapping ours. Full-screen containers are skipped by size.
+local function FindBlocker()
+    local top, bottom, left, right = frame:GetTop(), frame:GetBottom(), frame:GetLeft(), frame:GetRight()
+    if not top then return end
+    local found, foundBottom
+    for _, f in ipairs({ UIParent:GetChildren() }) do
+        local strata = f ~= frame and f:IsShown() and f:GetFrameStrata()
+        if strata == "DIALOG" or strata == "FULLSCREEN_DIALOG" then
+            local t, b, l, r = f:GetTop(), f:GetBottom(), f:GetLeft(), f:GetRight()
+            if t and b and l and r and (r - l) < UIParent:GetWidth() / 2 and (t - b) < UIParent:GetHeight() / 2
+                and l < right and r > left and b < top and t > bottom
+                and (not foundBottom or b < foundBottom) then
+                found, foundBottom = f, b
+            end
+        end
+    end
+    return found
+end
+
 -- selected is the rotation in use; it is not marked. onPick(def) runs for whichever is chosen.
 function ns.ShowPicker(list, selected, onPick)
     if not frame then Build() end
@@ -106,14 +125,15 @@ function ns.ShowPicker(list, selected, onPick)
             cell:SetPoint("TOPLEFT", frame, "TOPLEFT", x + shift, y)
         end
     end
-    -- Sage's picker opens at the same spot; sit below it instead of on top of it
+    -- Other addons open dialogs at this same spot (Sage's picker does): sit below any that overlap
     frame:ClearAllPoints()
-    if SageChoice and SageChoice:IsShown() then
-        frame:SetPoint("TOP", SageChoice, "BOTTOM", 0, -10)
-    else
-        frame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+    frame:Show() -- a hidden frame may not report its rectangle
+    local blocker = FindBlocker()
+    if blocker then
+        frame:ClearAllPoints()
+        frame:SetPoint("TOP", blocker, "BOTTOM", 0, -10)
     end
-    frame:Show()
 end
 
 function ns.HidePicker()
