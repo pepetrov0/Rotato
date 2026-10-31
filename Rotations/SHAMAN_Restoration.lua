@@ -27,9 +27,9 @@ local function Lust(spell, buff, debuff)
 end
 
 ns.Rotation{
-    class = "SHAMAN",
-    spec = 3, -- Restoration
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Restoration Shaman",
+    priority = 1,
+    filter = function(c) return c.class == "SHAMAN" and c.spec == 3 and c.level >= 80 end,
 
     reminders = {
         EarthlivingWeapon(),

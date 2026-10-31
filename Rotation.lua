@@ -2,10 +2,12 @@ local ADDON_NAME, ns = ...
 
 -- Registry of rotation definitions, and the "variants" a rotation can declare.
 --
--- A rotation file calls ns.Rotation{ ... } with these fields (all optional but class):
---   class, spec          which character it is for; no spec (nil) is the fallback for a character
---                        with no spec rotation yet: no talents, or still levelling
---   condition            function() -> truthy when the rotation applies (default: always), see ns.GetRotation
+-- A rotation file calls ns.Rotation{ ... } with these fields (all optional but filter):
+--   name                 shown when the rotation is picked
+--   filter               function(c) -> truthy when the rotation is for this character; c has
+--                        .class, .spec (talent tree index, nil with no points) and .level
+--   priority             among the rotations passing their filter the highest wins (default 0), so
+--                        a spec rotation outranks the class starter it replaces
 --   reminders            out of combat with no hostile target; keeps the panel up until done
 --   preparation          out of combat setup
 --   highprio             checked before the rotations, with or without a target
@@ -15,40 +17,26 @@ local ADDON_NAME, ns = ...
 
 ns.rotations = {}
 
--- A key can hold several rotations, each with its own condition: a levelling rotation for the
--- baseline kit, then the full one once the spec has its abilities. They are kept in registration
--- order and all are tried, so the selection below can choose by condition.
+-- Rotations are kept in registration order; see ns.GetRotation for how one is chosen.
 function ns.Rotation(def)
-    local key = def.class .. ":" .. (def.spec or "*")
-    local list = ns.rotations[key]
-    if not list then list = {}; ns.rotations[key] = list end
-    list[#list + 1] = def
+    ns.rotations[#ns.rotations + 1] = def
 end
 
--- The rotation in a list whose condition holds. Several holding resolve to the later registered
--- one, so a file loaded afterwards can replace an earlier default.
-local function Applicable(list)
-    for i = #list, 1, -1 do
-        local condition = list[i].condition
-        if not condition or condition() then return list[i] end
-    end
-end
-
--- A spec's rotation is used when it has one whose condition holds; otherwise the class's no-spec rotation
--- is the fallback. That is how a new character (no talents below level 10, no points spent yet at
--- 10) and a levelling one (spec rotations start at 80) still get a rotation instead of none.
--- Returns nil until Class.lua has detected the character, which callers rely on to do nothing
+-- The rotation in use: of those whose filter passes, the highest priority. Equal priorities resolve
+-- to the later registered one, so a file loaded afterwards can replace an earlier default. That is
+-- also how a new character (no talents) or a levelling one still gets the class starter instead of
+-- none. Returns nil until Class.lua has detected the character, which callers rely on to do nothing
 -- early in the login.
 local current
 
-local function Describe(def)
-    return format("%s %s", def.class, def.spec and ("spec " .. def.spec) or "no spec")
-end
-
 local function Select()
-    local spec = ns.specIndex and ns.rotations[ns.class .. ":" .. ns.specIndex]
-    local list = ns.rotations[ns.class .. ":*"]
-    return (spec and Applicable(spec)) or (list and Applicable(list))
+    local best
+    for _, def in ipairs(ns.rotations) do
+        if (not best or (def.priority or 0) >= (best.priority or 0)) and (not def.filter or def.filter(ns.c)) then
+            best = def
+        end
+    end
+    return best
 end
 
 function ns.GetRotation()
@@ -56,7 +44,7 @@ function ns.GetRotation()
     local rotation = Select()
     if rotation ~= current then
         current = rotation
-        ns.Print("rotation in use: " .. (rotation and Describe(rotation) or "none"))
+        ns.Print("rotation in use: " .. (rotation and (rotation.name or "unnamed") or "none"))
     end
     return rotation
 end

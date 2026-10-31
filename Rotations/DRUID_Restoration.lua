@@ -5,9 +5,9 @@ local ADDON_NAME, ns = ...
 -- is where a mouseover/target/self macro would send the spell.
 
 ns.Rotation{
-    class = "DRUID",
-    spec = 3, -- Restoration
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Restoration Druid",
+    priority = 1,
+    filter = function(c) return c.class == "DRUID" and c.spec == 3 and c.level >= 80 end,
 
     highprio = {
         { "Tree of Life", when = function(c) return not c.buff("Tree of Life").up end },

@@ -17,9 +17,9 @@ local function PowerInfusionBlocked(c)
 end
 
 ns.Rotation{
-    class = "PRIEST",
-    spec = 1, -- Discipline
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Discipline Priest",
+    priority = 1,
+    filter = function(c) return c.class == "PRIEST" and c.spec == 1 and c.level >= 80 end,
 
     reminders = {
         { "Inner Fire", when = function(c) return not c.buff("Inner Fire").up end },

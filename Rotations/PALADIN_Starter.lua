@@ -20,7 +20,8 @@ local function Purify()
 end
 
 ns.Rotation{
-    class = "PALADIN",
+    name = "Paladin starter",
+    filter = function(c) return c.class == "PALADIN" end,
 
     variants = { judgement = Paladin.JudgementVariant("light") },
 

@@ -17,9 +17,9 @@ local DPS_ASPECTS = { "Aspect of the Dragonhawk", "Aspect of the Wild" }
 local function NoMisdirectionTarget(c) return c.inGroup and not UnitExists("focus") end
 
 ns.Rotation{
-    class = "HUNTER",
-    spec = 2, -- Marksmanship
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Marksmanship Hunter",
+    priority = 1,
+    filter = function(c) return c.class == "HUNTER" and c.spec == 2 and c.level >= 80 end,
 
     -- Which damage aspect to go back to after Viper is whichever one was used last, which can only
     -- be known from what the player casts (see Rotation.lua). Casting Viper changes nothing here.

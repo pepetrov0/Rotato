@@ -24,9 +24,9 @@ local function Sanctuary()
 end
 
 ns.Rotation{
-    class = "PALADIN",
-    spec = 2, -- Protection
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Protection Paladin",
+    priority = 1,
+    filter = function(c) return c.class == "PALADIN" and c.spec == 2 and c.level >= 80 end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     -- Protection defaults to Light: the healing on the tank's own hits is worth more than the mana

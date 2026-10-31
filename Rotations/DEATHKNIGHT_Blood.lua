@@ -40,9 +40,9 @@ local function FrostPresence()
 end
 
 ns.Rotation{
-    class = "DEATHKNIGHT",
-    spec = 1, -- Blood
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Blood Death Knight",
+    priority = 1,
+    filter = function(c) return c.class == "DEATHKNIGHT" and c.spec == 1 and c.level >= 80 end,
 
     reminders = {
         FrostPresence(),

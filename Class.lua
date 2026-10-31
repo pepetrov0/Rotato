@@ -2,7 +2,7 @@ local ADDON_NAME, ns = ...
 
 -- Detects the player's class and talent spec and publishes it as ns.class (the class token),
 -- ns.specIndex (1-3, nil when no points are spent), ns.specName and ns.specGroup (dual spec).
--- Rotation files are looked up with these, see ns.GetRotation.
+-- Rotation filters read these as c.class and c.spec, see ns.GetRotation.
 
 -- The spec is the talent tree with the most points. There is no direct "current spec" API in
 -- 3.3.5, and the active talent group matters because a dual-spec character has two sets.

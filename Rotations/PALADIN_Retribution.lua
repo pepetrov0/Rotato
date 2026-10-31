@@ -6,9 +6,9 @@ local ADDON_NAME, ns = ...
 local Paladin = ns.Paladin
 
 ns.Rotation{
-    class = "PALADIN",
-    spec = 3, -- Retribution
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Retribution Paladin",
+    priority = 1,
+    filter = function(c) return c.class == "PALADIN" and c.spec == 3 and c.level >= 80 end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     -- Retribution defaults to Wisdom: it is the one that returns mana.

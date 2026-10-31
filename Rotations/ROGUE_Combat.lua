@@ -17,8 +17,9 @@ local function SliceAndDiceDue(c)
 end
 
 ns.Rotation{
-    class = "ROGUE",
-    spec = 2, -- Combat
+    name = "Combat Rogue",
+    priority = 1,
+    filter = function(c) return c.class == "ROGUE" and c.spec == 2 end,
 
     -- Poison is an item, not a cast, so it is offered as one. Both out-of-combat tiers: with no
     -- target it is a reminder, and with a hostile one it is part of preparing for the pull.

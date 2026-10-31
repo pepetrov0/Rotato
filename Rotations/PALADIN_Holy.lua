@@ -10,9 +10,9 @@ local function SealOfWisdom()
 end
 
 ns.Rotation{
-    class = "PALADIN",
-    spec = 1, -- Holy
-    condition = function() return UnitLevel("player") >= 80 end,
+    name = "Holy Paladin",
+    priority = 1,
+    filter = function(c) return c.class == "PALADIN" and c.spec == 1 and c.level >= 80 end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     variants = { judgement = Paladin.JudgementVariant("light") },

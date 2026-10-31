@@ -191,6 +191,9 @@ local c = setmetatable({ target = target, pet = pet, variant = variant, runes = 
         elseif key == "comboPoints" then return GetComboPoints("player", "target")
         elseif key == "inGroup" then return GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0
         elseif key == "mode" then return ns.mode
+        elseif key == "level" then return UnitLevel("player")
+        elseif key == "class" then return ns.class
+        elseif key == "spec" then return ns.specIndex
         end
     end,
 })
