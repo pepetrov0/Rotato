@@ -59,12 +59,11 @@ local function BuildCell()
     cell.icon:SetSize(ICON, ICON)
     cell.icon:SetPoint("TOP", 0, -10)
     cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-    cell.border = cell:CreateTexture(nil, "OVERLAY", nil, 1)
-    cell.border:SetTexture("Interface\\Buttons\\UI-ActionButton-Border")
-    cell.border:SetBlendMode("ADD")
-    cell.border:SetSize(ICON * 1.9, ICON * 1.9)
-    cell.border:SetPoint("CENTER", cell.icon, "CENTER")
-    cell.border:SetVertexColor(1, 0.82, 0)
+    -- a gold square behind the icon, 2px larger on each side, shows as a frame around it
+    cell.border = cell:CreateTexture(nil, "ARTWORK")
+    cell.border:SetTexture(1, 0.82, 0)
+    cell.border:SetPoint("TOPLEFT", cell.icon, "TOPLEFT", -2, 2)
+    cell.border:SetPoint("BOTTOMRIGHT", cell.icon, "BOTTOMRIGHT", 2, -2)
     cell.label = cell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     cell.label:SetPoint("TOP", cell.icon, "BOTTOM", 0, -8)
     cell.label:SetWidth(CELL_W - 10)
@@ -77,7 +76,7 @@ local function BuildCell()
     return cell
 end
 
--- selected is the rotation in use, marked with a gold ring; onPick(def) runs for whichever is chosen.
+-- selected is the rotation in use, framed in gold; onPick(def) runs for whichever is chosen.
 function ns.ShowPicker(list, selected, onPick)
     if not frame then Build() end
     local columns = math.min(#list, COLUMNS)
