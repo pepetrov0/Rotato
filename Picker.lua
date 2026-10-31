@@ -45,6 +45,18 @@ local function Build()
     frame.close:SetPoint("TOPRIGHT", -2, -2)
     if skins and skins.HandleCloseButton then skins:HandleCloseButton(frame.close) end
 
+    -- drag it anywhere; the spot is remembered and then used instead of the automatic one
+    frame:SetMovable(true)
+    frame:SetClampedToScreen(true)
+    frame:EnableMouse(true)
+    frame:RegisterForDrag("LeftButton")
+    frame:SetScript("OnDragStart", frame.StartMoving)
+    frame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, _, relPoint, x, y = self:GetPoint()
+        RotatoDB.pickerPos = { point, relPoint, x, y }
+    end)
+
     frame.buttons = {}
     tinsert(UISpecialFrames, "RotatoPicker")
     frame:Hide()
@@ -127,6 +139,12 @@ function ns.ShowPicker(list, selected, onPick)
     end
     -- Other addons open dialogs at this same spot (Sage's picker does): sit below any that overlap
     frame:ClearAllPoints()
+    local saved = RotatoDB.pickerPos
+    if saved then
+        frame:SetPoint(saved[1], UIParent, saved[2], saved[3], saved[4])
+        frame:Show()
+        return
+    end
     frame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
     frame:Show() -- a hidden frame may not report its rectangle
     local blocker = FindBlocker()
