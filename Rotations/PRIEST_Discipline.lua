@@ -18,6 +18,7 @@ end
 
 ns.Rotation{
     name = "Discipline Priest",
+    icon = "Interface\\Icons\\Spell_Holy_WordFortitude",
     filter = function(c) return c.class == "PRIEST" and c.spec == 1 and c.level >= 80 end,
 
     reminders = {

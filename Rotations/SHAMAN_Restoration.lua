@@ -28,6 +28,7 @@ end
 
 ns.Rotation{
     name = "Restoration Shaman",
+    icon = "Interface\\Icons\\Spell_Nature_MagicImmunity",
     filter = function(c) return c.class == "SHAMAN" and c.spec == 3 and c.level >= 80 end,
 
     reminders = {

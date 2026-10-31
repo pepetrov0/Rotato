@@ -9,6 +9,7 @@ local WISE = "Judgements of the Wise"
 
 ns.Rotation{
     name = "Retribution Paladin",
+    icon = "Interface\\Icons\\Spell_Holy_AuraOfLight",
     filter = function(c) return c.class == "PALADIN" end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).

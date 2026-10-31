@@ -6,6 +6,7 @@ local ADDON_NAME, ns = ...
 
 ns.Rotation{
     name = "Restoration Druid",
+    icon = "Interface\\Icons\\Spell_Nature_HealingTouch",
     filter = function(c) return c.class == "DRUID" and c.spec == 3 and c.level >= 80 end,
 
     highprio = {
