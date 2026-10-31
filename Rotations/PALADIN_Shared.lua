@@ -9,15 +9,14 @@ ns.Paladin = Paladin
 
 -- Any seal will do for upkeep. Vengeance is the Alliance seal and Corruption the Horde one, and
 -- Command is a talent, so each character only knows some of them; the entries below are tried in
--- order and the first one that is known wins. Righteousness is the one a low level character has;
--- it is only suggested while none of those three is known, though one already up counts as a seal.
-local UPKEEP_SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
-Paladin.SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption", "Seal of Righteousness" }
-
-local function NoSealUp(c) return not c.anyBuff(Paladin.SEALS).up end
+-- order and the first one that is known wins. Righteousness is the one a low level character has:
+-- it is only a seal worth keeping up while none of those three is known. Once one is, Righteousness
+-- no longer counts, so a leftover Righteousness is corrected to the better seal.
+local BETTER_SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption" }
+local ALL_SEALS = { "Seal of Command", "Seal of Vengeance", "Seal of Corruption", "Seal of Righteousness" }
 
 local function BetterSealKnown(c)
-    for _, seal in ipairs(UPKEEP_SEALS) do
+    for _, seal in ipairs(BETTER_SEALS) do
         if c.spell(seal).known then return true end
     end
     return false
@@ -26,12 +25,22 @@ end
 -- One entry per seal. Put it in a list wrapped by Paladin.List, which flattens it in.
 function Paladin.SealUpkeep()
     local entries = {}
-    for i, seal in ipairs(UPKEEP_SEALS) do
-        entries[i] = { seal, when = NoSealUp }
+    for i, seal in ipairs(BETTER_SEALS) do
+        entries[i] = { seal, when = function(c) return not c.anyBuff(BETTER_SEALS).up end }
     end
-    entries[#entries + 1] = { "Seal of Righteousness",
-        when = function(c) return NoSealUp(c) and not BetterSealKnown(c) end }
+    entries[#entries + 1] = { "Seal of Righteousness", when = function(c)
+        return not BetterSealKnown(c) and not c.anyBuff(ALL_SEALS).up
+    end }
     return entries
+end
+
+-- The seal slot for the trackers, following the same rule: Righteousness is only a seal while no
+-- better one is known. Exactly one of the two entries can show.
+function Paladin.SealTrackers()
+    return {
+        { buff = BETTER_SEALS, when = BetterSealKnown },
+        { buff = ALL_SEALS, when = function(c) return not BetterSealKnown(c) end },
+    }
 end
 
 -- A list of entries in which a nested list (an array of entries, like SealUpkeep returns) is
@@ -113,10 +122,8 @@ end
 -- something to Cleanse. `extra` adds spec-specific entries ahead of the Cleanse one, so the dispel
 -- stays last. Fresh tables every call (see the file comment).
 function Paladin.CommonTrackers(extra)
-    local trackers = {
-        { buff = Paladin.SEALS },
-        { debuff = { variant = "judgement" }, any = true },
-    }
+    local trackers = Paladin.SealTrackers()
+    trackers[#trackers + 1] = { debuff = { variant = "judgement" }, any = true }
     for _, entry in ipairs(extra or {}) do trackers[#trackers + 1] = entry end
     for _, entry in ipairs(Paladin.CleanseTrackers()) do trackers[#trackers + 1] = entry end
     return trackers
