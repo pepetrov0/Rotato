@@ -4,7 +4,7 @@ local ADDON_NAME, ns = ...
 -- Escape closes it; the rotation already in use stays in that case.
 
 local CELL_W, CELL_H, ICON, GAP, PADDING, COLUMNS = 100, 100, 40, 10, 14, 3
-local HEADER_H = 62
+local HEADER_H = 78
 
 local frame
 
