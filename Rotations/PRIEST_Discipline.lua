@@ -19,7 +19,7 @@ end
 ns.Rotation{
     class = "PRIEST",
     spec = 1, -- Discipline
-    minLevel = 80,
+    condition = function() return UnitLevel("player") >= 80 end,
 
     reminders = {
         { "Inner Fire", when = function(c) return not c.buff("Inner Fire").up end },

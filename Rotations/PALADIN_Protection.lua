@@ -26,7 +26,7 @@ end
 ns.Rotation{
     class = "PALADIN",
     spec = 2, -- Protection
-    minLevel = 80,
+    condition = function() return UnitLevel("player") >= 80 end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     -- Protection defaults to Light: the healing on the tank's own hits is worth more than the mana

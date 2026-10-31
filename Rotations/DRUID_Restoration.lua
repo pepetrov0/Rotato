@@ -7,7 +7,7 @@ local ADDON_NAME, ns = ...
 ns.Rotation{
     class = "DRUID",
     spec = 3, -- Restoration
-    minLevel = 80,
+    condition = function() return UnitLevel("player") >= 80 end,
 
     highprio = {
         { "Tree of Life", when = function(c) return not c.buff("Tree of Life").up end },

@@ -12,7 +12,7 @@ end
 ns.Rotation{
     class = "PALADIN",
     spec = 1, -- Holy
-    minLevel = 80,
+    condition = function() return UnitLevel("player") >= 80 end,
 
     -- The current Judgement follows what the player casts (see Rotation.lua).
     variants = { judgement = Paladin.JudgementVariant("light") },

@@ -5,7 +5,7 @@ local ADDON_NAME, ns = ...
 -- A rotation file calls ns.Rotation{ ... } with these fields (all optional but class):
 --   class, spec          which character it is for; no spec (nil) is the fallback for a character
 --                        with no spec rotation yet: no talents, or still levelling
---   minLevel             lowest character level it applies from (default 1), see ns.GetRotation
+--   condition            function() -> truthy when the rotation applies (default: always), see ns.GetRotation
 --   reminders            out of combat with no hostile target; keeps the panel up until done
 --   preparation          out of combat setup
 --   highprio             checked before the rotations, with or without a target
@@ -15,9 +15,9 @@ local ADDON_NAME, ns = ...
 
 ns.rotations = {}
 
--- A key can hold several rotations, each valid from its own level: a levelling rotation for the
+-- A key can hold several rotations, each with its own condition: a levelling rotation for the
 -- baseline kit, then the full one once the spec has its abilities. They are kept in registration
--- order and both are tried, so the selection below can choose by level.
+-- order and all are tried, so the selection below can choose by condition.
 function ns.Rotation(def)
     local key = def.class .. ":" .. (def.spec or "*")
     local list = ns.rotations[key]
@@ -25,19 +25,16 @@ function ns.Rotation(def)
     list[#list + 1] = def
 end
 
--- The rotation in a list that applies at this level: the one with the highest minLevel that is
--- not above it. Two starting at the same level resolve to the later registered one, so a file
--- loaded afterwards can replace an earlier default.
-local function AtLevel(list, level)
-    local best, bestLevel
-    for _, def in ipairs(list) do
-        local min = tonumber(def.minLevel) or 1
-        if min <= level and (not bestLevel or min >= bestLevel) then best, bestLevel = def, min end
+-- The rotation in a list whose condition holds. Several holding resolve to the later registered
+-- one, so a file loaded afterwards can replace an earlier default.
+local function Applicable(list)
+    for i = #list, 1, -1 do
+        local condition = list[i].condition
+        if not condition or condition() then return list[i] end
     end
-    return best
 end
 
--- A spec's rotation is used when it has one for this level; otherwise the class's no-spec rotation
+-- A spec's rotation is used when it has one whose condition holds; otherwise the class's no-spec rotation
 -- is the fallback. That is how a new character (no talents below level 10, no points spent yet at
 -- 10) and a levelling one (spec rotations start at 80) still get a rotation instead of none.
 -- Returns nil until Class.lua has detected the character, which callers rely on to do nothing
@@ -45,15 +42,13 @@ end
 local current
 
 local function Describe(def)
-    return format("%s %s (level %d+)", def.class, def.spec and ("spec " .. def.spec) or "no spec",
-        tonumber(def.minLevel) or 1)
+    return format("%s %s", def.class, def.spec and ("spec " .. def.spec) or "no spec")
 end
 
 local function Select()
-    local level = UnitLevel("player")
     local spec = ns.specIndex and ns.rotations[ns.class .. ":" .. ns.specIndex]
     local list = ns.rotations[ns.class .. ":*"]
-    return (spec and AtLevel(spec, level)) or (list and AtLevel(list, level))
+    return (spec and Applicable(spec)) or (list and Applicable(list))
 end
 
 function ns.GetRotation()

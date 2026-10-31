@@ -42,7 +42,7 @@ end
 ns.Rotation{
     class = "DEATHKNIGHT",
     spec = 1, -- Blood
-    minLevel = 80,
+    condition = function() return UnitLevel("player") >= 80 end,
 
     reminders = {
         FrostPresence(),
