@@ -7,17 +7,29 @@ local ROW_HEIGHT, PADDING, WIDTH = 26, 24, 260
 
 local frame
 
+-- ElvUI is looked up when the window is built, not at load: it loads after us. Without it the
+-- default dialog look is kept. Guarded on the methods, as in UI.lua, since ElvUI adds them at its own pace.
+local function Skins()
+    local E = ElvUI and ElvUI[1]
+    local skins = E and E.GetModule and E:GetModule("Skins", true)
+    return E, skins and skins.HandleButton and skins
+end
+
 local function Build()
     frame = CreateFrame("Frame", "RotatoPicker", UIParent)
     frame:SetFrameStrata("DIALOG")
     frame:SetWidth(WIDTH)
     frame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
-    frame:SetBackdrop({
-        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
-        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 32, edgeSize = 32,
-        insets = { left = 11, right = 12, top = 12, bottom = 11 },
-    })
+    if frame.SetTemplate and Skins() then
+        frame:SetTemplate("Transparent")
+    else
+        frame:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 },
+        })
+    end
     frame:EnableMouse(true)
     frame.title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.title:SetPoint("TOP", 0, -PADDING)
@@ -36,6 +48,8 @@ function ns.ShowPicker(list, selected, onPick)
             button = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
             button:SetSize(WIDTH - 2 * PADDING, ROW_HEIGHT - 2)
             button:SetPoint("TOP", frame.title, "BOTTOM", 0, -8 - (i - 1) * ROW_HEIGHT)
+            local _, skins = Skins()
+            if skins then skins:HandleButton(button) end
             frame.buttons[i] = button
         end
         button:SetText(def.name)
