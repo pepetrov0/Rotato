@@ -75,6 +75,15 @@ function Paladin.CleanseTracker()
     return { healTargetDebuffType = { "Poison", "Disease", "Magic" } }
 end
 
+-- The tracker for a character that may not have Cleanse yet: Purify only takes poison and disease,
+-- so Magic counts once Cleanse is in the spellbook. Exactly one of the two entries can show.
+function Paladin.CleanseTrackers()
+    return {
+        { healTargetDebuffType = { "Poison", "Disease" }, when = function(c) return not c.spell("Cleanse").known end },
+        { healTargetDebuffType = { "Poison", "Disease", "Magic" }, when = function(c) return c.spell("Cleanse").known end },
+    }
+end
+
 -- Forbearance on the paladin refuses Divine Shield and Divine Protection, so their slots are
 -- grayed out instead of inviting a cast that cannot happen.
 function Paladin.ShieldsBlocked(c)
@@ -96,7 +105,7 @@ function Paladin.CommonTrackers(extra)
         { debuff = { variant = "judgement" }, any = true },
     }
     for _, entry in ipairs(extra or {}) do trackers[#trackers + 1] = entry end
-    trackers[#trackers + 1] = Paladin.CleanseTracker()
+    for _, entry in ipairs(Paladin.CleanseTrackers()) do trackers[#trackers + 1] = entry end
     return trackers
 end
 
