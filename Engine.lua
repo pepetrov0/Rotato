@@ -396,7 +396,7 @@ local function Passes(entry, name)
     if not ok then
         if not entry.errored then
             entry.errored = true
-            ns.Print("rotation error in " .. name .. ": " .. tostring(result))
+            ns.Print("rotation error in " .. tostring(name) .. ": " .. tostring(result))
         end
         return false
     end
