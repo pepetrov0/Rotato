@@ -12,6 +12,13 @@ local function SealUpkeep()
     return { SEAL, when = function(c) return not c.buff(SEAL).up end }
 end
 
+-- Cleanse replaces Purify later and also removes Magic; Purify only does these two.
+local function Purify()
+    return { "Purify", when = function(c)
+        return c.debuffOfType(c.healTarget(), "Poison", "Disease").up
+    end }
+end
+
 ns.Rotation{
     class = "PALADIN",
 
@@ -19,7 +26,7 @@ ns.Rotation{
 
     reminders = { SealUpkeep() },
 
-    highprio = { SealUpkeep() },
+    highprio = { SealUpkeep(), Purify() },
 
     rotations = {
         single = {
@@ -30,6 +37,7 @@ ns.Rotation{
     trackers = {
         { buff = SEAL },
         { debuff = { variant = "judgement" }, any = true },
+        { healTargetDebuffType = { "Poison", "Disease" } },
     },
 
     -- Forbearance refuses it, so it grays out while it runs
