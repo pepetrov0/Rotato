@@ -3,7 +3,7 @@ local ADDON_NAME, ns = ...
 -- The window that asks which rotation to use when several are on offer, see Rotation.lua.
 -- Escape closes it; the rotation already in use stays in that case.
 
-local CELL_W, CELL_H, ICON, GAP, PADDING, COLUMNS = 110, 100, 40, 10, 14, 3
+local CELL_W, CELL_H, ICON, GAP, PADDING, COLUMNS = 100, 100, 40, 10, 14, 3
 local HEADER_H = 62
 
 local frame
@@ -57,13 +57,11 @@ local function BuildCell()
     cell:SetSize(CELL_W, CELL_H)
     cell.icon = cell:CreateTexture(nil, "OVERLAY")
     cell.icon:SetSize(ICON, ICON)
-    cell.icon:SetPoint("TOP", 0, -10)
     cell.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
     cell.label = cell:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    cell.label:SetPoint("TOP", cell.icon, "BOTTOM", 0, -8)
+    cell.label:SetPoint("TOP", cell.icon, "BOTTOM", 0, -6)
     cell.label:SetWidth(CELL_W - 10)
-    cell.label:SetHeight(28)
-    cell.label:SetJustifyV("TOP")
+    cell.label:SetJustifyH("CENTER")
     if skins then
         skins:HandleButton(cell)
         if E.TexCoords then cell.icon:SetTexCoord(unpack(E.TexCoords)) end
@@ -85,6 +83,10 @@ function ns.ShowPicker(list, selected, onPick)
         cell:SetPoint("TOPLEFT", frame, "TOPLEFT", PADDING + col * (CELL_W + GAP), -(HEADER_H + row * (CELL_H + GAP)))
         cell.icon:SetTexture(def.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
         cell.label:SetText(def.name)
+        -- icon and name are centred together as one block, whatever the number of name lines
+        local block = ICON + 6 + cell.label:GetStringHeight()
+        cell.icon:ClearAllPoints()
+        cell.icon:SetPoint("TOP", cell, "TOP", 0, -(CELL_H - block) / 2)
         cell:SetScript("OnClick", function()
             onPick(def)
             frame:Hide()
