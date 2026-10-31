@@ -20,7 +20,8 @@ function ns.Rotation(def)
 end
 
 -- Choosing --------------------------------------------------------------
--- The rotations of the player's class are its playstyles. With one it is used without asking; with
+-- The rotations of the player's class are its playstyles. With one it is used without asking (the
+-- player can still open the picker to opt out); with
 -- several the player picks (Picker.lua) and the pick is remembered per character. The player is
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
 -- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
@@ -89,17 +90,17 @@ local function Refresh()
     if #list > 1 and not picked and not own and not asked then
         asked = true
         ns.ShowPicker(Choices(list), nil, Pick)
-    elseif #list <= 1 then
+    elseif #list == 0 then
         ns.HidePicker()
     end
 end
 
 -- /rotato rotation: the picker again, to change the choice.
 function ns.OpenPicker()
-    if offered and #offered > 1 then
+    if offered and #offered > 0 then
         ns.ShowPicker(Choices(offered), current, Pick)
     else
-        ns.Print("only one rotation is available" .. (current and (": " .. current.name) or "."))
+        ns.Print("no rotation is available for this class.")
     end
 end
 
