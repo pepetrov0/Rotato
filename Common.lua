@@ -17,6 +17,7 @@ ns.common = {
         { buff = "Stoneform", show = "active" },
         { buff = "Gift of the Naaru", show = "active" },
         { buff = "Divine Guardian", show = "active" },
+        { buff = "Improved Lay on Hands", show = "active" }, -- 10/20% less physical damage after Lay on Hands
         { buff = "Indestructible", show = "active" }, -- Indestructible Potion
         { buff = "Aegis of Dalaran", show = "active" }, -- trinket proc
     },
