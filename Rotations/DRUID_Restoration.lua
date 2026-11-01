@@ -1,4 +1,6 @@
 local ADDON_NAME, ns = ...
+-- Only the player's class's rotations are kept in memory.
+if select(2, UnitClass("player")) ~= "DRUID" then return end
 
 -- Restoration druid. Conditions are functions of `c`, the condition API in Engine.lua. Healing goes
 -- to c.healTarget(): the mouseover if it is a living friend, else the target, else yourself, which

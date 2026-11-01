@@ -1,4 +1,6 @@
 local ADDON_NAME, ns = ...
+-- Only the player's class's rotations are kept in memory.
+if select(2, UnitClass("player")) ~= "HUNTER" then return end
 
 -- Marksmanship hunter. Conditions are functions of `c`, the condition API in Engine.lua;
 -- c.mana is a percentage. The entry fields for the side slots are described in Slots.lua.

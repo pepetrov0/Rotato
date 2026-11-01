@@ -1,4 +1,6 @@
 local ADDON_NAME, ns = ...
+-- Only the player's class's rotations are kept in memory.
+if select(2, UnitClass("player")) ~= "ROGUE" then return end
 
 -- Pieces the three rogue specs have in common. This file loads before them (see the toc).
 

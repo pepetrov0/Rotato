@@ -1,4 +1,6 @@
 local ADDON_NAME, ns = ...
+-- Only the player's class's rotations are kept in memory.
+if select(2, UnitClass("player")) ~= "DEATHKNIGHT" then return end
 
 -- Blood death knight tank. Conditions are functions of `c`, the condition API in Engine.lua. The
 -- entry fields for the side slots are described in Slots.lua.

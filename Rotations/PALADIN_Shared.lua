@@ -1,4 +1,6 @@
 local ADDON_NAME, ns = ...
+-- Only the player's class's rotations are kept in memory.
+if select(2, UnitClass("player")) ~= "PALADIN" then return end
 
 -- Pieces the three paladin specs have in common. This file loads before them (see the toc). Entries
 -- carry state of their own (error flags, the last icon seen), so every function here builds fresh

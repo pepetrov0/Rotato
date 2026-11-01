@@ -1,4 +1,6 @@
 local ADDON_NAME, ns = ...
+-- Only the player's class's rotations are kept in memory.
+if select(2, UnitClass("player")) ~= "ROGUE" then return end
 
 -- Combat rogue. Conditions are functions of `c`, the condition API in Engine.lua; c.comboPoints is
 -- the number of points on the current target. The entry fields for the side slots are described in
