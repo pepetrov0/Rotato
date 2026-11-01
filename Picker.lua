@@ -1,7 +1,8 @@
 local ADDON_NAME, ns = ...
 
 -- The window that asks which rotation to use when several are on offer, see Rotation.lua.
--- It has no close button and Escape leaves it up: only a choice closes it (Rotation.lua hides it in combat).
+-- It has no close button and Escape leaves it up: only a choice closes it. Rotation.lua
+-- decides when it is up: with the spellbook open, or on /rotato rotation, never in combat.
 
 local CELL_W, CELL_H, ICON, GAP, PADDING, COLUMNS = 100, 100, 40, 10, 14, 3
 local HEADER_H = 78
@@ -20,7 +21,8 @@ local function Build()
     local E, skins = Skins()
     frame = CreateFrame("Frame", "RotatoPicker", UIParent)
     frame:SetFrameStrata("DIALOG")
-    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
+    -- below the center: Sage's build dialog sits above it, and both can be up with the spellbook and talent window open
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, -100)
     if frame.SetTemplate and skins then
         frame:SetTemplate("Transparent")
     else

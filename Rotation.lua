@@ -24,14 +24,19 @@ end
 -- there is only one, since "my own way" is always on offer; the pick is remembered per character and talent group
 -- (dual spec): switching groups uses that group's pick, or asks if it has none. The player is
 -- asked again after a talent reset, which is seen as the points invested dropping to zero; until
--- they answer, no rotation is used. "I'm playing my own way" is a pick too: it uses no rotation.
--- Below level 10 there is no rotation and no picker; from 10 the player is asked until they answer:
--- the picker cannot be closed without a choice, and it is hidden in combat and comes back after it.
+-- they answer, no rotation is used. "My own way" is a pick too: it uses no rotation.
+-- Below level 10 there is no rotation and no picker; from 10 the player is asked until they answer.
+-- It asks at a natural moment rather than in the middle of the world: the picker is only up while
+-- the spellbook is open (out of combat), and a chat line says so once per session. /rotato rotation
+-- opens it right away instead. It cannot be closed without a choice, but closing the spellbook
+-- takes it away.
 -- ns.GetRotation returns nil until Class.lua has detected the character, which callers rely on to
 -- do nothing early in the login.
 local PICKER_LEVEL = 10
 local current, offered
 local asking -- the talent group the picker is asking for until it is answered, or nil
+local forced -- /rotato rotation asked for the picker: it is up whether or not a window is open
+local hinted = {} -- talent groups already told, this session, where the picker is
 
 local function CharacterKey() return UnitName("player") .. "-" .. GetRealmName() end
 
@@ -65,7 +70,7 @@ end
 
 -- The last card of the picker: no rotation at all. Remembered as the pick like any rotation name.
 local OWN = "own way"
-local ownWay = { name = "I'm playing my own way", icon = "Interface\\Icons\\INV_Misc_Map_01", own = true }
+local ownWay = { name = "My own way", icon = "Interface\\Icons\\INV_Misc_Map_01", own = true }
 
 local function Choices(list)
     local choices = { unpack(list) }
@@ -79,8 +84,13 @@ local function Use(rotation)
     ns.Print("rotation in use: " .. (rotation and rotation.name or "none"))
 end
 
+-- The picker comes up with the spellbook.
+local function WindowOpen()
+    return SpellBookFrame and SpellBookFrame:IsShown() or false
+end
+
 local function Pick(def)
-    asking = nil
+    asking, forced = nil, nil
     CharacterState().pick = def.own and OWN or def.name
     Use(not def.own and def or nil)
 end
@@ -91,13 +101,14 @@ local function Refresh()
     offered = list
 
     -- a picker left open from the other talent group would save its answer to this one
-    if asking and asking ~= group then asking = nil end
+    if asking and asking ~= group then asking, forced = nil, nil end
 
     -- Having had points and now having none is a reset.
     if ns.hasTalents then
         state.invested = true
     elseif state.invested then
         state.invested, state.pick = nil, nil
+        hinted[group] = nil -- asked afresh, so told afresh
     end
 
     local picked
@@ -109,11 +120,15 @@ local function Refresh()
     Use(UnitLevel("player") >= PICKER_LEVEL and picked or nil)
 
     if #list == 0 or UnitLevel("player") < PICKER_LEVEL then
-        asking = nil
+        asking, forced = nil, nil
     elseif not picked and not own then
         asking = group
     end
-    if not asking or UnitAffectingCombat("player") then
+    if asking and not forced and not hinted[group] then
+        hinted[group] = true
+        ns.Print("choose a rotation: open your spellbook (P), or type /rotato rotation.")
+    end
+    if not asking or UnitAffectingCombat("player") or not (forced or WindowOpen()) then
         ns.HidePicker()
     elseif not ns.PickerShown() then
         ns.ShowPicker(Choices(list), current, Pick)
@@ -127,7 +142,7 @@ function ns.OpenPicker()
     if UnitLevel("player") < PICKER_LEVEL then
         ns.Print("the rotation picker is available from level " .. PICKER_LEVEL .. ".")
     elseif offered and #offered > 0 then
-        asking = Group()
+        asking, forced = Group(), true
         if UnitAffectingCombat("player") then ns.Print("the rotation picker will open after combat.") end
         Refresh()
     else
@@ -140,6 +155,7 @@ end
 function ns.ResetRotationChoice()
     local state = CharacterState()
     state.pick, state.invested = nil, nil
+    hinted[Group()] = nil
     ns.Print("rotation choice cleared.")
     Refresh()
 end
@@ -150,6 +166,12 @@ function ns.InitRotation()
     -- the tick would leave the picker up for up to a second of the fight
     f:RegisterEvent("PLAYER_REGEN_DISABLED")
     f:SetScript("OnEvent", ns.HidePicker)
+
+    -- The picker follows the spellbook at once, rather than on the next tick.
+    if SpellBookFrame then
+        SpellBookFrame:HookScript("OnShow", Refresh)
+        SpellBookFrame:HookScript("OnHide", Refresh)
+    end
     f:SetScript("OnUpdate", function(_, dt)
         elapsed = elapsed + dt
         if elapsed < 1 then return end
