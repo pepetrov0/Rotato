@@ -21,10 +21,7 @@ local function Build()
     local E, skins = Skins()
     frame = CreateFrame("Frame", "RotatoPicker", UIParent)
     frame:SetFrameStrata("DIALOG")
-    -- hung by its top just under Sage's build dialog (184 tall, centred 150 above the screen centre,
-    -- so its bottom is 58 above), since both can be up with the spellbook and talent window open;
-    -- extra rows grow downward, away from it
-    frame:SetPoint("TOP", UIParent, "CENTER", 0, 48)
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, 150)
     if frame.SetTemplate and skins then
         frame:SetTemplate("Transparent")
     else
