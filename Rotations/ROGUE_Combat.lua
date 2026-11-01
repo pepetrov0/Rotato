@@ -54,6 +54,7 @@ ns.Rotation{
     offensives = {
         -- worth using on cooldown
         { spell = "Blade Flurry", buff = "Blade Flurry", recommend = function(c) return c.ready("Blade Flurry") end },
+        { spell = "Adrenaline Rush", buff = "Adrenaline Rush", recommend = function(c) return c.ready("Adrenaline Rush") end },
     },
 
     defensives = {
