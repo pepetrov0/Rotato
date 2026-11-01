@@ -16,7 +16,7 @@ local defaults = {
     dynamicWidth = true,  -- size each side to its longest row (slotsPerRow is then the maximum)
     symmetric = true,     -- with dynamicWidth, keep both sides as wide as the widest one
     backgroundTransparency = 50, -- percent; 0 is opaque, 100 is invisible
-    chatLog = true,       -- report automatic changes (showing, hiding, mode...) in chat, see ns.Log
+    chatLog = false,      -- report automatic changes (showing, hiding, mode...) in chat, see ns.Log
 
 }
 
@@ -100,7 +100,7 @@ frame:SetScript("OnEvent", function(self, event, arg1)
         ns.InitDisplay()
         ns.InitSlots()
         ns.InitTooltips()
-        ns.LogLoad("/rotato unlock to move or resize, /rotato lock when done.")
+        ns.LogLoad("Options: /rotato unlock, then right-click the frame (size, font, transparency...). /rotato lists all commands.")
     end
 end)
 

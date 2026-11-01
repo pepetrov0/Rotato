@@ -261,9 +261,9 @@ function ns.OpenMenu()
         })
     end
     -- with a dynamic width the count is only the most a row can grow to
-    tinsert(menu, { text = RotatoDB.dynamicWidth and "Max buffs per row" or "Buffs shown per row",
+    tinsert(menu, { text = RotatoDB.dynamicWidth and "Max icons per side row" or "Icons per side row",
         hasArrow = true, notCheckable = true, menuList = counts })
-    tinsert(menu, { text = "Fit width to shown icons", checked = RotatoDB.dynamicWidth,
+    tinsert(menu, { text = "Shrink to the icons shown", checked = RotatoDB.dynamicWidth,
         func = function()
             RotatoDB.dynamicWidth = not RotatoDB.dynamicWidth
             ns.ApplyWidth()
@@ -297,9 +297,9 @@ function ns.OpenMenu()
     tinsert(menu, { text = "Background transparency", hasArrow = true, notCheckable = true,
         menuList = transparencies })
     tinsert(menu, { text = "Font", hasArrow = true, notCheckable = true, menuList = FontMenu() })
-    tinsert(menu, { text = "Cooldown text size", hasArrow = true, notCheckable = true,
+    tinsert(menu, { text = "Timer text size", hasArrow = true, notCheckable = true,
         menuList = SizeMenu("cooldownTextSize") })
-    tinsert(menu, { text = "Label text size", hasArrow = true, notCheckable = true,
+    tinsert(menu, { text = "Status text size (Next, Cooldown...)", hasArrow = true, notCheckable = true,
         menuList = SizeMenu("labelSize") })
     tinsert(menu, { text = "Spell name size", hasArrow = true, notCheckable = true,
         menuList = SizeMenu("nameSize") })
