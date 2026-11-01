@@ -22,7 +22,7 @@ local function Build()
     frame = CreateFrame("Frame", "RotatoPicker", UIParent)
     frame:SetFrameStrata("DIALOG")
     -- below the center: Sage's build dialog sits above it, and both can be up with the spellbook and talent window open
-    frame:SetPoint("CENTER", UIParent, "CENTER", 0, -100)
+    frame:SetPoint("CENTER", UIParent, "CENTER", 0, -40)
     if frame.SetTemplate and skins then
         frame:SetTemplate("Transparent")
     else
