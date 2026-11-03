@@ -44,17 +44,13 @@ ns.Rotation{
     reminders = Rogue.PoisonReminders(),
     preparation = Rogue.PoisonReminders(),
 
-    highprio = {
-        -- Upkeep ahead of any damage finisher, and it needs no target of its own: the combo points
-        -- only exist while there is one, so the check covers it.
-        { SLICE_AND_DICE, when = SliceAndDiceDue },
-        -- Below Slice and Dice: the rogue's own upkeep comes first, and the armor debuff is only
-        -- the raid's. Bosses only; on trash the points are better spent on damage.
-        { EXPOSE_ARMOR, when = ExposeArmorDue },
-    },
-
     rotations = {
         single = {
+            -- Upkeep ahead of any damage finisher: both are worth more than the next Eviscerate.
+            { SLICE_AND_DICE, when = SliceAndDiceDue },
+            -- Below Slice and Dice: the rogue's own upkeep comes first, and the armor debuff is only
+            -- the raid's. Bosses only; on trash the points are better spent on damage.
+            { EXPOSE_ARMOR, when = ExposeArmorDue },
             -- Only while the bleed is missing; a running one is left alone until it expires, so the
             -- points in between go to Eviscerate.
             { "Rupture", when = function(c)
