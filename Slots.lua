@@ -13,6 +13,8 @@ local ADDON_NAME, ns = ...
 --                           that never become the pet unit (Feral Spirit) cannot be read
 --   playerDebuff = "Name"   a debuff on the player
 --   debuff       = "Name"   an aura on the target (yours only, unless any = true)
+--                           or { "Name", "Other" } for interchangeable ones, whichever is up and
+--                           from any caster (Expose Armor / Sunder Armor share a raid slot)
 --   targetBuff   = "Name"   a buff on the target
 --   targetBuffType         = { "Magic", "Enrage" }   any buff of those dispel types on the target
 --   healTargetBuff        = "Name"   your own buff (a hot) on whoever a heal would go to
@@ -143,9 +145,10 @@ end
 
 -- Reads the aura an entry is about. Also returns the unit it was read from when that is a heal
 -- target, because the tooltip needs to know where to look.
-local function ReadAura(entry, buffList)
+local function ReadAura(entry, buffList, debuffList)
     local c = ns.c
     if buffList then return c.anyBuff(buffList)
+    elseif debuffList then return c.anyDebuff(debuffList)
     elseif entry.buff then return c.buff(entry.buff)
     elseif entry.pet then return c.pet.aura(entry.pet)
     elseif entry.playerDebuff then return c.selfDebuff(entry.playerDebuff)
@@ -178,19 +181,21 @@ local function Resolve(entry, rowKey)
     local healTypeList = entry.healTargetDebuffType
 
     local buffList = type(entry.buff) == "table" and entry.buff or nil
+    local debuffList = type(entry.debuff) == "table" and entry.debuff or nil
     local auraName = buffList and buffList[1] or entry.buff or entry.pet or entry.playerDebuff
-        or entry.debuff or entry.targetBuff or entry.healTargetBuff or entry.healTargetBuffAny
-        or entry.healTargetDebuff
+        or debuffList and debuffList[1] or entry.debuff or entry.targetBuff or entry.healTargetBuff
+        or entry.healTargetBuffAny or entry.healTargetDebuff
 
-    -- of interchangeable buffs, the first one that exists stands for the list (a low level
+    -- of interchangeable auras, the first one that exists stands for the list (a low level
     -- character has Righteousness but not the seals listed before it)
-    if buffList then
-        for _, name in ipairs(buffList) do
+    local list = buffList or debuffList
+    if list then
+        for _, name in ipairs(list) do
             if GetSpellInfo(name) then auraName = name break end
         end
     end
 
-    local aura, healUnit = ReadAura(entry, buffList)
+    local aura, healUnit = ReadAura(entry, buffList, debuffList)
     local active = aura and aura.up
 
     -- Visibility rules, cheapest first.

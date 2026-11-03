@@ -233,6 +233,17 @@ end
 -- c.debuff(name, { any = true }) without building the options table on every check.
 function c.debuffAny(name) return Aura(UnitDebuff, "target", name) end
 
+-- The first of several interchangeable debuffs that is up. It counts from any caster on purpose:
+-- these are raid debuff slots (Expose Armor / Sunder Armor), so another player's copy fills the
+-- slot just as well as yours.
+function c.anyDebuff(names)
+    for _, name in ipairs(names) do
+        local aura = c.debuffAny(name)
+        if aura.up then return aura end
+    end
+    return NO_AURA
+end
+
 -- A debuff on any unit from any caster, for restrictions like Weakened Soul that apply no matter
 -- which priest cast it.
 function c.debuffOn(unit, name) return Aura(UnitDebuff, unit, name) end
