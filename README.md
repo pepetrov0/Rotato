@@ -65,17 +65,20 @@ faded means using it now is pointless (for example Divine Shield during Forbeara
 
 ## Todo
 
+A tick means the rotation is finalized. The unticked ones that already have a file are experimental
+and may still change.
+
 - Death Knight
-  - [x] Blood
+  - [ ] Blood
   - [ ] Frost
   - [ ] Unholy
 - Druid
   - [ ] Balance
   - [ ] Feral
-  - [x] Restoration
+  - [ ] Restoration
 - Hunter
   - [ ] Beast Mastery
-  - [x] Marksmanship
+  - [ ] Marksmanship
   - [ ] Survival
 - Mage
   - [ ] Arcane
@@ -86,7 +89,7 @@ faded means using it now is pointless (for example Divine Shield during Forbeara
   - [x] Protection
   - [x] Retribution
 - Priest
-  - [x] Discipline
+  - [ ] Discipline
   - [ ] Holy
   - [ ] Shadow
 - Rogue
@@ -96,7 +99,7 @@ faded means using it now is pointless (for example Divine Shield during Forbeara
 - Shaman
   - [ ] Elemental
   - [ ] Enhancement
-  - [x] Restoration
+  - [ ] Restoration
 - Warlock
   - [ ] Affliction
   - [ ] Demonology
