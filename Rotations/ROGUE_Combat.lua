@@ -63,6 +63,10 @@ ns.Rotation{
             { "Eviscerate", when = function(c) return c.comboPoints >= 5 end },
             { "Sinister Strike" },
         },
+        -- Everything else the spec has is single-target, so the knives are the whole rotation.
+        aoe = {
+            { "Fan of Knives" },
+        },
     },
 
     trackers = {
