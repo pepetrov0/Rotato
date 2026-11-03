@@ -30,7 +30,8 @@ local function ExposeArmorDue(c)
     for _, name in ipairs(ARMOR_DEBUFFS) do
         if c.debuffAny(name).up then return false end
     end
-    return c.comboPoints >= 5
+    -- any point will do: the debuff is up as soon as it lands, even if it only lasts 6 seconds
+    return c.comboPoints >= 1
 end
 
 ns.Rotation{
