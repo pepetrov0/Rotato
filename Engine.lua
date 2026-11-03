@@ -185,6 +185,8 @@ local c = setmetatable({ target = target, pet = pet, variant = variant, runes = 
     __index = function(_, key)
         if key == "combat" then return UnitAffectingCombat("player") and true or false
         elseif key == "mana" then return Percent(UnitPower("player", 0), UnitPowerMax("player", 0))
+        -- energy is 0-100 (a little more with talents), so a percent reads the same as the bar
+        elseif key == "energy" then return Percent(UnitPower("player", 3), UnitPowerMax("player", 3))
         elseif key == "hp" then return Percent(UnitHealth("player"), UnitHealthMax("player"))
         elseif key == "moving" then return GetUnitSpeed("player") > 0
         -- points on the current target; zero when there is none, so a combo-point rule reads as false
