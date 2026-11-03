@@ -76,7 +76,10 @@ ns.Rotation{
     offensives = {
         -- worth using on cooldown
         { spell = "Blade Flurry", buff = "Blade Flurry", recommend = function(c) return c.ready("Blade Flurry") end },
-        { spell = "Adrenaline Rush", buff = "Adrenaline Rush", recommend = function(c) return c.ready("Adrenaline Rush") end },
+        -- below half energy too: it refills the bar, so using it on a full one wastes the regen
+        { spell = "Adrenaline Rush", buff = "Adrenaline Rush", recommend = function(c)
+            return c.energy < 50 and c.ready("Adrenaline Rush")
+        end },
         -- no aura to sweep: it is over in a couple of seconds. It locks the rogue out while it runs,
         -- so it is only worth using below half energy, where the idle time wastes the least regen.
         { spell = "Killing Spree", recommend = function(c)
